@@ -1,12 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { err, ok } from "neverthrow";
 
-import {
-  PrintrApiError,
-  createPrintrClient,
-  toToolResponse,
-  unwrapResult,
-} from "./client.js";
+import { createPrintrClient, PrintrApiError, toToolResponse, unwrapResult } from "./client.js";
 
 describe("createPrintrClient", () => {
   it("creates a client with provided config", () => {
