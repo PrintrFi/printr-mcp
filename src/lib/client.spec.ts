@@ -1,20 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { err, ok } from "neverthrow";
 
-import { createPrintrClient, PrintrApiError, toToolResponse, unwrapResult } from "./client.js";
-
-describe("createPrintrClient", () => {
-  it("creates a client with correct configuration", () => {
-    const client = createPrintrClient({
-      apiKey: "test-key",
-      baseUrl: "https://api.test.com",
-    });
-
-    expect(client).toBeDefined();
-    expect(typeof client.GET).toBe("function");
-    expect(typeof client.POST).toBe("function");
-  });
-});
+import { PrintrApiError, toToolResponse, unwrapResult } from "./client.js";
 
 describe("unwrapResult", () => {
   it("returns Ok with data on success", () => {

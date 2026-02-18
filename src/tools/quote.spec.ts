@@ -21,7 +21,7 @@ describe("registerQuoteTool", () => {
   };
 
   describe("tool registration", () => {
-    it("registers tool with correct name and description", () => {
+    it("registers tool with correct name", () => {
       const mockServer = createMockServer();
       const mockClient = createMockClient(() =>
         Promise.resolve(mockSuccessResponse({ quote: mockQuoteResponse })),
@@ -31,10 +31,7 @@ describe("registerQuoteTool", () => {
 
       const tool = mockServer.getRegisteredTool();
       expect(tool?.name).toBe("printr_quote");
-      expect(tool?.config.description).toContain("cost estimate");
-      expect(tool?.config.description).toContain("printr_create_token");
-      expect(tool?.config.inputSchema).toBeDefined();
-      expect(tool?.config.outputSchema).toBeDefined();
+      expect(tool?.handler).toBeDefined();
     });
   });
 

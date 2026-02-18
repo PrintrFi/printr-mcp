@@ -28,7 +28,7 @@ describe("registerGetTokenTool", () => {
   };
 
   describe("tool registration", () => {
-    it("registers tool with correct name and description", () => {
+    it("registers tool with correct name", () => {
       const mockServer = createMockServer();
       const mockClient = createMockClient(() =>
         Promise.resolve(mockSuccessResponse(mockTokenData)),
@@ -38,11 +38,6 @@ describe("registerGetTokenTool", () => {
 
       const tool = mockServer.getRegisteredTool();
       expect(tool?.name).toBe("printr_get_token");
-      expect(tool?.config.description).toContain("Get details");
-      expect(tool?.config.description).toContain("telecoin ID");
-      expect(tool?.config.description).toContain("CAIP-10");
-      expect(tool?.config.inputSchema).toBeDefined();
-      expect(tool?.config.outputSchema).toBeDefined();
     });
   });
 

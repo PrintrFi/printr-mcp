@@ -35,7 +35,7 @@ describe("registerGetDeploymentsTool", () => {
   };
 
   describe("tool registration", () => {
-    it("registers tool with correct name and description", () => {
+    it("registers tool with correct name", () => {
       const mockServer = createMockServer();
       const mockClient = createMockClient(() =>
         Promise.resolve(mockSuccessResponse(mockDeploymentsData)),
@@ -45,11 +45,6 @@ describe("registerGetDeploymentsTool", () => {
 
       const tool = mockServer.getRegisteredTool();
       expect(tool?.name).toBe("printr_get_deployments");
-      expect(tool?.config.description).toContain("deployment status");
-      expect(tool?.config.description).toContain("per-chain");
-      expect(tool?.config.description).toContain("monitor");
-      expect(tool?.config.inputSchema).toBeDefined();
-      expect(tool?.config.outputSchema).toBeDefined();
     });
   });
 

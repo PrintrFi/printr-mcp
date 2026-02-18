@@ -11,23 +11,30 @@ import {
   tokenId,
 } from "./schemas.js";
 
+describe("string-based schemas", () => {
+  const schemas = [
+    { name: "caip2ChainId", schema: caip2ChainId, valid: "eip155:8453" },
+    { name: "caip10Address", schema: caip10Address, valid: "eip155:8453:0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb" },
+    { name: "tokenId", schema: tokenId, valid: "0x3a7a8d1234567890abcdef" },
+  ];
+
+  test.each(schemas)("$name rejects non-string values", ({ schema }) => {
+    expect(schema.safeParse(123).success).toBe(false);
+    expect(schema.safeParse(null).success).toBe(false);
+    expect(schema.safeParse(undefined).success).toBe(false);
+  });
+});
+
 describe("caip2ChainId", () => {
   const validCases = [
     { name: "EVM chain (Base)", input: "eip155:8453" },
     { name: "EVM chain (Ethereum mainnet)", input: "eip155:1" },
     { name: "Solana chain", input: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" },
-    { name: "arbitrary string", input: "invalid" }, // Note: Currently just a string, no format validation
-    { name: "empty string", input: "" }, // Note: Currently just a string
   ];
 
   test.each(validCases)("accepts $name", ({ input }) => {
     const result = caip2ChainId.safeParse(input);
     expect(result.success).toBe(true);
-  });
-
-  it("rejects non-string values", () => {
-    const result = caip2ChainId.safeParse(123);
-    expect(result.success).toBe(false);
   });
 });
 
@@ -35,11 +42,6 @@ describe("caip10Address", () => {
   it("accepts valid CAIP-10 addresses", () => {
     const result = caip10Address.safeParse("eip155:8453:0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb");
     expect(result.success).toBe(true);
-  });
-
-  it("rejects non-string values", () => {
-    const result = caip10Address.safeParse(123);
-    expect(result.success).toBe(false);
   });
 });
 
@@ -52,11 +54,6 @@ describe("tokenId", () => {
   test.each(validCases)("accepts $name", ({ input }) => {
     const result = tokenId.safeParse(input);
     expect(result.success).toBe(true);
-  });
-
-  it("rejects non-string values", () => {
-    const result = tokenId.safeParse(123);
-    expect(result.success).toBe(false);
   });
 });
 

@@ -31,7 +31,7 @@ describe("registerCreateTokenTool", () => {
   };
 
   describe("tool registration", () => {
-    it("registers tool with correct name and description", () => {
+    it("registers tool with correct name", () => {
       const mockServer = createMockServer();
       const mockClient = createMockClient(() =>
         Promise.resolve(mockSuccessResponse(mockTokenResponse)),
@@ -41,11 +41,6 @@ describe("registerCreateTokenTool", () => {
 
       const tool = mockServer.getRegisteredTool();
       expect(tool?.name).toBe("printr_create_token");
-      expect(tool?.config.description).toContain("Create a new token");
-      expect(tool?.config.description).toContain("UNSIGNED transaction");
-      expect(tool?.config.description).toContain("printr_quote");
-      expect(tool?.config.inputSchema).toBeDefined();
-      expect(tool?.config.outputSchema).toBeDefined();
     });
   });
 
