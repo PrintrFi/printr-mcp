@@ -5,6 +5,15 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      verbose:
+        description: "Enable verbose test output"
+        type: boolean
+        default: false
+      test_token_id:
+        description: "Token ID for E2E get_token/get_deployments tests"
+        type: string
 
 jobs:
   test:
@@ -34,7 +43,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
       - uses: actions/checkout@v4
@@ -52,4 +61,5 @@ jobs:
         env:
           API_TOKEN: ${{ secrets.API_TOKEN }}
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          API_TEST_TOKEN_ID: ${{ secrets.API_TEST_TOKEN_ID }}
+          API_TEST_TOKEN_ID: ${{ inputs.test_token_id || secrets.API_TEST_TOKEN_ID }}
+          VERBOSE: ${{ inputs.verbose && '1' || '' }}
