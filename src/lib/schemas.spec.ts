@@ -14,7 +14,11 @@ import {
 describe("string-based schemas", () => {
   const schemas = [
     { name: "caip2ChainId", schema: caip2ChainId, valid: "eip155:8453" },
-    { name: "caip10Address", schema: caip10Address, valid: "eip155:8453:0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb" },
+    {
+      name: "caip10Address",
+      schema: caip10Address,
+      valid: "eip155:8453:0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+    },
     { name: "tokenId", schema: tokenId, valid: "0x3a7a8d1234567890abcdef" },
   ];
 
