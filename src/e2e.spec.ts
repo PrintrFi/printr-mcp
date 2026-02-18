@@ -10,9 +10,9 @@ import { registerGetDeploymentsTool } from "./tools/get-deployments.js";
 import { registerGetTokenTool } from "./tools/get-token.js";
 import { registerQuoteTool } from "./tools/quote.js";
 
-const API_TOKEN = process.env.API_TOKEN;
-const API_BASE_URL = process.env.API_BASE_URL;
-const API_TEST_TOKEN_ID = process.env.API_TEST_TOKEN_ID;
+const API_TOKEN = process.env.PRINTR_API_KEY;
+const API_BASE_URL = process.env.PRINTR_API_BASE_URL;
+const API_TEST_TOKEN_ID = process.env.PRINTR_TEST_TOKEN_ID;
 
 const hasCredentials = Boolean(API_TOKEN && API_BASE_URL);
 

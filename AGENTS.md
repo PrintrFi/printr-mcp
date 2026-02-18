@@ -108,8 +108,9 @@ Each MCP tool lives in `src/tools/<name>.ts` and exports a `register*Tool(server
 
 | Variable              | Required | Description                                                         |
 | --------------------- | -------- | ------------------------------------------------------------------- |
-| `PRINTR_API_KEY`      | Yes      | Partner API key (Bearer JWT)                                        |
-| `PRINTR_API_BASE_URL` | No       | Override API base URL (default: `https://api-preview.printr.money`) |
+| `PRINTR_API_KEY`        | Yes      | Partner API key (Bearer JWT)                                        |
+| `PRINTR_API_BASE_URL`   | No       | Override API base URL (default: `https://api-preview.printr.money`) |
+| `PRINTR_TEST_TOKEN_ID`  | No       | Known token ID used in E2E tests for `get_token` / `get_deployments`|
 
 ## Documentation References
 

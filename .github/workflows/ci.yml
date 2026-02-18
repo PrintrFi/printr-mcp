@@ -65,7 +65,7 @@ jobs:
       - name: Run E2E tests
         run: bun run test:e2e
         env:
-          API_TOKEN: ${{ secrets.API_TOKEN }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          API_TEST_TOKEN_ID: ${{ inputs.test_token_id || secrets.API_TEST_TOKEN_ID }}
+          PRINTR_API_KEY: ${{ secrets.PRINTR_API_KEY }}
+          PRINTR_API_BASE_URL: ${{ secrets.PRINTR_API_BASE_URL }}
+          PRINTR_TEST_TOKEN_ID: ${{ inputs.test_token_id || secrets.PRINTR_TEST_TOKEN_ID }}
           VERBOSE: ${{ inputs.verbose && '1' || '' }}

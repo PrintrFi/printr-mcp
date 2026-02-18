@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PrintrFi/printr-mcp"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
