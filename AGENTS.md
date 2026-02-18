@@ -32,10 +32,11 @@ src/
   index.ts              # Entry point: creates MCP server, registers tools, connects stdio transport
   api.gen.d.ts          # Auto-generated OpenAPI types. Never edit by hand.
   integration.spec.ts   # Integration tests (MCP client-server via InMemoryTransport)
+  e2e.spec.ts           # E2E tests against real Printr preview API
   lib/
     client.ts           # Typed HTTP client (openapi-fetch), error unwrapping (neverthrow)
     schemas.ts          # Shared Zod schemas for tool input/output validation
-    test-helpers.ts     # Mock server, mock client, response factories
+    test-helpers.ts     # Mock server, mock client, response factories, verbose logging
   tools/
     quote.ts            # printr_quote tool
     create-token.ts     # printr_create_token tool
@@ -50,7 +51,9 @@ Each MCP tool lives in `src/tools/<name>.ts` and exports a `register*Tool(server
 ### Imports
 
 - Path alias: `~/` maps to `./src/` (tsconfig paths)
-- Always use `.js` extension in import specifiers (e.g., `import { foo } from "~/lib/client.js"`)
+- Source files: use `~/` alias (e.g., `import { foo } from "~/lib/client.js"`)
+- Test files (`*.spec.ts`): use regular relative paths (e.g., `import { foo } from "./lib/client.js"`)
+- Always use `.js` extension in import specifiers
 - Required by `verbatimModuleSyntax: true`
 
 ### Error Handling
@@ -76,7 +79,9 @@ Each MCP tool lives in `src/tools/<name>.ts` and exports a `register*Tool(server
 - Test files: `*.spec.ts` co-located with source files
 - Integration tests: `src/integration.spec.ts` (uses MCP SDK `InMemoryTransport`)
 - Mock helpers in `src/lib/test-helpers.ts`: `createMockServer`, `createMockClient`, `mockSuccessResponse`, `mockErrorResponse`
-- Tests use mock client/server pattern; no real API calls
+- Verbose logging helpers in `src/lib/test-helpers.ts`: `log`, `logResult` (enabled via `VERBOSE=1`)
+- Unit/integration tests use mock client/server pattern; no real API calls
+- E2E tests in `src/e2e.spec.ts` hit the real preview API; skipped when env vars are absent
 
 ## Adding a New Tool
 
@@ -87,6 +92,15 @@ Each MCP tool lives in `src/tools/<name>.ts` and exports a `register*Tool(server
 5. Handler pattern: `toToolResponse(unwrapResult(await client.METHOD(...)))`
 6. Register the tool in `src/index.ts`
 7. Add unit tests in `src/tools/<name>.spec.ts` following existing patterns
+
+## Commits
+
+- Follow [Conventional Commits](https://www.conventionalcommits.org/)
+- Format: `type(scope): description` — all lowercase, no period, imperative mood
+- Types: `feat`, `fix`, `refactor`, `test`, `chore`, `docs`, `ci`
+- Scope is optional but preferred (e.g., `test(e2e):`, `feat(quote):`, `chore(deps):`)
+- Keep messages terse — one line, no body unless essential
+- No co-author trailers
 
 ## Environment Variables
 
