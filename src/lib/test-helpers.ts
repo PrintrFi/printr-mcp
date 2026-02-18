@@ -2,6 +2,18 @@
 
 import type { PrintrClient } from "./client.js";
 
+const verbose = process.env.VERBOSE === "1" || process.env.VERBOSE === "true";
+
+export function log(...args: unknown[]) {
+  if (verbose) console.log(...args);
+}
+
+export function logResult(label: string, result: Record<string, unknown>) {
+  if (!verbose) return;
+  const payload = result.structuredContent ?? result.content;
+  console.log(`[${label}]`, result.isError ? "ERROR" : "OK", JSON.stringify(payload, null, 2));
+}
+
 type ToolConfig = {
   description: string;
   inputSchema: unknown;
