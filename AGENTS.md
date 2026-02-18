@@ -12,18 +12,20 @@ MCP server for the Printr API. Enables AI agents to create, discover, and track 
 
 ## Key Commands
 
-| Command                | Purpose                           |
-| ---------------------- | --------------------------------- |
-| `bun run dev`          | Start with hot reload             |
-| `bun test`             | Run all tests                     |
-| `bun test --coverage`  | Run tests with coverage report    |
-| `bun run build`        | Build for distribution            |
-| `bun run lint`         | Check with Biome                  |
-| `bun run lint:fix`     | Auto-fix Biome issues             |
-| `bun run format`       | Format with Biome                 |
-| `bun run typecheck`    | Type-check without emitting       |
-| `bun run check`        | typecheck + lint + test (full CI) |
-| `bun run generate:api` | Regenerate OpenAPI types          |
+| Command                | Purpose                              |
+| ---------------------- | ------------------------------------ |
+| `bun run dev`          | Start with hot reload                |
+| `bun run test`         | Run unit & integration tests         |
+| `bun run test:e2e`     | Run E2E tests (requires API env vars)|
+| `bun run test:all`     | Run all tests (unit + integration + E2E) |
+| `bun test --coverage`  | Run all tests with coverage report   |
+| `bun run build`        | Build for distribution               |
+| `bun run lint`         | Check with Biome                     |
+| `bun run lint:fix`     | Auto-fix Biome issues                |
+| `bun run format`       | Format with Biome                    |
+| `bun run typecheck`    | Type-check without emitting          |
+| `bun run check`        | typecheck + lint + test (full CI)    |
+| `bun run generate:api` | Regenerate OpenAPI types             |
 
 ## Architecture
 
