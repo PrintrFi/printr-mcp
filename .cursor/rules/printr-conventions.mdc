@@ -1,0 +1,7 @@
+---
+description: Printr MCP project conventions - runtime, tooling, architecture, and coding patterns
+globs: "*.ts, *.tsx, *.js, *.jsx, *.json"
+alwaysApply: true
+---
+
+Follow the project conventions defined in AGENTS.md at the repository root.
