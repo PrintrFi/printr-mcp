@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import type { PrintrClient } from "~/lib/client.js";
+import type { PrintrClient, paths } from "~/lib/client.js";
 import { toToolResponse, unwrapResult } from "~/lib/client.js";
 import {
   caip2ChainId,
@@ -11,6 +11,8 @@ import {
   initialBuy,
   quoteOutput,
 } from "~/lib/schemas.js";
+
+type CreateTokenRequestBody = paths["/print"]["post"]["requestBody"]["content"]["application/json"];
 
 const evmPayload = z.object({
   to: z.string().describe("Target contract (CAIP-10)"),
@@ -77,10 +79,7 @@ export function registerCreateTokenTool(server: McpServer, client: PrintrClient)
     async (params) => {
       // Body is already validated by MCP inputSchema; response is fully typed
       return toToolResponse(
-        unwrapResult(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await client.POST("/print", { body: params as any }),
-        ),
+        unwrapResult(await client.POST("/print", { body: params as CreateTokenRequestBody })),
       );
     },
   );

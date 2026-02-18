@@ -1,9 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import type { PrintrClient } from "~/lib/client.js";
+import type { PrintrClient, paths } from "~/lib/client.js";
 import { toToolResponse, unwrapResult } from "~/lib/client.js";
 import { caip2ChainId, graduationThreshold, initialBuy, quoteOutput } from "~/lib/schemas.js";
+
+type QuoteRequestBody = paths["/print/quote"]["post"]["requestBody"]["content"]["application/json"];
 
 const inputSchema = z.object({
   chains: z.array(caip2ChainId).min(1).describe("Chains to deploy on"),
@@ -27,10 +29,9 @@ export function registerQuoteTool(server: McpServer, client: PrintrClient) {
     async (params) => {
       // Body is already validated by MCP inputSchema; response is fully typed
       return toToolResponse(
-        unwrapResult(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await client.POST("/print/quote", { body: params as any }),
-        ).map((response) => response.quote),
+        unwrapResult(await client.POST("/print/quote", { body: params as QuoteRequestBody })).map(
+          (response) => response.quote,
+        ),
       );
     },
   );

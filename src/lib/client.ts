@@ -3,6 +3,7 @@ import createClient from "openapi-fetch";
 
 import type { paths } from "~/api.gen.js";
 
+export type { paths };
 export type PrintrClient = ReturnType<typeof createPrintrClient>;
 
 export interface ClientConfig {
