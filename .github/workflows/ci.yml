@@ -24,6 +24,10 @@ jobs:
 
       - name: Run tests
         run: bun run test
+        env:
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          API_TEST_TOKEN_ID: ${{ secrets.API_TEST_TOKEN_ID }}
 
       - name: Build
         run: bun run build
