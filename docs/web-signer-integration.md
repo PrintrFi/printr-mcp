@@ -219,13 +219,21 @@ The local session API runs on `http://localhost:{port}` and sets `Access-Control
 
 ## Local Development
 
-To test against a local Printr dev server, the MCP agent accepts a `printr_app_url` override:
+To test against a local Printr dev server, set the `PRINTR_APP_URL` environment variable before starting the MCP server:
 
-```
-printr_open_web_signer({
-  ...,
-  printr_app_url: "http://localhost:3000"
-})
+```json
+{
+  "mcpServers": {
+    "printr": {
+      "command": "bun",
+      "args": ["run", "/path/to/printr-mcp/src/index.ts"],
+      "env": {
+        "PRINTR_API_KEY": "<your-api-key>",
+        "PRINTR_APP_URL": "http://localhost:3000"
+      }
+    }
+  }
+}
 ```
 
-This generates a link to `http://localhost:3000/sign?session=...&api=...` instead of production.
+The MCP server reads `PRINTR_APP_URL` at startup and uses it for all deep links, including the `printr_open_web_signer` signing URL. This generates a link to `http://localhost:3000/sign?session=...&api=...` instead of production.
