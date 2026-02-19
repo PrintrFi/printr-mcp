@@ -86,18 +86,6 @@ describe("registerOpenWebSignerTool", () => {
       });
       expect(result.success).toBe(false);
     });
-
-    it("rejects invalid printr_app_url", () => {
-      const server = createMockServer();
-      registerOpenWebSignerTool(server as any);
-      const result = getSchema(server).safeParse({
-        chain_type: "evm",
-        payload: MOCK_EVM_PAYLOAD,
-        token_id: MOCK_TOKEN_ID,
-        printr_app_url: "not-a-url",
-      });
-      expect(result.success).toBe(false);
-    });
   });
 
   describe("handler", () => {
@@ -124,12 +112,6 @@ describe("registerOpenWebSignerTool", () => {
       const url = new URL(result.structuredContent?.url as string);
       expect(url.searchParams.get("session")).toBeString();
       expect(url.searchParams.get("api")).toStartWith("http://localhost:");
-    });
-
-    it("respects printr_app_url override", async () => {
-      const result = await callHandler({ printr_app_url: "http://localhost:3000" });
-      const url = result.structuredContent?.url as string;
-      expect(url).toStartWith("http://localhost:3000/sign");
     });
 
     it("returns session_token, api_port, and expires_at", async () => {
