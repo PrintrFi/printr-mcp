@@ -122,4 +122,4 @@ Each MCP tool lives in `src/tools/<name>.ts` and exports a `register*Tool(server
 - **Zod:** https://zod.dev
 - **Biome:** https://biomejs.dev
 
-This is a backend MCP server project. There is no frontend, no HTML imports, no Bun.serve().
+This is a backend MCP server project. Currently there is no frontend or HTML. The dist bundle must remain compatible with Node.js ≥ 18 (see `engines` in package.json) so it can run via `npx` as well as `bunx`.

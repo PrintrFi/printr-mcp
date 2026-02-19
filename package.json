@@ -2,10 +2,12 @@
   "name": "@printr/mcp",
   "version": "0.1.0",
   "type": "module",
-  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/PrintrFi/printr-mcp"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,7 +19,7 @@
   ],
   "scripts": {
     "generate:api": "bunx openapi-typescript ../printr/backend/golang/spec/omegastar/v0/openapi.yml -o src/api.gen.d.ts",
-    "build": "bun build src/index.ts --outdir dist --target node --format esm && tsc --emitDeclarationOnly --outDir dist",
+    "build": "bun build src/index.ts --outdir dist --target node --format esm && tsc --emitDeclarationOnly --outDir dist && chmod +x dist/index.js",
     "dev": "bun --hot src/index.ts",
     "start": "bun src/index.ts",
     "test": "bun test src/lib src/tools src/integration.spec.ts",
