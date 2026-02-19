@@ -27,7 +27,7 @@ const inputSchema = z.object({
       "base58-encoded 64-byte Solana keypair secret. " +
         "WARNING: handle with care — never share or commit this value.",
     ),
-  rpc_url: z.string().url().optional().describe(`Solana RPC endpoint (default: ${DEFAULT_SVM_RPC})`),
+  rpc_url: z.url().optional().describe(`Solana RPC endpoint (default: ${DEFAULT_SVM_RPC})`),
 });
 
 const outputSchema = z.object({

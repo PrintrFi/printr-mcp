@@ -16,7 +16,7 @@ const inputSchema = z.object({
       "Hex private key for the creator wallet (with or without 0x prefix). " +
         "WARNING: handle with care — never share or commit this value.",
     ),
-  rpc_url: z.string().url().describe("HTTP RPC endpoint for the target chain"),
+  rpc_url: z.url().describe("HTTP RPC endpoint for the target chain"),
 });
 
 const outputSchema = z.object({

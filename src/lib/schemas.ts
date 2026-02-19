@@ -4,7 +4,7 @@ export const caip2ChainId = z
   .string()
   .describe(
     "CAIP-2 chain ID (e.g. 'eip155:8453' for Base, " +
-      "'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' for Solana)",
+    "'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' for Solana)",
   );
 
 export const caip10Address = z.string().describe("CAIP-10 address (e.g. 'eip155:8453:0x742d...')");
@@ -39,10 +39,10 @@ export const graduationThreshold = z
 
 export const externalLinks = z
   .object({
-    website: z.string().url().optional(),
-    x: z.string().url().optional(),
-    telegram: z.string().url().optional(),
-    github: z.string().url().optional(),
+    website: z.url().optional(),
+    x: z.url().optional(),
+    telegram: z.url().optional(),
+    github: z.url().optional(),
   })
   .optional()
   .describe("Optional external links for the token");
