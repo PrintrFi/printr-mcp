@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import type { PrintrClient } from "~/lib/client.js";
-import { toToolResponse, unwrapResult } from "~/lib/client.js";
+import { toToolResponseAsync, unwrapResultAsync } from "~/lib/client.js";
 import { tokenId } from "~/lib/schemas.js";
 
 const xChainTransaction = z.object({
@@ -45,12 +45,8 @@ export function registerGetDeploymentsTool(server: McpServer, client: PrintrClie
       outputSchema,
     },
     async ({ id }) => {
-      return toToolResponse(
-        unwrapResult(
-          await client.GET("/tokens/{id}/deployments", {
-            params: { path: { id } },
-          }),
-        ),
+      return toToolResponseAsync(
+        unwrapResultAsync(client.GET("/tokens/{id}/deployments", { params: { path: { id } } })),
       );
     },
   );

@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import type { PrintrClient } from "~/lib/client.js";
-import { toToolResponse, unwrapResult } from "~/lib/client.js";
+import { toToolResponseAsync, unwrapResultAsync } from "~/lib/client.js";
 import { tokenId } from "~/lib/schemas.js";
 
 const curveProperties = z.object({
@@ -50,12 +50,8 @@ export function registerGetTokenTool(server: McpServer, client: PrintrClient) {
       outputSchema,
     },
     async ({ id }) => {
-      return toToolResponse(
-        unwrapResult(
-          await client.GET("/tokens/{id}", {
-            params: { path: { id } },
-          }),
-        ),
+      return toToolResponseAsync(
+        unwrapResultAsync(client.GET("/tokens/{id}", { params: { path: { id } } })),
       );
     },
   );
