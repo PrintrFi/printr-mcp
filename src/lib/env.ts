@@ -7,6 +7,8 @@ const schema = z.object({
   PRINTR_TEST_TOKEN_ID: z.string().optional(),
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_IMAGE_MODEL: z.string().default("gemini/gemini-2.5-flash-image"),
+  EVM_WALLET_PRIVATE_KEY: z.string().optional(),
+  SVM_WALLET_PRIVATE_KEY: z.string().optional(),
   VERBOSE: z.string().optional(),
 });
 

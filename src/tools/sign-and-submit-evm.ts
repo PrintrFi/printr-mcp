@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
+import { env } from "~/lib/env.js";
 import { signAndSubmitEvm } from "~/lib/evm.js";
 
 const inputSchema = z.object({
@@ -12,9 +13,11 @@ const inputSchema = z.object({
   }),
   private_key: z
     .string()
+    .optional()
     .describe(
       "Hex private key for the creator wallet (with or without 0x prefix). " +
-        "WARNING: handle with care — never share or commit this value.",
+        "WARNING: handle with care — never share or commit this value. " +
+        "Falls back to EVM_WALLET_PRIVATE_KEY env var if not provided.",
     ),
   rpc_url: z.url().describe("HTTP RPC endpoint for the target chain"),
 });
@@ -33,15 +36,27 @@ export function registerSignAndSubmitEvmTool(server: McpServer): void {
         "Sign and submit an EVM transaction payload returned by printr_create_token. " +
         "Requires the creator wallet private key and an RPC URL for the target chain. " +
         "Returns the transaction hash and receipt once confirmed. " +
-        "After successful confirmation, present the trade page URL to the user: " +
-        "https://app.printr.money/trade/{token_id} using the token_id from the prior " +
-        "printr_create_token call.",
+        `After successful confirmation, present the trade page URL to the user: ` +
+        `${env.PRINTR_APP_URL}/trade/{token_id} using the token_id from the prior ` +
+        `printr_create_token call.`,
       inputSchema,
       outputSchema,
     },
     async ({ payload, private_key, rpc_url }) => {
       try {
-        const result = await signAndSubmitEvm(payload, private_key, rpc_url);
+        const resolvedKey = private_key ?? env.EVM_WALLET_PRIVATE_KEY;
+        if (!resolvedKey) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: "No private key provided. Pass private_key or set EVM_WALLET_PRIVATE_KEY env var.",
+              },
+            ],
+            isError: true as const,
+          };
+        }
+        const result = await signAndSubmitEvm(payload, resolvedKey, rpc_url);
         return {
           structuredContent: result,
           content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],

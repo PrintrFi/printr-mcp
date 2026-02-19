@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { z } from "zod";
+import { env } from "../lib/env.js";
 import { createMockServer } from "../lib/test-helpers.js";
 import { registerSignAndSubmitEvmTool } from "./sign-and-submit-evm.js";
 
@@ -52,7 +53,7 @@ describe("registerSignAndSubmitEvmTool", () => {
       expect(result.success).toBe(true);
     });
 
-    it("rejects missing private_key", () => {
+    it("accepts missing private_key (optional — falls back to env var)", () => {
       const mockServer = createMockServer();
       registerSignAndSubmitEvmTool(
         mockServer as Parameters<typeof registerSignAndSubmitEvmTool>[0],
@@ -62,7 +63,7 @@ describe("registerSignAndSubmitEvmTool", () => {
       const schema = tool?.config.inputSchema as z.ZodObject<z.ZodRawShape>;
       const result = schema.safeParse({ payload: MOCK_PAYLOAD, rpc_url: MOCK_RPC_URL });
 
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(true);
     });
 
     it("rejects missing rpc_url", () => {
@@ -131,5 +132,24 @@ describe("registerSignAndSubmitEvmTool", () => {
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toInclude("CAIP-10");
     });
+
+    it.skipIf(!!env.EVM_WALLET_PRIVATE_KEY)(
+      "returns isError when private_key is omitted and EVM_WALLET_PRIVATE_KEY env var is not set",
+      async () => {
+        const mockServer = createMockServer();
+        registerSignAndSubmitEvmTool(
+          mockServer as Parameters<typeof registerSignAndSubmitEvmTool>[0],
+        );
+
+        const tool = mockServer.getRegisteredTool();
+        const result = (await tool?.handler({
+          payload: MOCK_PAYLOAD,
+          rpc_url: MOCK_RPC_URL,
+        })) as { isError?: boolean; content: { text: string }[] };
+
+        expect(result.isError).toBe(true);
+        expect(result.content[0]?.text).toInclude("EVM_WALLET_PRIVATE_KEY");
+      },
+    );
   });
 });

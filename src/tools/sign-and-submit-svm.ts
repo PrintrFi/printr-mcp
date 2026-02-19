@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
+import { env } from "~/lib/env.js";
 import { DEFAULT_SVM_RPC, signAndSubmitSvm } from "~/lib/svm.js";
 
 const svmInstruction = z.object({
@@ -23,9 +24,11 @@ const inputSchema = z.object({
   }),
   private_key: z
     .string()
+    .optional()
     .describe(
       "base58-encoded 64-byte Solana keypair secret. " +
-        "WARNING: handle with care — never share or commit this value.",
+        "WARNING: handle with care — never share or commit this value. " +
+        "Falls back to SVM_WALLET_PRIVATE_KEY env var if not provided.",
     ),
   rpc_url: z.url().optional().describe(`Solana RPC endpoint (default: ${DEFAULT_SVM_RPC})`),
 });
@@ -46,15 +49,27 @@ export function registerSignAndSubmitSvmTool(server: McpServer): void {
         "Sign and submit a Solana transaction payload returned by printr_create_token. " +
         "Requires the creator wallet private key (base58, 64 bytes) and optionally a custom " +
         "RPC URL. Returns the transaction signature once confirmed. " +
-        "After successful confirmation, present the trade page URL to the user: " +
-        "https://app.printr.money/trade/{token_id} using the token_id from the prior " +
-        "printr_create_token call.",
+        `After successful confirmation, present the trade page URL to the user: ` +
+        `${env.PRINTR_APP_URL}/trade/{token_id} using the token_id from the prior ` +
+        `printr_create_token call.`,
       inputSchema,
       outputSchema,
     },
     async ({ payload, private_key, rpc_url }) => {
       try {
-        const result = await signAndSubmitSvm(payload, private_key, rpc_url);
+        const resolvedKey = private_key ?? env.SVM_WALLET_PRIVATE_KEY;
+        if (!resolvedKey) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: "No private key provided. Pass private_key or set SVM_WALLET_PRIVATE_KEY env var.",
+              },
+            ],
+            isError: true as const,
+          };
+        }
+        const result = await signAndSubmitSvm(payload, resolvedKey, rpc_url);
         return {
           structuredContent: result,
           content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
