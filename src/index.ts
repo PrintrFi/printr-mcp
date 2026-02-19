@@ -5,6 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { createPrintrClient } from "~/lib/client.js";
 import { env } from "~/lib/env.js";
 import { registerCreateTokenTool } from "~/tools/create-token.js";
+import { registerGenerateImageTool } from "~/tools/generate-image.js";
 import { registerGetDeploymentsTool } from "~/tools/get-deployments.js";
 import { registerGetTokenTool } from "~/tools/get-token.js";
 import { registerOpenWebSignerTool } from "~/tools/open-web-signer.js";
@@ -37,6 +38,9 @@ registerGetDeploymentsTool(server, client);
 registerSignAndSubmitEvmTool(server);
 registerSignAndSubmitSvmTool(server);
 registerOpenWebSignerTool(server);
+if (env.OPENROUTER_API_KEY) {
+  registerGenerateImageTool(server);
+}
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
