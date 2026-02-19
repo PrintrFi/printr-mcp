@@ -22,8 +22,8 @@
     "build": "bun build src/index.ts --outdir dist --target node --format esm && tsc --emitDeclarationOnly --outDir dist && chmod +x dist/index.js",
     "dev": "bun --hot src/index.ts",
     "start": "bun src/index.ts",
-    "test": "bun test src/lib src/tools src/integration.spec.ts",
-    "test:coverage": "bun test --coverage --coverage-reporter=lcov src/lib src/tools src/integration.spec.ts",
+    "test": "bun test src/lib src/server src/tools src/integration.spec.ts",
+    "test:coverage": "bun test --coverage --coverage-reporter=lcov src/lib src/server src/tools src/integration.spec.ts",
     "test:e2e": "bun test src/e2e.spec.ts",
     "test:all": "bun test",
     "typecheck": "tsc --noEmit",
@@ -43,9 +43,11 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@hono/node-server": "^1.19.9",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@solana/web3.js": "^1.98.4",
     "bs58": "^6.0.0",
+    "hono": "^4.11.10",
     "neverthrow": "^8.2.0",
     "openapi-fetch": "^0.13.0",
     "viem": "^2.46.2",

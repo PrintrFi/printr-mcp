@@ -7,6 +7,7 @@ import { env } from "~/lib/env.js";
 import { registerCreateTokenTool } from "~/tools/create-token.js";
 import { registerGetDeploymentsTool } from "~/tools/get-deployments.js";
 import { registerGetTokenTool } from "~/tools/get-token.js";
+import { registerOpenWebSignerTool } from "~/tools/open-web-signer.js";
 import { registerQuoteTool } from "~/tools/quote.js";
 import { registerSignAndSubmitEvmTool } from "~/tools/sign-and-submit-evm.js";
 import { registerSignAndSubmitSvmTool } from "~/tools/sign-and-submit-svm.js";
@@ -35,6 +36,7 @@ registerGetTokenTool(server, client);
 registerGetDeploymentsTool(server, client);
 registerSignAndSubmitEvmTool(server);
 registerSignAndSubmitSvmTool(server);
+registerOpenWebSignerTool(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
