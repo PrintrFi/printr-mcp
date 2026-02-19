@@ -21,6 +21,7 @@
     "generate:api": "bunx openapi-typescript ../printr/backend/golang/spec/omegastar/v0/openapi.yml -o src/api.gen.d.ts",
     "build": "bun build src/index.ts --outdir dist --target node --format esm && tsc --emitDeclarationOnly --outDir dist && chmod +x dist/index.js",
     "dev": "bun --hot src/index.ts",
+    "dev:stub-session": "bun scripts/stub-session.ts",
     "start": "bun src/index.ts",
     "test": "bun test src/lib src/server src/tools src/integration.spec.ts",
     "test:coverage": "bun test --coverage --coverage-reporter=lcov src/lib src/server src/tools src/integration.spec.ts",
@@ -31,7 +32,7 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "check": "bun run typecheck && bun run lint && bun test",
+    "check": "bun typecheck && bun lint && bun test",
     "prepublishOnly": "bun run build"
   },
   "devDependencies": {
