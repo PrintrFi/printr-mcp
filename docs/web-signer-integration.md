@@ -10,7 +10,8 @@ When a user is interacting with the Printr MCP agent and reaches the signing ste
 
 1. Starts a minimal ephemeral HTTP session API on `localhost` (inside the MCP process)
 2. Stores the full unsigned transaction payload in that session
-3. Returns a deep link: `https://app.printr.money/sign?session=TOKEN&api=http://localhost:PORT`
+3. Returns a deep link: `https://app.printr.money/sign?session=TOKEN&api=http%3A%2F%2Flocalhost%3APORT`
+   (the `api` value is `encodeURIComponent`-encoded by the agent)
 
 The `/sign` page fetches the payload from the local session API, uses the existing Printr wallet stack to connect and sign, then writes the result back.
 
@@ -32,6 +33,8 @@ GET /sign?session=<TOKEN>&api=<API_URL>
 ## Session API Contract
 
 The local session API is run by the MCP process. The `/sign` page communicates with it via standard `fetch`. All endpoints return JSON and include `Access-Control-Allow-Origin: *`.
+
+> **Note:** The session is created in-process by the MCP agent before the deep link is generated. The `POST /sessions` endpoint exists on the server but is not used by the web app — it is an internal implementation detail.
 
 ### `GET {api}/sessions/{session}`
 

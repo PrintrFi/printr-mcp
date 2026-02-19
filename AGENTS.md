@@ -61,8 +61,9 @@ Each MCP tool lives in `src/tools/<name>.ts` and exports a `register*Tool(server
 ### Error Handling
 
 - Use `neverthrow` Result types, not try/catch
-- `unwrapResult()` converts openapi-fetch responses to `Result<T, PrintrApiError>`
-- `toToolResponse()` converts a Result into the MCP tool response format
+- For async operations that can fail: use `ResultAsync`, never `Promise<Result<T, E>>`
+- `unwrapResult()` converts a single openapi-fetch response to `Result<T, PrintrApiError>`; use `unwrapResultAsync()` for promises so the pipeline stays as `ResultAsync`
+- `toToolResponse()` / `toToolResponseAsync()` convert a Result or ResultAsync into the MCP tool response format
 
 ### Validation
 
@@ -91,7 +92,7 @@ Each MCP tool lives in `src/tools/<name>.ts` and exports a `register*Tool(server
 2. Define Zod `inputSchema` and `outputSchema`
 3. Export `register<Name>Tool(server: McpServer, client: PrintrClient)`
 4. Call `server.registerTool(toolName, { description, inputSchema, outputSchema }, handler)`
-5. Handler pattern: `toToolResponse(unwrapResult(await client.METHOD(...)))`
+5. Handler pattern: `return toToolResponseAsync(unwrapResultAsync(client.METHOD(...)))` (keep pipelines as ResultAsync; avoid `await` + `unwrapResult` which yields `Promise<Result>`)
 6. Register the tool in `src/index.ts`
 7. Add unit tests in `src/tools/<name>.spec.ts` following existing patterns
 
@@ -106,11 +107,14 @@ Each MCP tool lives in `src/tools/<name>.ts` and exports a `register*Tool(server
 
 ## Environment Variables
 
-| Variable              | Required | Description                                                         |
-| --------------------- | -------- | ------------------------------------------------------------------- |
-| `PRINTR_API_KEY`        | Yes      | Partner API key (Bearer JWT)                                        |
-| `PRINTR_API_BASE_URL`   | No       | Override API base URL (default: `https://api-preview.printr.money`) |
-| `PRINTR_TEST_TOKEN_ID`  | No       | Known token ID used in E2E tests for `get_token` / `get_deployments`|
+| Variable                 | Required | Description                                                                                    |
+| ------------------------ | -------- | ---------------------------------------------------------------------------------------------- |
+| `PRINTR_API_KEY`         | Yes      | Partner API key (Bearer JWT)                                                                   |
+| `PRINTR_API_BASE_URL`    | No       | Override API base URL (default: `https://api-preview.printr.money`)                           |
+| `PRINTR_APP_URL`         | No       | Override Printr web app URL (default: `https://app.printr.money`)                             |
+| `PRINTR_TEST_TOKEN_ID`   | No       | Known token ID used in E2E tests for `get_token` / `get_deployments`                          |
+| `OPENROUTER_API_KEY`     | No       | Enables auto-generated token images via OpenRouter when no `image`/`image_path` is supplied   |
+| `OPENROUTER_IMAGE_MODEL` | No       | OpenRouter model for image generation (default: `gemini/gemini-2.5-flash-image`)              |
 
 ## Documentation References
 
