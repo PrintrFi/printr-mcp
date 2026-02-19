@@ -4,27 +4,24 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { createPrintrClient } from "./lib/client.js";
+import { env } from "./lib/env.js";
 import { log, logResult } from "./lib/test-helpers.js";
 import { registerCreateTokenTool } from "./tools/create-token.js";
 import { registerGetDeploymentsTool } from "./tools/get-deployments.js";
 import { registerGetTokenTool } from "./tools/get-token.js";
 import { registerQuoteTool } from "./tools/quote.js";
 
-const API_TOKEN = process.env.PRINTR_API_KEY;
-const API_BASE_URL = process.env.PRINTR_API_BASE_URL;
-const API_TEST_TOKEN_ID = process.env.PRINTR_TEST_TOKEN_ID;
-
-const hasCredentials = Boolean(API_TOKEN && API_BASE_URL);
+const hasCredentials = Boolean(env.PRINTR_API_KEY);
 
 describe.skipIf(!hasCredentials)("E2E: Printr API", () => {
   let client: Client;
 
   beforeAll(async () => {
-    log(`[setup] base_url=${API_BASE_URL}`);
+    log(`[setup] base_url=${env.PRINTR_API_BASE_URL}`);
 
     const printrClient = createPrintrClient({
-      apiKey: API_TOKEN!,
-      baseUrl: API_BASE_URL!,
+      apiKey: env.PRINTR_API_KEY!,
+      baseUrl: env.PRINTR_API_BASE_URL,
     });
 
     const server = new McpServer({ name: "printr-e2e", version: "0.1.0" });
@@ -122,10 +119,10 @@ describe.skipIf(!hasCredentials)("E2E: Printr API", () => {
   });
 
   describe("printr_get_token", () => {
-    it.skipIf(!API_TEST_TOKEN_ID)("returns token details for a known token", async () => {
+    it.skipIf(!env.PRINTR_TEST_TOKEN_ID)("returns token details for a known token", async () => {
       const result = await client.callTool({
         name: "printr_get_token",
-        arguments: { id: API_TEST_TOKEN_ID! },
+        arguments: { id: env.PRINTR_TEST_TOKEN_ID! },
       });
 
       logResult("get_token/known", result);
@@ -160,10 +157,10 @@ describe.skipIf(!hasCredentials)("E2E: Printr API", () => {
   });
 
   describe("printr_get_deployments", () => {
-    it.skipIf(!API_TEST_TOKEN_ID)("returns deployments for a known token", async () => {
+    it.skipIf(!env.PRINTR_TEST_TOKEN_ID)("returns deployments for a known token", async () => {
       const result = await client.callTool({
         name: "printr_get_deployments",
-        arguments: { id: API_TEST_TOKEN_ID! },
+        arguments: { id: env.PRINTR_TEST_TOKEN_ID! },
       });
 
       logResult("get_deployments/known", result);

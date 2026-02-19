@@ -57,7 +57,7 @@ const inputSchema = z.object({
 const outputSchema = z.object({
   token_id: z.string().describe("Cross-chain telecoin ID (hex)"),
   payload: z
-    .object({ hash: z.string().optional().describe("Payload hash") })
+    .object({ hash: z.string().nullish().describe("Payload hash") })
     .and(z.union([evmPayload, svmPayload]))
     .describe("Unsigned transaction payload"),
   quote: quoteOutput.describe("Full cost breakdown"),
@@ -72,7 +72,10 @@ export function registerCreateTokenTool(server: McpServer, client: PrintrClient)
         "signed by the creator's wallet and submitted on-chain. The payload will be EVM calldata " +
         "or Solana instructions depending on the home chain. " +
         "You need separate wallet infrastructure to sign and submit the transaction. " +
-        "Use printr_quote first to estimate costs.",
+        "Use printr_quote first to estimate costs. " +
+        "The response includes a token_id (telecoin ID, hex) which can be used to construct the " +
+        "trade page URL: https://app.printr.money/trade/{token_id}. " +
+        "Present this URL to the user after the transaction is confirmed.",
       inputSchema,
       outputSchema,
     },

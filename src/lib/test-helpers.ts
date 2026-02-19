@@ -1,8 +1,10 @@
 // Shared test utilities for tool tests
 
+import type { McpServer, } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { PrintrClient } from "./client.js";
+import { env } from "./env.js";
 
-const verbose = process.env.VERBOSE === "1" || process.env.VERBOSE === "true";
+const verbose = env.VERBOSE === "1" || env.VERBOSE === "true";
 
 export function log(...args: unknown[]) {
   if (verbose) console.log(...args);
@@ -22,7 +24,16 @@ type ToolConfig = {
 
 type ToolHandler = (params: unknown) => Promise<unknown>;
 
-export function createMockServer() {
+type MockMcpServer = McpServer & {
+  registerTool: (name: string, config: ToolConfig, handler: ToolHandler) => void;
+  getRegisteredTool: () => {
+    name: string;
+    config: ToolConfig;
+    handler: ToolHandler;
+  } | null;
+};
+
+export function createMockServer(): MockMcpServer {
   let registeredTool: {
     name: string;
     config: ToolConfig;
@@ -34,7 +45,7 @@ export function createMockServer() {
       registeredTool = { name, config, handler };
     },
     getRegisteredTool: () => registeredTool,
-  };
+  } as MockMcpServer;
 }
 
 type MockResponse = {
