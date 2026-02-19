@@ -1,8 +1,10 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { errAsync, okAsync } from "neverthrow";
 import { z } from "zod";
-
 import type { PrintrClient, paths } from "~/lib/client.js";
-import { toToolResponse, unwrapResult } from "~/lib/client.js";
+import { toToolResponseAsync, unwrapResultAsync } from "~/lib/client.js";
+import { env } from "~/lib/env.js";
+import { generateTokenImage, processImagePath } from "~/lib/image.js";
 import {
   caip2ChainId,
   caip10Address,
@@ -47,7 +49,20 @@ const inputSchema = z.object({
   name: z.string().min(1).max(32).describe("Token name"),
   symbol: z.string().min(1).max(10).describe("Token ticker symbol"),
   description: z.string().max(500).describe("Token description"),
-  image: z.string().describe("Base64-encoded image data (max 500KB). JPEG or PNG."),
+  image: z
+    .string()
+    .optional()
+    .describe(
+      "Base64-encoded image data (max 500KB). JPEG or PNG. Mutually exclusive with image_path.",
+    ),
+  image_path: z
+    .string()
+    .optional()
+    .describe(
+      "Absolute path to a local image file. The server reads, auto-compresses if needed, and " +
+        "encodes it. Mutually exclusive with image. If neither image nor image_path is provided " +
+        "and OPENROUTER_API_KEY is configured, an image is generated automatically.",
+    ),
   chains: z.array(caip2ChainId).min(1).describe("Chains to deploy on"),
   initial_buy: initialBuy,
   graduation_threshold_per_chain_usd: graduationThreshold,
@@ -57,8 +72,10 @@ const inputSchema = z.object({
 const outputSchema = z.object({
   token_id: z.string().describe("Cross-chain telecoin ID (hex)"),
   payload: z
-    .object({ hash: z.string().nullish().describe("Payload hash") })
-    .and(z.union([evmPayload, svmPayload]))
+    .union([
+      evmPayload.extend({ hash: z.string().nullish().describe("Payload hash") }),
+      svmPayload.extend({ hash: z.string().nullish().describe("Payload hash") }),
+    ])
     .describe("Unsigned transaction payload"),
   quote: quoteOutput.describe("Full cost breakdown"),
 });
@@ -73,6 +90,9 @@ export function registerCreateTokenTool(server: McpServer, client: PrintrClient)
         "or Solana instructions depending on the home chain. " +
         "You need separate wallet infrastructure to sign and submit the transaction. " +
         "Use printr_quote first to estimate costs. " +
+        "Supply image (base64) or image_path (local file path — auto-compressed). " +
+        "If neither is provided and OPENROUTER_API_KEY is set, an image is generated from the " +
+        "token name, symbol, and description. " +
         "The response includes a token_id (telecoin ID, hex) which can be used to construct the " +
         "trade page URL: https://app.printr.money/trade/{token_id}. " +
         "Present this URL to the user after the transaction is confirmed.",
@@ -80,9 +100,32 @@ export function registerCreateTokenTool(server: McpServer, client: PrintrClient)
       outputSchema,
     },
     async (params) => {
-      // Body is already validated by MCP inputSchema; response is fully typed
-      return toToolResponse(
-        unwrapResult(await client.POST("/print", { body: params as CreateTokenRequestBody })),
+      const { image, image_path, ...rest } = params;
+
+      const imageAsync = image
+        ? okAsync(image)
+        : image_path
+          ? processImagePath(image_path)
+          : env.OPENROUTER_API_KEY
+            ? generateTokenImage({
+                name: params.name,
+                symbol: params.symbol,
+                description: params.description,
+                openrouterApiKey: env.OPENROUTER_API_KEY,
+              })
+            : errAsync({
+                message:
+                  "No image provided. Supply image, image_path, or configure OPENROUTER_API_KEY for auto-generation.",
+              });
+
+      return toToolResponseAsync(
+        imageAsync.andThen((resolvedImage) =>
+          unwrapResultAsync(
+            client.POST("/print", {
+              body: { ...rest, image: resolvedImage } as CreateTokenRequestBody,
+            }),
+          ),
+        ),
       );
     },
   );

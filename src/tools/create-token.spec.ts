@@ -1,4 +1,7 @@
-import { describe, expect, it, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it, test } from "bun:test";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import sharp from "sharp";
 import {
   createMockClient,
   createMockServer,
@@ -6,6 +9,27 @@ import {
   mockSuccessResponse,
 } from "../lib/test-helpers.js";
 import { registerCreateTokenTool } from "./create-token.js";
+
+const TMP_DIR = "/tmp/printr-create-token-test";
+
+async function makeJpegFile(name: string, width = 64, height = 64): Promise<string> {
+  const buf = await sharp({
+    create: { width, height, channels: 3, background: { r: 200, g: 100, b: 50 } },
+  })
+    .jpeg({ quality: 80 })
+    .toBuffer();
+  const path = join(TMP_DIR, name);
+  await writeFile(path, buf);
+  return path;
+}
+
+beforeAll(async () => {
+  await mkdir(TMP_DIR, { recursive: true });
+});
+
+afterAll(async () => {
+  await rm(TMP_DIR, { recursive: true, force: true });
+});
 
 describe("registerCreateTokenTool", () => {
   const mockTokenResponse = {
@@ -73,6 +97,81 @@ describe("registerCreateTokenTool", () => {
 
       expect(capturedEndpoint).toBe("/print");
       expect(capturedBody).toEqual(params);
+    });
+
+    it("resolves image_path to a base64 image before calling the API", async () => {
+      const imagePath = await makeJpegFile("token.jpg");
+      let capturedBody: Record<string, unknown> | undefined;
+
+      const mockClient = createMockClient((_endpoint, options) => {
+        capturedBody = options?.body as Record<string, unknown>;
+        return Promise.resolve(mockSuccessResponse(mockTokenResponse));
+      });
+
+      const mockServer = createMockServer();
+      registerCreateTokenTool(mockServer as any, mockClient);
+
+      const tool = mockServer.getRegisteredTool();
+      const result = await tool?.handler({
+        creator_accounts: ["eip155:8453:0xcreator"],
+        name: "Test Token",
+        symbol: "TEST",
+        description: "A test token",
+        image_path: imagePath,
+        chains: ["eip155:8453"],
+        initial_buy: { spend_usd: 100 },
+      });
+
+      expect((result as any)?.isError).toBeUndefined();
+      // image_path must be stripped; image must be a non-empty base64 string
+      expect(capturedBody?.image_path).toBeUndefined();
+      expect(capturedBody?.image).toBeString();
+      expect((capturedBody?.image as string).length).toBeGreaterThan(0);
+    });
+
+    it("returns error for a non-existent image_path", async () => {
+      const mockClient = createMockClient(() =>
+        Promise.resolve(mockSuccessResponse(mockTokenResponse)),
+      );
+
+      const mockServer = createMockServer();
+      registerCreateTokenTool(mockServer as any, mockClient);
+
+      const tool = mockServer.getRegisteredTool();
+      const result = await tool?.handler({
+        creator_accounts: ["eip155:8453:0xcreator"],
+        name: "Test Token",
+        symbol: "TEST",
+        description: "A test token",
+        image_path: "/tmp/does-not-exist-99999.jpg",
+        chains: ["eip155:8453"],
+        initial_buy: { spend_usd: 100 },
+      });
+
+      expect((result as any)?.isError).toBe(true);
+      expect((result as any)?.content?.[0]?.text).toMatch(/Cannot read image file/);
+    });
+
+    it("returns error when no image source is available and OPENROUTER_API_KEY is unset", async () => {
+      const mockClient = createMockClient(() =>
+        Promise.resolve(mockSuccessResponse(mockTokenResponse)),
+      );
+
+      const mockServer = createMockServer();
+      registerCreateTokenTool(mockServer as any, mockClient);
+
+      const tool = mockServer.getRegisteredTool();
+      const result = await tool?.handler({
+        creator_accounts: ["eip155:8453:0xcreator"],
+        name: "Test Token",
+        symbol: "TEST",
+        description: "A test token",
+        chains: ["eip155:8453"],
+        initial_buy: { spend_usd: 100 },
+      });
+
+      expect((result as any)?.isError).toBe(true);
+      expect((result as any)?.content?.[0]?.text).toMatch(/No image provided/);
     });
 
     it("returns structured content on success", async () => {
