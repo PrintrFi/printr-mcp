@@ -1,6 +1,12 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { type CreateSessionInput, createSession, sessions, setResult, type TxResult } from "./sessions.js";
+import {
+  type CreateSessionInput,
+  createSession,
+  sessions,
+  setResult,
+  type TxResult,
+} from "./sessions.js";
 
 export function buildApp() {
   const app = new Hono();
@@ -34,9 +40,7 @@ export function buildApp() {
   app.put("/sessions/:token/result", async (c) => {
     const result = await c.req.json<TxResult>();
     const ok = setResult(c.req.param("token"), result);
-    return ok
-      ? c.json({ ok: true })
-      : c.json({ error: "Session not found or expired" }, 404);
+    return ok ? c.json({ ok: true }) : c.json({ error: "Session not found or expired" }, 404);
   });
 
   return app;

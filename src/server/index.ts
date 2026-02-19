@@ -2,7 +2,13 @@ import { createServer as createNetServer } from "node:net";
 import { serve } from "@hono/node-server";
 import { buildApp } from "./app.js";
 
-export { createSession, getSession, type ChainType, type TxResult, type TxSession } from "./sessions.js";
+export {
+  type ChainType,
+  createSession,
+  getSession,
+  type TxResult,
+  type TxSession,
+} from "./sessions.js";
 
 function isPortFree(port: number): Promise<boolean> {
   return new Promise((resolve) => {

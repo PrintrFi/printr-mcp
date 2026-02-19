@@ -1,6 +1,6 @@
 // Shared test utilities for tool tests
 
-import type { McpServer, } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { PrintrClient } from "./client.js";
 import { env } from "./env.js";
 

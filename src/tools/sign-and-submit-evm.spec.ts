@@ -25,7 +25,9 @@ describe("registerSignAndSubmitEvmTool", () => {
 
   it("registers tool with a description", () => {
     const mockServer = createMockServer();
-    registerSignAndSubmitEvmTool(mockServer as unknown as Parameters<typeof registerSignAndSubmitEvmTool>[0]);
+    registerSignAndSubmitEvmTool(
+      mockServer as unknown as Parameters<typeof registerSignAndSubmitEvmTool>[0],
+    );
 
     const tool = mockServer.getRegisteredTool();
     expect(tool?.config.description).toBeString();

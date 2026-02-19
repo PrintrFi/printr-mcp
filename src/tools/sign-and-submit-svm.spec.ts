@@ -43,9 +43,7 @@ describe("registerSignAndSubmitSvmTool", () => {
   describe("input schema validation", () => {
     it("accepts valid input with rpc_url", () => {
       const mockServer = createMockServer();
-      registerSignAndSubmitSvmTool(
-        mockServer,
-      );
+      registerSignAndSubmitSvmTool(mockServer);
 
       const tool = mockServer.getRegisteredTool();
       const schema = tool?.config.inputSchema as z.ZodObject<z.ZodRawShape>;
@@ -60,9 +58,7 @@ describe("registerSignAndSubmitSvmTool", () => {
 
     it("accepts valid input without rpc_url (optional)", () => {
       const mockServer = createMockServer();
-      registerSignAndSubmitSvmTool(
-        mockServer,
-      );
+      registerSignAndSubmitSvmTool(mockServer);
 
       const tool = mockServer.getRegisteredTool();
       const schema = tool?.config.inputSchema as z.ZodObject<z.ZodRawShape>;
@@ -76,9 +72,7 @@ describe("registerSignAndSubmitSvmTool", () => {
 
     it("rejects missing private_key", () => {
       const mockServer = createMockServer();
-      registerSignAndSubmitSvmTool(
-        mockServer,
-      );
+      registerSignAndSubmitSvmTool(mockServer);
 
       const tool = mockServer.getRegisteredTool();
       const schema = tool?.config.inputSchema as z.ZodObject<z.ZodRawShape>;
@@ -89,9 +83,7 @@ describe("registerSignAndSubmitSvmTool", () => {
 
     it("rejects empty ixs array", () => {
       const mockServer = createMockServer();
-      registerSignAndSubmitSvmTool(
-        mockServer,
-      );
+      registerSignAndSubmitSvmTool(mockServer);
 
       const tool = mockServer.getRegisteredTool();
       const schema = tool?.config.inputSchema as z.ZodObject<z.ZodRawShape>;
@@ -105,9 +97,7 @@ describe("registerSignAndSubmitSvmTool", () => {
 
     it("rejects invalid rpc_url", () => {
       const mockServer = createMockServer();
-      registerSignAndSubmitSvmTool(
-        mockServer,
-      );
+      registerSignAndSubmitSvmTool(mockServer);
 
       const tool = mockServer.getRegisteredTool();
       const schema = tool?.config.inputSchema as z.ZodObject<z.ZodRawShape>;
@@ -124,9 +114,7 @@ describe("registerSignAndSubmitSvmTool", () => {
   describe("handler", () => {
     it("returns isError when given an invalid base58 private key", async () => {
       const mockServer = createMockServer();
-      registerSignAndSubmitSvmTool(
-        mockServer,
-      );
+      registerSignAndSubmitSvmTool(mockServer);
 
       const tool = mockServer.getRegisteredTool();
       const result = (await tool?.handler({

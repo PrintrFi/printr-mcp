@@ -52,9 +52,7 @@ export async function signAndSubmitSvm(
 
   let altAccounts: AddressLookupTableAccount[] = [];
   if (payload.lookup_table) {
-    const altResponse = await connection.getAddressLookupTable(
-      new PublicKey(payload.lookup_table),
-    );
+    const altResponse = await connection.getAddressLookupTable(new PublicKey(payload.lookup_table));
     if (altResponse.value) {
       altAccounts = [altResponse.value];
     }

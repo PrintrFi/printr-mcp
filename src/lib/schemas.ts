@@ -4,7 +4,7 @@ export const caip2ChainId = z
   .string()
   .describe(
     "CAIP-2 chain ID (e.g. 'eip155:8453' for Base, " +
-    "'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' for Solana)",
+      "'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' for Solana)",
   );
 
 export const caip10Address = z.string().describe("CAIP-10 address (e.g. 'eip155:8453:0x742d...')");

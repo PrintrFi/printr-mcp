@@ -1,10 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import {
-  createSession,
-  getSession,
-  startSessionServer,
-  type TxResult,
-} from "./";
+import { createSession, getSession, startSessionServer, type TxResult } from "./";
 
 // ---------------------------------------------------------------------------
 // Session store (unit)
@@ -35,10 +30,7 @@ describe("createSession", () => {
       token_id: "0x1",
     });
     const thirtyMin = 30 * 60 * 1000;
-    expect(session.expires_at - session.created_at).toBeWithin(
-      thirtyMin - 100,
-      thirtyMin + 100,
-    );
+    expect(session.expires_at - session.created_at).toBeWithin(thirtyMin - 100, thirtyMin + 100);
     expect(session.created_at).toBeGreaterThanOrEqual(before);
   });
 
@@ -122,7 +114,7 @@ describe("startSessionServer", () => {
         body: JSON.stringify({ chain_type: "evm", payload: {}, token_id: "0x1" }),
       });
       expect(res.status).toBe(201);
-      const body = await res.json() as { token: string; expires_at: number };
+      const body = (await res.json()) as { token: string; expires_at: number };
       expect(body.token).toBeString();
       expect(body.expires_at).toBeNumber();
     });
@@ -143,7 +135,7 @@ describe("startSessionServer", () => {
 
       const res = await fetch(`${base}/sessions/${session.token}`);
       expect(res.status).toBe(200);
-      const body = await res.json() as { chain_type: string; token_id: string };
+      const body = (await res.json()) as { chain_type: string; token_id: string };
       expect(body.chain_type).toBe("svm");
       expect(body.token_id).toBe("0x2");
     });
@@ -180,7 +172,7 @@ describe("startSessionServer", () => {
       });
 
       const getRes = await fetch(`${base}/sessions/${session.token}`);
-      const body = await getRes.json() as { result: TxResult };
+      const body = (await getRes.json()) as { result: TxResult };
       expect(body.result?.status).toBe("success");
       expect(body.result?.tx_hash).toBe("0xabc123");
     });
