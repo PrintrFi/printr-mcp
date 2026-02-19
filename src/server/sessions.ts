@@ -2,11 +2,20 @@ import { randomUUID } from "node:crypto";
 
 export type ChainType = "evm" | "svm";
 
+export type TokenMeta = {
+  name: string;
+  symbol: string;
+  description?: string;
+  image_url?: string;
+};
+
 export type TxResult = {
   status: "success" | "failed";
   tx_hash?: string;
   signature?: string;
   error?: string;
+  /** Base64-encoded replacement image, set when the user updates the token image in the web signer. */
+  image_data?: string;
 };
 
 export type TxSession = {
@@ -14,6 +23,7 @@ export type TxSession = {
   chain_type: ChainType;
   payload: unknown;
   token_id: string;
+  token_meta?: TokenMeta;
   rpc_url?: string;
   created_at: number;
   expires_at: number;
