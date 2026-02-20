@@ -23,6 +23,7 @@
     "dev": "bun --hot src/index.ts",
     "dev:stub-session": "bun scripts/stub-session.ts",
     "start": "bun src/index.ts",
+    "inspect": "bunx @modelcontextprotocol/inspector bun src/index.ts",
     "test": "bun test src/lib src/server src/tools src/integration.spec.ts",
     "test:coverage": "bun test --coverage --coverage-reporter=lcov src/lib src/server src/tools src/integration.spec.ts",
     "test:e2e": "bun test src/e2e.spec.ts",
@@ -33,12 +34,16 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "check": "bun typecheck && bun lint && bun test",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "bun run build",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.2",
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
     "@types/bun": "latest",
     "@types/sharp": "^0.32.0",
+    "husky": "^9.1.7",
     "openapi-typescript": "^7.6.0"
   },
   "peerDependencies": {
