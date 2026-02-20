@@ -145,7 +145,7 @@ The workflow then runs typecheck → tests → build → `npm publish`, and crea
 | `PRINTR_APP_URL`         | No       | Override Printr web app URL (default: `https://app.printr.money`)                             |
 | `PRINTR_TEST_TOKEN_ID`   | No       | Known token ID used in E2E tests for `get_token` / `get_deployments`                          |
 | `OPENROUTER_API_KEY`     | No       | Enables auto-generated token images via OpenRouter when no `image`/`image_path` is supplied   |
-| `OPENROUTER_IMAGE_MODEL` | No       | OpenRouter model for image generation (default: `gemini/gemini-2.5-flash-image`)              |
+| `OPENROUTER_IMAGE_MODEL` | No       | OpenRouter model for image generation (default: `google/gemini-2.5-flash-image`)              |
 
 ## Documentation References
 

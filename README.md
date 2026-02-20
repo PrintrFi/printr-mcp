@@ -72,5 +72,5 @@ bun test
 | `EVM_WALLET_PRIVATE_KEY`  | No       | Default EVM hex private key — avoids passing it per call to `printr_sign_and_submit_evm` |
 | `SVM_WALLET_PRIVATE_KEY`  | No       | Default Solana base58 keypair secret — avoids passing it per call to `printr_sign_and_submit_svm` |
 | `OPENROUTER_API_KEY`      | No       | Enables `printr_generate_image` and auto image generation in `printr_create_token` |
-| `OPENROUTER_IMAGE_MODEL`  | No       | Image model used for generation (default: `gemini/gemini-2.5-flash-image`) |
+| `OPENROUTER_IMAGE_MODEL`  | No       | Image model used for generation (default: `google/gemini-2.5-flash-image`) |
 | `VERBOSE`                 | No       | Set to `1` or `true` to enable verbose test/debug logging              |
