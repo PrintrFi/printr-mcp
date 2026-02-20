@@ -17,12 +17,30 @@ MCP server for [Printr](https://printr.money) — enables AI agents to create, d
 
 ## Setup
 
+Add to your MCP client config (Claude Desktop, Cursor, etc.):
+
 ```json
 {
     "mcpServers": {
         "printr": {
-            "command": "bun",
-            "args": ["run", "/path/to/printr-mcp/src/index.ts"],
+            "command": "bunx",
+            "args": ["@printr/mcp@latest"],
+            "env": {
+                "PRINTR_API_KEY": "<your-api-key>"
+            }
+        }
+    }
+}
+```
+
+Or with `npx`:
+
+```json
+{
+    "mcpServers": {
+        "printr": {
+            "command": "npx",
+            "args": ["-y", "@printr/mcp@latest"],
             "env": {
                 "PRINTR_API_KEY": "<your-api-key>"
             }
