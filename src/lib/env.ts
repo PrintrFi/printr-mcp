@@ -9,6 +9,8 @@ const schema = z.object({
   OPENROUTER_IMAGE_MODEL: z.string().default("gemini/gemini-2.5-flash-image"),
   EVM_WALLET_PRIVATE_KEY: z.string().optional(),
   SVM_WALLET_PRIVATE_KEY: z.string().optional(),
+  AGENT_MODE: z.string().optional(),
+  PRINTR_WALLET_STORE: z.string().optional(),
   VERBOSE: z.string().optional(),
 });
 

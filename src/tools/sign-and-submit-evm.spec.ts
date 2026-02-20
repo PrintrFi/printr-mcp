@@ -148,7 +148,7 @@ describe("registerSignAndSubmitEvmTool", () => {
         })) as { isError?: boolean; content: { text: string }[] };
 
         expect(result.isError).toBe(true);
-        expect(result.content[0]?.text).toInclude("EVM_WALLET_PRIVATE_KEY");
+        expect(result.content[0]?.text).toInclude("private_key");
       },
     );
   });
