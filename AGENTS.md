@@ -105,6 +105,37 @@ Each MCP tool lives in `src/tools/<name>.ts` and exports a `register*Tool(server
 - Keep messages terse — one line, no body unless essential
 - No co-author trailers
 
+Commit messages are validated locally by [commitlint](https://commitlint.js.org/) via the `commit-msg` Husky hook. Invalid messages are rejected before the commit is created.
+
+## Quality Gates
+
+Enforced locally via [Husky](https://typicode.github.io/husky/):
+
+| Hook | Command | Runs on |
+| ------------ | -------------- | -------------- |
+| `commit-msg` | `commitlint` | every commit |
+| `pre-commit` | `bun test` | every commit |
+
+Config: [`commitlint.config.cjs`](./commitlint.config.cjs)
+
+## Release
+
+Releases are published to npm automatically via GitHub Actions (`.github/workflows/release.yml`) when a version tag is pushed.
+
+**To cut a release:**
+
+```sh
+# 1. bump version in package.json
+# 2. commit the bump
+git commit -m "chore(release): bump version to x.y.z"
+# 3. tag and push
+git tag vx.y.z && git push && git push --tags
+```
+
+The workflow then runs typecheck → tests → build → `npm publish`, and creates a GitHub Release with auto-generated notes from commits.
+
+**Required secret:** `NPM_TOKEN` — an npm Automation token added to repo Settings → Secrets → Actions.
+
 ## Environment Variables
 
 | Variable                 | Required | Description                                                                                    |
