@@ -12,6 +12,8 @@ const schema = z.object({
   // dev only
   PRINTR_APP_URL: z.string().default("https://app.printr.money"),
   VERBOSE: z.string().optional(),
+  // e2e only
+  PRINTR_TEST_TOKEN_ID: z.string().optional(),
 });
 
 export type Env = z.infer<typeof schema>;
