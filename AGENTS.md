@@ -143,7 +143,6 @@ The workflow then runs typecheck → tests → build → `npm publish`, and crea
 | `PRINTR_API_KEY`         | Yes      | Partner API key (Bearer JWT)                                                                   |
 | `PRINTR_API_BASE_URL`    | No       | Override API base URL (default: `https://api-preview.printr.money`)                           |
 | `PRINTR_APP_URL`         | No       | Override Printr web app URL (default: `https://app.printr.money`)                             |
-| `PRINTR_TEST_TOKEN_ID`   | No       | Known token ID used in E2E tests for `get_token` / `get_deployments`                          |
 | `OPENROUTER_API_KEY`     | No       | Enables auto-generated token images via OpenRouter when no `image`/`image_path` is supplied   |
 | `OPENROUTER_IMAGE_MODEL` | No       | OpenRouter model for image generation (default: `google/gemini-2.5-flash-image`)              |
 
