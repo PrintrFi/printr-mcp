@@ -48,7 +48,8 @@ export const WalletNewPage: FC<Props> = ({ token, base, address, privateKeyTemp 
         </p>
 
         <div class="bg-amber-950/50 border border-amber-800 rounded-lg px-4 py-3 text-amber-400 text-xs mb-5">
-          ⚠ Back up your private key now. Anyone with this key can spend your funds. Store it somewhere safe and offline.
+          ⚠ Back up your private key now. Anyone with this key can spend your funds. Store it
+          somewhere safe and offline.
         </div>
 
         <div class="mb-4">
@@ -78,13 +79,18 @@ export const WalletNewPage: FC<Props> = ({ token, base, address, privateKeyTemp 
           </div>
         </div>
 
-        <label for="backed-up" class="flex items-start gap-2 cursor-pointer text-xs text-zinc-400 mb-4">
-          <input type="checkbox" id="backed-up" x-model="backedUp" class="mt-0.5 flex-shrink-0" />
-          I have securely backed up my private key
+        <label
+          for="backed-up"
+          class="flex items-start gap-2 cursor-pointer text-xs text-zinc-400 mb-4"
+        >
+          <input type="checkbox" id="backed-up" x-model="backedUp" class="mt-0.5 flex-shrink-0" />I
+          have securely backed up my private key
         </label>
 
         <div class="mb-4">
-          <label class="block text-xs text-zinc-400 mb-1.5" for="label">Wallet label</label>
+          <label class="block text-xs text-zinc-400 mb-1.5" for="label">
+            Wallet label
+          </label>
           <input
             type="text"
             id="label"
@@ -95,7 +101,9 @@ export const WalletNewPage: FC<Props> = ({ token, base, address, privateKeyTemp 
         </div>
 
         <div class="mb-4">
-          <label class="block text-xs text-zinc-400 mb-1.5" for="password">Keystore password</label>
+          <label class="block text-xs text-zinc-400 mb-1.5" for="password">
+            Keystore password
+          </label>
           <input
             type="password"
             id="password"
@@ -112,7 +120,9 @@ export const WalletNewPage: FC<Props> = ({ token, base, address, privateKeyTemp 
           x-bind="{ disabled: !canSubmit || loading }"
           class="w-full mt-2 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-default rounded-lg text-white text-sm font-medium transition-colors"
         >
-          <span x-text="loading ? 'Saving\u2026' : 'Save \u0026 continue'">Save &amp; continue</span>
+          <span x-text="loading ? 'Saving\u2026' : 'Save \u0026 continue'">
+            Save &amp; continue
+          </span>
         </button>
 
         <div

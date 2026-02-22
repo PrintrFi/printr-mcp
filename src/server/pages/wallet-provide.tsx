@@ -54,11 +54,14 @@ export const WalletProvidePage: FC<Props> = ({ token, base }) => (
       <div x-show="!success">
         <h1 class="text-lg font-semibold mb-1">Provide a Private Key</h1>
         <p class="text-sm text-zinc-500 mb-6">
-          Enter your existing wallet private key. It will be used to sign the transaction and never shared.
+          Enter your existing wallet private key. It will be used to sign the transaction and never
+          shared.
         </p>
 
         <div class="mb-4">
-          <label class="block text-xs text-zinc-400 mb-1.5" for="private-key">Private Key</label>
+          <label class="block text-xs text-zinc-400 mb-1.5" for="private-key">
+            Private Key
+          </label>
           <input
             type="password"
             id="private-key"
@@ -69,14 +72,19 @@ export const WalletProvidePage: FC<Props> = ({ token, base }) => (
           />
         </div>
 
-        <label for="save-toggle" class="flex items-center gap-2 cursor-pointer text-xs text-zinc-400 mt-2">
+        <label
+          for="save-toggle"
+          class="flex items-center gap-2 cursor-pointer text-xs text-zinc-400 mt-2"
+        >
           <input type="checkbox" id="save-toggle" x-model="save" class="rounded" />
           Save this wallet to keystore
         </label>
 
         <div x-show="save" class="mt-3 space-y-3">
           <div>
-            <label class="block text-xs text-zinc-400 mb-1.5" for="label">Wallet label</label>
+            <label class="block text-xs text-zinc-400 mb-1.5" for="label">
+              Wallet label
+            </label>
             <input
               type="text"
               id="label"
@@ -86,7 +94,9 @@ export const WalletProvidePage: FC<Props> = ({ token, base }) => (
             />
           </div>
           <div>
-            <label class="block text-xs text-zinc-400 mb-1.5" for="password">Keystore password</label>
+            <label class="block text-xs text-zinc-400 mb-1.5" for="password">
+              Keystore password
+            </label>
             <input
               type="password"
               id="password"

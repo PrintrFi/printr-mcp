@@ -7,6 +7,10 @@ import { privateKeyToAccount } from "viem/accounts";
 import { checkEvmBalance, checkSvmBalance } from "~/lib/balance.js";
 import { normalisePrivateKey, parseEvmCaip10 } from "~/lib/evm.js";
 import { addWallet, decryptKey, encryptKey, getWallet } from "~/lib/keystore.js";
+import { renderPage } from "./pages/layout.js";
+import { WalletNewPage } from "./pages/wallet-new.js";
+import { WalletProvidePage } from "./pages/wallet-provide.js";
+import { WalletUnlockPage } from "./pages/wallet-unlock.js";
 import {
   type CreateSessionInput,
   createSession,
@@ -15,10 +19,6 @@ import {
   type TxResult,
 } from "./sessions.js";
 import { activeWallets, getWalletSession, setWalletSessionResult } from "./wallet-sessions.js";
-import { WalletNewPage } from "./pages/wallet-new.js";
-import { WalletProvidePage } from "./pages/wallet-provide.js";
-import { WalletUnlockPage } from "./pages/wallet-unlock.js";
-import { renderPage } from "./pages/layout.js";
 
 type ChainType = "evm" | "svm";
 
@@ -42,6 +42,13 @@ async function checkBalance(address: string, type: ChainType, chain: string) {
 export function buildApp() {
   const app = new Hono();
 
+  // Allow HTTPS origins (e.g. app.printr.money) to fetch this localhost server.
+  // The PNA preflight sends Access-Control-Request-Private-Network: true and
+  // requires the response to echo Access-Control-Allow-Private-Network: true.
+  app.use("*", async (c, next) => {
+    await next();
+    c.header("Access-Control-Allow-Private-Network", "true");
+  });
   app.use("*", cors());
 
   // ── Health ───────────────────────────────────────────────────────────────
@@ -95,14 +102,28 @@ export function buildApp() {
     const base = c.req.query("api") ? decodeURIComponent(c.req.query("api")!) : "";
 
     const session = getWalletSession(token);
-    if (!session?.walletId) return c.html(renderPage(<WalletUnlockPage token={token} base={base} label="Session not found" address="" />), 404);
+    if (!session?.walletId)
+      return c.html(
+        renderPage(
+          <WalletUnlockPage token={token} base={base} label="Session not found" address="" />,
+        ),
+        404,
+      );
 
     const entry = getWallet(session.walletId);
-    if (!entry) return c.html(renderPage(<WalletUnlockPage token={token} base={base} label="Wallet not found" address="" />), 404);
+    if (!entry)
+      return c.html(
+        renderPage(
+          <WalletUnlockPage token={token} base={base} label="Wallet not found" address="" />,
+        ),
+        404,
+      );
 
-    return c.html(renderPage(
-      <WalletUnlockPage token={token} base={base} label={entry.label} address={entry.address} />,
-    ));
+    return c.html(
+      renderPage(
+        <WalletUnlockPage token={token} base={base} label={entry.label} address={entry.address} />,
+      ),
+    );
   });
 
   app.post("/wallet/unlock/:token", async (c) => {
@@ -186,14 +207,16 @@ export function buildApp() {
       return c.html(renderPage(<WalletProvidePage token={token} base={base} />), 404);
     }
 
-    return c.html(renderPage(
-      <WalletNewPage
-        token={token}
-        base={base}
-        address={session.address}
-        privateKeyTemp={session.privateKeyTemp}
-      />,
-    ));
+    return c.html(
+      renderPage(
+        <WalletNewPage
+          token={token}
+          base={base}
+          address={session.address}
+          privateKeyTemp={session.privateKeyTemp}
+        />,
+      ),
+    );
   });
 
   app.post("/wallet/new/:token/confirm", async (c) => {

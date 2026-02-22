@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import type { z } from "zod";
 import { createMockServer } from "../lib/test-helpers.js";
+import { LOCAL_SESSION_ORIGIN } from "../server/index.js";
 import { registerOpenWebSignerTool } from "./open-web-signer.js";
 
 const MOCK_EVM_PAYLOAD = {
@@ -111,7 +112,7 @@ describe("registerOpenWebSignerTool", () => {
       const result = await callHandler();
       const url = new URL(result.structuredContent?.url as string);
       expect(url.searchParams.get("session")).toBeString();
-      expect(url.searchParams.get("api")).toStartWith("http://localhost:");
+      expect(url.searchParams.get("api")).toStartWith(`${LOCAL_SESSION_ORIGIN}:`);
     });
 
     it("returns session_token, api_port, and expires_at", async () => {

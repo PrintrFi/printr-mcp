@@ -15,7 +15,8 @@
     "printr-mcp": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "certs"
   ],
   "scripts": {
     "generate:api": "bunx openapi-typescript ../printr/backend/golang/spec/omegastar/v0/openapi.yml -o src/api.gen.d.ts",

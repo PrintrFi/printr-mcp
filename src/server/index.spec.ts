@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { createSession, getSession, startSessionServer, type TxResult } from "./";
+import {
+  createSession,
+  getSession,
+  LOCAL_SESSION_ORIGIN,
+  startSessionServer,
+  type TxResult,
+} from "./";
 
 // ---------------------------------------------------------------------------
 // Session store (unit)
@@ -84,7 +90,7 @@ describe("startSessionServer", () => {
 
   beforeEach(async () => {
     port = await startSessionServer();
-    base = `http://localhost:${port}`;
+    base = `${LOCAL_SESSION_ORIGIN}:${port}`;
   });
 
   it("returns a numeric port in range 5174–5200", () => {

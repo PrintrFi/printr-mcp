@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import { env } from "~/lib/env.js";
-import { createSession, startSessionServer } from "~/server";
+import { createSession, LOCAL_SESSION_ORIGIN, startSessionServer } from "~/server";
 
 const tokenMeta = z.object({
   name: z.string().describe("Token name"),
@@ -52,7 +52,7 @@ export function registerOpenWebSignerTool(server: McpServer): void {
         const session = createSession({ chain_type, payload, token_id, token_meta, rpc_url });
 
         const appBase = env.PRINTR_APP_URL;
-        const apiUrl = `http://localhost:${port}`;
+        const apiUrl = `${LOCAL_SESSION_ORIGIN}:${port}`;
         const url = `${appBase}/sign?session=${session.token}&api=${encodeURIComponent(apiUrl)}`;
 
         const result = {

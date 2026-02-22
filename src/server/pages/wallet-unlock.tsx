@@ -46,7 +46,9 @@ export const WalletUnlockPage: FC<Props> = ({ token, base, label, address }) => 
         </div>
 
         <div class="mb-4">
-          <label class="block text-xs text-zinc-400 mb-1.5" for="password">Password</label>
+          <label class="block text-xs text-zinc-400 mb-1.5" for="password">
+            Password
+          </label>
           <input
             type="password"
             id="password"

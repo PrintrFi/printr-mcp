@@ -9,10 +9,10 @@
  * The web app URL defaults to http://localhost:3000; override with PRINTR_APP_URL.
  */
 
-import { createSession, startSessionServer } from "../src/server/index.js";
+import { LOCAL_SESSION_ORIGIN, createSession, startSessionServer } from "../src/server/index.js";
 
 const isEvm = Bun.argv.includes("--evm");
-const appUrl = Bun.env.PRINTR_APP_URL ?? "http://localhost:3000";
+const appUrl = Bun.env.PRINTR_APP_URL ?? "https://app.printr.money";
 
 const TOKEN_ID = "0x1ae6a983dd953c47ff71e4ef82101bc5da66686ef7e25e05ef9e576a14c7c802";
 const IMAGE_URL = `https://cdn.printr.money/t/${TOKEN_ID}/media/image`;
@@ -102,7 +102,7 @@ const session = createSession({
     : "https://api.mainnet-beta.solana.com",
 });
 
-const apiUrl = `http://localhost:${port}`;
+const apiUrl = `${LOCAL_SESSION_ORIGIN}:${port}`;
 const signUrl = `${appUrl}/sign?session=${session.token}&api=${encodeURIComponent(apiUrl)}`;
 
 console.log();
