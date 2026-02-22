@@ -19,6 +19,7 @@
     "certs"
   ],
   "scripts": {
+    "certs:renew": "sh scripts/renew-certs.sh",
     "generate:api": "bunx openapi-typescript ../printr/backend/golang/spec/omegastar/v0/openapi.yml -o src/api.gen.d.ts",
     "build": "bun build src/index.ts --outdir dist --target node --format esm && tsc --emitDeclarationOnly --outDir dist && chmod +x dist/index.js",
     "dev": "bun --hot src/index.ts",
