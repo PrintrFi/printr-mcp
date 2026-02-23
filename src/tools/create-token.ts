@@ -1,10 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { errAsync, okAsync } from "neverthrow";
 import { z } from "zod";
-import type { PrintrClient, paths } from "~/lib/client.js";
-import { toToolResponseAsync, unwrapResultAsync } from "~/lib/client.js";
-import { env } from "~/lib/env.js";
-import { generateTokenImage, processImagePath } from "~/lib/image.js";
+import type { PrintrClient } from "~/lib/client.js";
+import { toToolResponseAsync } from "~/lib/client.js";
 import {
   caip2ChainId,
   caip10Address,
@@ -13,8 +10,7 @@ import {
   initialBuy,
   quoteOutput,
 } from "~/lib/schemas.js";
-
-type CreateTokenRequestBody = paths["/print"]["post"]["requestBody"]["content"]["application/json"];
+import { buildToken } from "~/lib/token.js";
 
 const evmPayload = z.object({
   to: z.string().describe("Target contract (CAIP-10)"),
@@ -60,8 +56,8 @@ const inputSchema = z.object({
     .optional()
     .describe(
       "Absolute path to a local image file. The server reads, auto-compresses if needed, and " +
-        "encodes it. Mutually exclusive with image. If neither image nor image_path is provided " +
-        "and OPENROUTER_API_KEY is configured, an image is generated automatically.",
+      "encodes it. Mutually exclusive with image. If neither image nor image_path is provided " +
+      "and OPENROUTER_API_KEY is configured, an image is generated automatically.",
     ),
   chains: z.array(caip2ChainId).min(1).describe("Chains to deploy on"),
   initial_buy: initialBuy,
@@ -99,34 +95,6 @@ export function registerCreateTokenTool(server: McpServer, client: PrintrClient)
       inputSchema,
       outputSchema,
     },
-    async (params) => {
-      const { image, image_path, ...rest } = params;
-
-      const imageAsync = image
-        ? okAsync(image)
-        : image_path
-          ? processImagePath(image_path)
-          : env.OPENROUTER_API_KEY
-            ? generateTokenImage({
-                name: params.name,
-                symbol: params.symbol,
-                description: params.description,
-                openrouterApiKey: env.OPENROUTER_API_KEY,
-              })
-            : errAsync({
-                message:
-                  "No image provided. Supply image, image_path, or configure OPENROUTER_API_KEY for auto-generation.",
-              });
-
-      return toToolResponseAsync(
-        imageAsync.andThen((resolvedImage) =>
-          unwrapResultAsync(
-            client.POST("/print", {
-              body: { ...rest, image: resolvedImage } as CreateTokenRequestBody,
-            }),
-          ),
-        ),
-      );
-    },
+    (params) => toToolResponseAsync(buildToken(params, client)),
   );
 }

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "printr": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["run", "src/index.ts"],
+      "env": {
+        "PRINTR_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhaS1pbnRlZ3JhdGlvbiJ9.PZsqfleSmSiAra8jiN3JZvDSonoawQLnvYRyPHDbtRg",
+        "OPENROUTER_API_KEY": "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"
+      }
+    }
+  }
+}

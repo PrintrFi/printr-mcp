@@ -8,6 +8,7 @@ import { registerCreateTokenTool } from "~/tools/create-token.js";
 import { registerGenerateImageTool } from "~/tools/generate-image.js";
 import { registerGetDeploymentsTool } from "~/tools/get-deployments.js";
 import { registerGetTokenTool } from "~/tools/get-token.js";
+import { registerLaunchTokenTool } from "~/tools/launch-token.js";
 import { registerOpenWebSignerTool } from "~/tools/open-web-signer.js";
 import { registerQuoteTool } from "~/tools/quote.js";
 import { registerSignAndSubmitEvmTool } from "~/tools/sign-and-submit-evm.js";
@@ -16,7 +17,7 @@ import { registerSignAndSubmitSvmTool } from "~/tools/sign-and-submit-svm.js";
 if (!env.PRINTR_API_KEY) {
   console.error(
     "PRINTR_API_KEY environment variable is required. " +
-      "Get your API key from the Printr partner portal.",
+    "Get your API key from the Printr partner portal.",
   );
   process.exit(1);
 }
@@ -33,6 +34,7 @@ const server = new McpServer({
 
 registerQuoteTool(server, client);
 registerCreateTokenTool(server, client);
+registerLaunchTokenTool(server, client);
 registerGetTokenTool(server, client);
 registerGetDeploymentsTool(server, client);
 registerSignAndSubmitEvmTool(server);

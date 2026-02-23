@@ -11,6 +11,7 @@ const schema = z.object({
   PRINTR_WALLET_STORE: z.string().optional(),
   // dev only
   PRINTR_APP_URL: z.string().default("https://app.printr.money"),
+  PRINTR_CDN_URL: z.string().default("https://cdn.printr.money"),
   VERBOSE: z.string().optional(),
   // e2e only
   PRINTR_TEST_TOKEN_ID: z.string().optional(),
