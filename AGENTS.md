@@ -120,19 +120,17 @@ Config: [`commitlint.config.cjs`](./commitlint.config.cjs)
 
 ## Release
 
-Releases are published to npm automatically via GitHub Actions (`.github/workflows/release.yml`) when a version tag is pushed.
+Releases are automated via [release-please](https://github.com/googleapis/release-please). When conventional commits land on `main`, release-please opens a PR that:
 
-**To cut a release:**
+1. Bumps version in `package.json` based on commit types (`feat` → minor, `fix` → patch)
+2. Updates `CHANGELOG.md` with grouped changes
+3. Updates `.release-please-manifest.json`
 
-```sh
-# 1. bump version in package.json
-# 2. commit the bump
-git commit -m "chore(release): bump version to x.y.z"
-# 3. tag and push
-git tag vx.y.z && git push && git push --tags
-```
+**To release:** merge the release PR. This triggers the publish job which runs typecheck → tests → build → `npm publish` and creates a GitHub Release.
 
-The workflow then runs typecheck → tests → build → `npm publish`, and creates a GitHub Release with auto-generated notes from commits.
+**Configuration files:**
+- `release-please-config.json` — release-please settings
+- `.release-please-manifest.json` — tracks current version
 
 **Required secret:** `NPM_TOKEN` — an npm Automation token added to repo Settings → Secrets → Actions.
 
