@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/PrintrFi/printr-mcp/compare/v0.2.1...v0.2.2) (2026-02-24)
+
+
+### Bug Fixes
+
+* **server:** read version from package.json instead of hardcoded string ([161e509](https://github.com/PrintrFi/printr-mcp/commit/161e50950d2c6762f05e2d33ac46751654cc6173))
+
 ## [0.2.1](https://github.com/PrintrFi/printr-mcp/compare/v0.2.0...v0.2.1) (2026-02-24)
 
 
