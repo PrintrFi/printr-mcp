@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/PrintrFi/printr-mcp/compare/v0.2.0...v0.2.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* **env:** apply default public ai-integration api key ([9d64670](https://github.com/PrintrFi/printr-mcp/commit/9d64670105b692723444c56fe33733b3ff372240))
+
 ## [0.2.0](https://github.com/PrintrFi/printr-mcp/compare/v0.1.0...v0.2.0) (2026-02-24)
 
 ### Features
