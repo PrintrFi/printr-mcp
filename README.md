@@ -73,15 +73,20 @@ By default, token creation returns an unsigned transaction that you sign via bro
 
 ## Environment variables
 
-| Variable                  | Required | Description                                                            |
-| ------------------------- | -------- | ---------------------------------------------------------------------- |
-| `PRINTR_API_KEY`          | No       | Partner API key. Falls back to the default public AI-integration key.  |
-| `OPENROUTER_API_KEY`      | No       | Enables auto image generation and the `printr_generate_image` tool     |
-| `OPENROUTER_IMAGE_MODEL`  | No       | Image model override (default: `google/gemini-2.5-flash-image`)        |
-| `EVM_WALLET_PRIVATE_KEY`  | No       | Default EVM private key for autonomous signing                         |
-| `SVM_WALLET_PRIVATE_KEY`  | No       | Default Solana keypair secret for autonomous signing                   |
-| `PRINTR_API_BASE_URL`     | No       | Override API base URL (default: `https://api-preview.printr.money`)    |
-| `PRINTR_APP_URL`          | No       | Override app URL (default: `https://app.printr.money`)                 |
+| Variable                  | Description                                                            |
+| ------------------------- | ---------------------------------------------------------------------- |
+| `PRINTR_API_KEY`          | Partner API key. Falls back to the default public AI-integration key.  |
+| `OPENROUTER_API_KEY`      | Enables auto image generation and the `printr_generate_image` tool     |
+| `OPENROUTER_IMAGE_MODEL`  | Image model override (default: `google/gemini-2.5-flash-image`)        |
+| `EVM_WALLET_PRIVATE_KEY`  | Default EVM private key for autonomous signing                         |
+| `SVM_WALLET_PRIVATE_KEY`  | Default Solana keypair secret for autonomous signing                   |
+
+### Dev / self-hosting
+
+| Variable                  | Description                                                            |
+| ------------------------- | ---------------------------------------------------------------------- |
+| `PRINTR_API_BASE_URL`     | Override API base URL (default: `https://api-preview.printr.money`)    |
+| `PRINTR_APP_URL`          | Override app URL (default: `https://app.printr.money`)                 |
 
 ## Development
 

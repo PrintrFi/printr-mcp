@@ -6,6 +6,7 @@
     "type": "git",
     "url": "https://github.com/PrintrFi/printr-mcp"
   },
+  "license": "Apache-2.0",
   "engines": {
     "node": ">=18"
   },
@@ -19,7 +20,8 @@
   },
   "files": [
     "dist",
-    "certs"
+    "certs",
+    "LICENSE"
   ],
   "scripts": {
     "certs:renew": "sh scripts/renew-certs.sh",
