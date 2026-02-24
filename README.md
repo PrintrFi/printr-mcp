@@ -1,19 +1,8 @@
 # @printr/mcp
 
-MCP server for [Printr](https://printr.money) — enables AI agents to create, discover, and track tokens across chains.
+MCP server for [Printr](https://printr.money) — lets AI agents create, discover, and track tokens across chains.
 
-## Tools
-
-| Tool                        | Description                                                          |
-| --------------------------- | -------------------------------------------------------------------- |
-| `printr_quote`              | Get cost estimates for token creation                                |
-| `printr_create_token`       | Generate unsigned token creation tx payload                          |
-| `printr_get_token`          | Look up token details by ID or address                               |
-| `printr_get_deployments`    | Check deployment status across target chains                         |
-| `printr_sign_and_submit_evm`| Sign and submit an EVM tx payload using a private key or env var     |
-| `printr_sign_and_submit_svm`| Sign and submit a Solana tx payload using a private key or env var   |
-| `printr_open_web_signer`    | Start a browser-based signing session (MetaMask / Phantom)           |
-| `printr_generate_image`     | Generate a token image via OpenRouter (requires `OPENROUTER_API_KEY`)|
+No API key required. Works out of the box.
 
 ## Setup
 
@@ -23,54 +12,84 @@ Add to your MCP client config (Claude Desktop, Cursor, etc.):
 {
     "mcpServers": {
         "printr": {
-            "command": "bunx",
-            "args": ["@printr/mcp@latest"],
-            "env": {
-                "PRINTR_API_KEY": "<your-api-key>"
-            }
+            "command": "npx",
+            "args": ["-y", "@printr/mcp@latest"]
         }
     }
 }
 ```
 
-Or with `npx`:
+Or with `bunx`:
 
 ```json
 {
     "mcpServers": {
         "printr": {
-            "command": "npx",
-            "args": ["-y", "@printr/mcp@latest"],
-            "env": {
-                "PRINTR_API_KEY": "<your-api-key>"
-            }
+            "command": "bunx",
+            "args": ["@printr/mcp@latest"]
         }
     }
 }
 ```
 
-## Development
+## Optional capabilities
 
-```sh
-bun install
-PRINTR_API_KEY=xxx bun dev
+### Auto-generate token images
+
+Set `OPENROUTER_API_KEY` and the agent will generate an image automatically when you create a token without supplying one. The `printr_generate_image` tool also becomes available for standalone image generation.
+
+```json
+"env": {
+    "OPENROUTER_API_KEY": "<your-openrouter-key>"
+}
 ```
 
-### Testing
+### Let the agent sign transactions autonomously
 
-```sh
-bun test
+By default, token creation returns an unsigned transaction that you sign via browser wallet or by passing a private key per call. If you want the agent to sign and submit without prompting, set a default key:
+
+```json
+"env": {
+    "EVM_WALLET_PRIVATE_KEY": "<hex-private-key>",
+    "SVM_WALLET_PRIVATE_KEY": "<base58-keypair-secret>"
+}
 ```
+
+> Keep private keys out of shared configs. Use environment-level secrets when possible.
+
+## Tools
+
+| Tool                        | Description                                                          |
+| --------------------------- | -------------------------------------------------------------------- |
+| `printr_quote`              | Get cost estimates for token creation                                |
+| `printr_create_token`       | Generate an unsigned token creation tx payload                       |
+| `printr_launch_token`       | Create and sign a token in one call                                  |
+| `printr_get_token`          | Look up token details by ID or address                               |
+| `printr_get_deployments`    | Check deployment status across target chains                         |
+| `printr_sign_and_submit_evm`| Sign and submit an EVM tx payload                                    |
+| `printr_sign_and_submit_svm`| Sign and submit a Solana tx payload                                  |
+| `printr_open_web_signer`    | Start a browser signing session (MetaMask / Phantom)                 |
+| `printr_generate_image`     | Generate a token avatar via OpenRouter (requires `OPENROUTER_API_KEY`)|
 
 ## Environment variables
 
 | Variable                  | Required | Description                                                            |
 | ------------------------- | -------- | ---------------------------------------------------------------------- |
-| `PRINTR_API_KEY`          | Yes      | Partner API key (Bearer JWT)                                           |
+| `PRINTR_API_KEY`          | No       | Partner API key. Falls back to the default public AI-integration key.  |
+| `OPENROUTER_API_KEY`      | No       | Enables auto image generation and the `printr_generate_image` tool     |
+| `OPENROUTER_IMAGE_MODEL`  | No       | Image model override (default: `google/gemini-2.5-flash-image`)        |
+| `EVM_WALLET_PRIVATE_KEY`  | No       | Default EVM private key for autonomous signing                         |
+| `SVM_WALLET_PRIVATE_KEY`  | No       | Default Solana keypair secret for autonomous signing                   |
 | `PRINTR_API_BASE_URL`     | No       | Override API base URL (default: `https://api-preview.printr.money`)    |
-| `PRINTR_APP_URL`          | No       | Override app base URL (default: `https://app.printr.money`)            |
-| `EVM_WALLET_PRIVATE_KEY`  | No       | Default EVM hex private key — avoids passing it per call to `printr_sign_and_submit_evm` |
-| `SVM_WALLET_PRIVATE_KEY`  | No       | Default Solana base58 keypair secret — avoids passing it per call to `printr_sign_and_submit_svm` |
-| `OPENROUTER_API_KEY`      | No       | Enables `printr_generate_image` and auto image generation in `printr_create_token` |
-| `OPENROUTER_IMAGE_MODEL`  | No       | Image model used for generation (default: `google/gemini-2.5-flash-image`) |
-| `VERBOSE`                 | No       | Set to `1` or `true` to enable verbose test/debug logging              |
+| `PRINTR_APP_URL`          | No       | Override app URL (default: `https://app.printr.money`)                 |
+
+## Development
+
+```sh
+bun install
+bun dev
+```
+
+```sh
+bun test
+```
