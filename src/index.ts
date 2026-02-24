@@ -2,6 +2,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { version } from "../package.json";
 import { createPrintrClient } from "~/lib/client.js";
 import { env } from "~/lib/env.js";
 import { registerCreateTokenTool } from "~/tools/create-token.js";
@@ -21,7 +22,7 @@ const client = createPrintrClient({
 
 const server = new McpServer({
   name: "printr",
-  version: "0.1.0",
+  version,
 });
 
 registerQuoteTool(server, client);
