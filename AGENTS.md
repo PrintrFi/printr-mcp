@@ -138,7 +138,7 @@ Releases are automated via [release-please](https://github.com/googleapis/releas
 
 | Variable                 | Required | Description                                                                                    |
 | ------------------------ | -------- | ---------------------------------------------------------------------------------------------- |
-| `PRINTR_API_KEY`         | Yes      | Partner API key (Bearer JWT)                                                                   |
+| `PRINTR_API_KEY`         | No       | Partner API key (Bearer JWT). Falls back to the default public AI-integration key.            |
 | `PRINTR_API_BASE_URL`    | No       | Override API base URL (default: `https://api-preview.printr.money`)                           |
 | `PRINTR_APP_URL`         | No       | Override Printr web app URL (default: `https://app.printr.money`)                             |
 | `OPENROUTER_API_KEY`     | No       | Enables auto-generated token images via OpenRouter when no `image`/`image_path` is supplied   |

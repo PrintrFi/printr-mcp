@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 const schema = z.object({
-  PRINTR_API_KEY: z.string().optional(),
+  PRINTR_API_KEY: z
+    .string()
+    .default(
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhaS1pbnRlZ3JhdGlvbiJ9.PZsqfleSmSiAra8jiN3JZvDSonoawQLnvYRyPHDbtRg",
+    ),
   PRINTR_API_BASE_URL: z.string().default("https://api-preview.printr.money"),
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_IMAGE_MODEL: z.string().default("google/gemini-2.5-flash-image"),

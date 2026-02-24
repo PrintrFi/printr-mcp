@@ -14,14 +14,6 @@ import { registerQuoteTool } from "~/tools/quote.js";
 import { registerSignAndSubmitEvmTool } from "~/tools/sign-and-submit-evm.js";
 import { registerSignAndSubmitSvmTool } from "~/tools/sign-and-submit-svm.js";
 
-if (!env.PRINTR_API_KEY) {
-  console.error(
-    "PRINTR_API_KEY environment variable is required. " +
-    "Get your API key from the Printr partner portal.",
-  );
-  process.exit(1);
-}
-
 const client = createPrintrClient({
   apiKey: env.PRINTR_API_KEY,
   baseUrl: env.PRINTR_API_BASE_URL,
