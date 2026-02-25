@@ -123,12 +123,11 @@ describe("registerOpenWebSignerTool", () => {
       expect(sc?.expires_at).toBeGreaterThan(Date.now());
     });
 
-    it("includes structured content as JSON text", async () => {
+    it("includes url in text content", async () => {
       const result = await callHandler();
       const text = result.content?.[0]?.text;
       expect(text).toBeString();
-      const parsed = JSON.parse(text!);
-      expect(parsed.url).toBeString();
+      expect(text).toInclude("http");
     });
   });
 });

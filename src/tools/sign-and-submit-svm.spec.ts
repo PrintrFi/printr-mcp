@@ -139,7 +139,7 @@ describe("registerSignAndSubmitSvmTool", () => {
         })) as { isError?: boolean; content: { text: string }[] };
 
         expect(result.isError).toBe(true);
-        expect(result.content[0]?.text).toInclude("private_key");
+        expect(result.content[0]?.text).toInclude("printr_wallet_unlock");
       },
     );
   });
