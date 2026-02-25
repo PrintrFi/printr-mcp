@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/PrintrFi/printr-mcp/compare/v0.3.2...v0.3.3) (2026-02-25)
+
+
+### Bug Fixes
+
+* trigger 0.3.3 release ([63f3581](https://github.com/PrintrFi/printr-mcp/commit/63f35815ae0abf31c34a166cd55e957a431cd818))
+
 ## [0.3.1](https://github.com/PrintrFi/printr-mcp/compare/v0.3.0...v0.3.1) (2026-02-25)
 
 
