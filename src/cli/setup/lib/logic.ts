@@ -1,5 +1,4 @@
 import type { ClientDef, ConfigureResult, McpEntry, Runtime, StepResult } from "../types.js";
-import { parseSetupArgs } from "./args.js";
 import { CLIENTS, detectRuntime, makeEntry, RESULT_DETAIL, RESULT_STATUS } from "./clients.js";
 
 export function processClient(
@@ -18,13 +17,13 @@ export function processClient(
 }
 
 export async function runSetupLogic(
-  args: string[],
+  selectedIds: string[],
+  openrouterApiKey: string,
   onStep: (step: StepResult) => void,
 ): Promise<number> {
-  const { targetIds, openrouterApiKey } = parseSetupArgs(args);
   const runtime = detectRuntime();
   const entry = makeEntry(runtime, openrouterApiKey);
-  const clients = CLIENTS.filter((c) => targetIds.includes(c.id));
+  const clients = CLIENTS.filter((c) => selectedIds.includes(c.id));
   let configured = 0;
 
   for (const client of clients) {

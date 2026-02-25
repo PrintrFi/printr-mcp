@@ -1,7 +1,7 @@
-import { ALL_CLIENT_IDS } from "./clients.js";
 
 export interface SetupArgs {
-  targetIds: string[];
+  /** Explicit client IDs from --client flags; null means "show interactive selection". */
+  targetIds: string[] | null;
   openrouterApiKey: string;
 }
 
@@ -22,5 +22,5 @@ export function parseSetupArgs(args: string[]): SetupArgs {
     }
   }
 
-  return { targetIds: targetIds.length > 0 ? targetIds : ALL_CLIENT_IDS, openrouterApiKey };
+  return { targetIds: targetIds.length > 0 ? targetIds : null, openrouterApiKey };
 }
