@@ -33,9 +33,9 @@ export const initialBuy = z
   );
 
 export const graduationThreshold = z
-  .union([z.literal(69000), z.literal(250000)])
+  .union([z.literal(30000), z.literal(250000)])
   .optional()
-  .describe("Graduation threshold in USD (default: 69000)");
+  .describe("Graduation threshold in USD (default: 30000)");
 
 export const externalLinks = z
   .object({

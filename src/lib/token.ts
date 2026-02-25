@@ -15,7 +15,7 @@ export type BuildTokenInput = {
   image_path?: string;
   chains: string[];
   initial_buy: { supply_percent?: number; spend_usd?: number; spend_native?: string };
-  graduation_threshold_per_chain_usd?: 69000 | 250000;
+  graduation_threshold_per_chain_usd?: 30000 | 250000;
   external_links?: { website?: string; x?: string; telegram?: string; github?: string };
 };
 

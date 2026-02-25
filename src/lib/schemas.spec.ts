@@ -152,7 +152,7 @@ describe("initialBuy", () => {
 
 describe("graduationThreshold", () => {
   const validCases = [
-    { name: "69000", value: 69000 },
+    { name: "30000", value: 30000 },
     { name: "250000", value: 250000 },
     { name: "undefined (optional)", value: undefined },
   ];
@@ -164,7 +164,7 @@ describe("graduationThreshold", () => {
 
   const invalidCases = [
     { name: "other number", value: 100000 },
-    { name: "string value", value: "69000" },
+    { name: "string value", value: "30000" },
     { name: "zero", value: 0 },
   ];
 
