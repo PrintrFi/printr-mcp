@@ -1,157 +1,110 @@
-# Printr MCP - Project Conventions
+# Printr MCP — Project Conventions
 
 MCP server for the Printr API. Enables AI agents to create, discover, and track tokens across chains.
 
 ## Runtime & Tooling
 
-- **Runtime:** Bun (not Node.js). Use `bun` for all commands.
-- **Package manager:** `bun install` / `bun add` / `bun remove` (not npm/yarn/pnpm)
-- **Linter & Formatter:** Biome (not ESLint/Prettier). Config: `biome.json`
-- **Type checking:** `tsc --noEmit` (strict mode)
-- **Environment:** Bun auto-loads `.env` files. Do not use dotenv.
+- **Runtime:** Bun only (`bun`, `bunx`). Never use npm, yarn, or pnpm.
+- **Linter/Formatter:** Biome (`biome.json`). Never touch ESLint or Prettier config.
+- **Type checking:** `tsc --noEmit` (strict mode, `noFallthroughCasesInSwitch`, `noUncheckedIndexedAccess`)
+- **Env loading:** Bun auto-loads `.env`. Do not add dotenv.
 
 ## Key Commands
 
-| Command                | Purpose                              |
-| ---------------------- | ------------------------------------ |
-| `bun run dev`          | Start with hot reload                |
-| `bun run test`         | Run unit & integration tests         |
-| `bun run test:coverage`| Run unit & integration tests with lcov coverage |
-| `bun run test:e2e`     | Run E2E tests (requires API env vars)|
-| `bun run test:all`     | Run all tests (unit + integration + E2E) |
-| `bun run build`        | Build for distribution               |
-| `bun run lint`         | Check with Biome                     |
-| `bun run lint:fix`     | Auto-fix Biome issues                |
-| `bun run format`       | Format with Biome                    |
-| `bun run typecheck`    | Type-check without emitting          |
-| `bun run check`        | typecheck + lint + test (full CI)    |
-| `bun run generate:api` | Regenerate OpenAPI types             |
+| Command                 | Purpose                                          |
+| ----------------------- | ------------------------------------------------ |
+| `bun run dev`           | Start with hot reload                            |
+| `bun run check`         | typecheck + lint + test (full CI gate)           |
+| `bun run test`          | Unit & integration tests                         |
+| `bun run test:e2e`      | E2E tests (hits preview API — needs env vars)    |
+| `bun run build`         | Build for distribution                           |
+| `bun run lint:fix`      | Auto-fix Biome issues                            |
+| `bun run generate:api`  | Regenerate OpenAPI types from spec               |
 
 ## Architecture
 
-```
-src/
-  index.ts              # Entry point: creates MCP server, registers tools, connects stdio transport
-  api.gen.d.ts          # Auto-generated OpenAPI types. Never edit by hand.
-  integration.spec.ts   # Integration tests (MCP client-server via InMemoryTransport)
-  e2e.spec.ts           # E2E tests against real Printr preview API
-  lib/
-    client.ts           # Typed HTTP client (openapi-fetch), error unwrapping (neverthrow)
-    schemas.ts          # Shared Zod schemas for tool input/output validation
-    test-helpers.ts     # Mock server, mock client, response factories, verbose logging
-  tools/
-    quote.ts            # printr_quote tool
-    create-token.ts     # printr_create_token tool
-    get-token.ts        # printr_get_token tool
-    get-deployments.ts  # printr_get_deployments tool
-```
+`src/index.ts` — CLI routing + MCP server entry. All tools registered here.
 
-Each MCP tool lives in `src/tools/<name>.ts` and exports a `register*Tool(server, client)` function. Tools are wired together in `src/index.ts`.
+`src/lib/` — pure utilities: `client.ts` (HTTP + neverthrow + toolOk/toolError), `keystore.ts` (AES-GCM+scrypt wallet store), `wallet-elicit.ts` (wallet resolution), `evm.ts`, `svm.ts`, `chains.ts`, `qr.ts`, `schemas.ts`
 
-## Coding Conventions
+`src/server/` — ephemeral local HTTPS server for browser signing sessions (Hono, ports 5174–5200)
+
+`src/tools/` — one file per MCP tool, each exporting `register<Name>Tool(server, client?)`
+
+`src/cli/` — `setup` sub-command (detects AI clients, writes MCP config)
+
+## Non-Obvious Rules
+
+### Error handling
+- **Never use try/catch for business logic.** Use `neverthrow` (`Result`, `ResultAsync`).
+- try/catch is allowed only at MCP tool handler boundaries (outermost level).
+- For async pipelines: use `ResultAsync`, never `Promise<Result<T,E>>` (breaks chaining).
+- `toToolResponseAsync()` is the standard way to terminate a `ResultAsync` pipeline into an MCP response.
+- `toolOk(data)` / `toolError(text)` (from `~/lib/client.js`) for tools that don't use neverthrow pipelines. **Do not redeclare these locally.**
 
 ### Imports
+- Path alias `~/` maps to `./src/`. Always use it for source imports.
+- Test files (`*.spec.ts`) use relative paths (e.g. `"./client.js"`), not `~/`.
+- Always include `.js` extension — required by `verbatimModuleSyntax`.
 
-- Path alias: `~/` maps to `./src/` (tsconfig paths)
-- Source files: use `~/` alias (e.g., `import { foo } from "~/lib/client.js"`)
-- Test files (`*.spec.ts`): use regular relative paths (e.g., `import { foo } from "./lib/client.js"`)
-- Always use `.js` extension in import specifiers
-- Required by `verbatimModuleSyntax: true`
-
-### Error Handling
-
-- Use `neverthrow` Result types, not try/catch
-- For async operations that can fail: use `ResultAsync`, never `Promise<Result<T, E>>`
-- `unwrapResult()` converts a single openapi-fetch response to `Result<T, PrintrApiError>`; use `unwrapResultAsync()` for promises so the pipeline stays as `ResultAsync`
-- `toToolResponse()` / `toToolResponseAsync()` convert a Result or ResultAsync into the MCP tool response format
+### Tool response pattern
+- Tools using neverthrow: `return toToolResponseAsync(pipeline)`
+- Tools using try/catch at boundary: `return toolOk(data)` / `return toolError(msg)`
+- `structuredContent` must always mirror the `content[0].text` JSON — do not diverge.
+- When appending extra text (e.g. QR code) to a response, update `content[0].text` only; `structuredContent` stays as the plain data object.
 
 ### Validation
+- Zod schemas for all tool inputs and outputs (`inputSchema`, `outputSchema`).
+- Shared schemas go in `src/lib/schemas.ts`. Tool-specific ones stay local.
 
-- Use Zod for all input/output schemas
-- Define schemas alongside the tool that uses them, or in `src/lib/schemas.ts` for shared ones
+### Wallet / signing flow
+- `activeWallets` (in-memory) is set by `printr_wallet_new`, `printr_wallet_import`, `printr_wallet_unlock`. It is cleared on server restart.
+- `AGENT_MODE=1` bypasses interactive wallet selection — uses `EVM_WALLET_PRIVATE_KEY` / `SVM_WALLET_PRIVATE_KEY` directly.
+- scrypt KDF uses N=131072 (needs 128 MB) — always pass `maxmem: SCRYPT_MAXMEM` (256 MB) to both `encryptKey` and `decryptKey`.
 
-### Style (enforced by Biome)
-
-- 2-space indentation, double quotes, semicolons, trailing commas
-- LF line endings, 100 character line width
-- `const` over `let`; template literals over concatenation (warn)
-
-## Testing
-
-- Framework: `bun:test` (import from `"bun:test"`)
-- Test files: `*.spec.ts` co-located with source files
-- Integration tests: `src/integration.spec.ts` (uses MCP SDK `InMemoryTransport`)
-- Mock helpers in `src/lib/test-helpers.ts`: `createMockServer`, `createMockClient`, `mockSuccessResponse`, `mockErrorResponse`
-- Verbose logging helpers in `src/lib/test-helpers.ts`: `log`, `logResult` (enabled via `VERBOSE=1`)
-- Unit/integration tests use mock client/server pattern; no real API calls
-- E2E tests in `src/e2e.spec.ts` hit the real preview API; skipped when env vars are absent
+### Style
+- No section-divider comments (`// ── foo ──────`). Use blank lines to separate logical blocks.
+- 2-space indent, double quotes, semicolons, trailing commas (enforced by Biome).
 
 ## Adding a New Tool
 
 1. Create `src/tools/<name>.ts`
 2. Define Zod `inputSchema` and `outputSchema`
-3. Export `register<Name>Tool(server: McpServer, client: PrintrClient)`
-4. Call `server.registerTool(toolName, { description, inputSchema, outputSchema }, handler)`
-5. Handler pattern: `return toToolResponseAsync(unwrapResultAsync(client.METHOD(...)))` (keep pipelines as ResultAsync; avoid `await` + `unwrapResult` which yields `Promise<Result>`)
-6. Register the tool in `src/index.ts`
-7. Add unit tests in `src/tools/<name>.spec.ts` following existing patterns
+3. Export `register<Name>Tool(server: McpServer, client?: PrintrClient)`
+4. Call `server.registerTool(id, { description, inputSchema, outputSchema }, handler)`
+5. Register in `src/index.ts`
+6. Add tests in `src/tools/<name>.spec.ts`
 
 ## Commits
 
-- Follow [Conventional Commits](https://www.conventionalcommits.org/)
-- Format: `type(scope): description` — all lowercase, no period, imperative mood
+- [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): description` — lowercase, no period, imperative.
 - Types: `feat`, `fix`, `refactor`, `test`, `chore`, `docs`, `ci`
-- Scope is optional but preferred (e.g., `test(e2e):`, `feat(quote):`, `chore(deps):`)
-- Keep messages terse — one line, no body unless essential
-- No co-author trailers
+- No co-author trailers. Validated by commitlint via Husky `commit-msg` hook.
 
-Commit messages are validated locally by [commitlint](https://commitlint.js.org/) via the `commit-msg` Husky hook. Invalid messages are rejected before the commit is created.
+## Quality Gates (Husky)
 
-## Quality Gates
-
-Enforced locally via [Husky](https://typicode.github.io/husky/):
-
-| Hook | Command | Runs on |
-| ------------ | -------------- | -------------- |
-| `commit-msg` | `commitlint` | every commit |
-| `pre-commit` | `bun test` | every commit |
-
-Config: [`commitlint.config.cjs`](./commitlint.config.cjs)
+| Hook         | Command      |
+| ------------ | ------------ |
+| `commit-msg` | `commitlint` |
+| `pre-commit` | `bun test`   |
 
 ## Release
 
-Releases are automated via [release-please](https://github.com/googleapis/release-please). When conventional commits land on `main`, release-please opens a PR that:
-
-1. Bumps version in `package.json` based on commit types (`feat` → minor, `fix` → patch)
-2. Updates `CHANGELOG.md` with grouped changes
-3. Updates `.release-please-manifest.json`
-
-**To release:** merge the release PR. This triggers the publish job which runs typecheck → tests → build → `npm publish` and creates a GitHub Release.
-
-**Configuration files:**
-- `release-please-config.json` — release-please settings
-- `.release-please-manifest.json` — tracks current version
-
-**Required secret:** `NPM_TOKEN` — an npm Automation token added to repo Settings → Secrets → Actions.
+Automated via release-please. Merge the release PR → triggers typecheck → tests → build → `npm publish`.
+Required secret: `NPM_TOKEN` in repo Settings → Secrets → Actions.
 
 ## Environment Variables
 
-| Variable                 | Required | Description                                                                                    |
-| ------------------------ | -------- | ---------------------------------------------------------------------------------------------- |
-| `PRINTR_API_KEY`         | No       | Partner API key (Bearer JWT). Falls back to the default public AI-integration key.            |
-| `PRINTR_API_BASE_URL`    | No       | Override API base URL (default: `https://api-preview.printr.money`)                           |
-| `PRINTR_APP_URL`         | No       | Override Printr web app URL (default: `https://app.printr.money`)                             |
-| `OPENROUTER_API_KEY`     | No       | Enables auto-generated token images via OpenRouter when no `image`/`image_path` is supplied   |
-| `OPENROUTER_IMAGE_MODEL` | No       | OpenRouter model for image generation (default: `google/gemini-2.5-flash-image`)              |
-
-## Documentation References
-
-- **MCP SDK (TypeScript):** `node_modules/@modelcontextprotocol/sdk/dist/esm/` for type definitions; upstream docs at https://github.com/modelcontextprotocol/typescript-sdk/tree/main/docs
-- **MCP Protocol spec:** https://modelcontextprotocol.io/docs
-- **openapi-fetch:** https://openapi-ts.dev/openapi-fetch/
-- **Bun APIs:** `node_modules/bun-types/docs/**.mdx` for local reference
-- **neverthrow:** https://github.com/supermacro/neverthrow
-- **Zod:** https://zod.dev
-- **Biome:** https://biomejs.dev
-
-This is a backend MCP server project. Currently there is no frontend or HTML. The dist bundle must remain compatible with Node.js ≥ 18 (see `engines` in package.json) so it can run via `npx` as well as `bunx`.
+| Variable                 | Required | Description                                                                  |
+| ------------------------ | -------- | ---------------------------------------------------------------------------- |
+| `PRINTR_API_KEY`         | No       | Partner API key. Falls back to default public AI-integration key.            |
+| `PRINTR_API_BASE_URL`    | No       | Override API base URL (default: `https://api-preview.printr.money`)          |
+| `PRINTR_APP_URL`         | No       | Override web app URL (default: `https://app.printr.money`)                   |
+| `PRINTR_CDN_URL`         | No       | Override CDN URL (default: `https://cdn.printr.money`)                       |
+| `OPENROUTER_API_KEY`     | No       | Enables auto-generated token images via OpenRouter                           |
+| `OPENROUTER_IMAGE_MODEL` | No       | OpenRouter model (default: `google/gemini-2.5-flash-image`)                  |
+| `EVM_WALLET_PRIVATE_KEY` | No       | EVM private key for AGENT_MODE autonomous signing                            |
+| `SVM_WALLET_PRIVATE_KEY` | No       | Solana private key (base58) for AGENT_MODE autonomous signing                |
+| `SVM_RPC_URL`            | No       | Solana RPC endpoint (default: `https://api.mainnet-beta.solana.com`)         |
+| `AGENT_MODE`             | No       | Set to `1` to use env-var keys instead of interactive wallet selection       |
+| `PRINTR_WALLET_STORE`    | No       | Override keystore path (default: `~/.printr/wallets.json`)                   |
