@@ -9,7 +9,6 @@ if [ -d "$REPO_ROOT/apps/wallet" ]; then
 fi
 
 # Build the MCP server
-bun build "$REPO_ROOT/src/index.ts" --outdir "$REPO_ROOT/dist" --target node --format esm \
-  --external react-devtools-core
-tsc --emitDeclarationOnly --outDir "$REPO_ROOT/dist"
+bun build "$REPO_ROOT/src/index.ts" --outdir "$REPO_ROOT/dist" --target node --format esm
+bunx tsc --emitDeclarationOnly --outDir "$REPO_ROOT/dist"
 chmod +x "$REPO_ROOT/dist/index.js"

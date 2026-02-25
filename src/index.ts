@@ -42,4 +42,4 @@ Docs:    https://github.com/PrintrFi/printr-mcp
   }
 }
 
-startMcpServer();
+await startMcpServer();
