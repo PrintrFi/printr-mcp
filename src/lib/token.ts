@@ -4,8 +4,7 @@ import { unwrapResultAsync } from "~/lib/client.js";
 import { env } from "~/lib/env.js";
 import { generateTokenImage, processImagePath } from "~/lib/image.js";
 
-type CreateTokenRequestBody =
-  paths["/print"]["post"]["requestBody"]["content"]["application/json"];
+type CreateTokenRequestBody = paths["/print"]["post"]["requestBody"]["content"]["application/json"];
 
 export type BuildTokenInput = {
   creator_accounts: string[];
@@ -31,15 +30,15 @@ export function buildToken({ image, image_path, ...rest }: BuildTokenInput, clie
       ? processImagePath(image_path)
       : env.OPENROUTER_API_KEY
         ? generateTokenImage({
-          name: rest.name,
-          symbol: rest.symbol,
-          description: rest.description,
-          openrouterApiKey: env.OPENROUTER_API_KEY,
-        })
+            name: rest.name,
+            symbol: rest.symbol,
+            description: rest.description,
+            openrouterApiKey: env.OPENROUTER_API_KEY,
+          })
         : errAsync({
-          message:
-            "No image provided. Supply image, image_path, or configure OPENROUTER_API_KEY for auto-generation.",
-        });
+            message:
+              "No image provided. Supply image, image_path, or configure OPENROUTER_API_KEY for auto-generation.",
+          });
 
   return imageAsync.andThen((resolvedImage) =>
     unwrapResultAsync(

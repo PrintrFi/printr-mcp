@@ -56,8 +56,8 @@ const inputSchema = z.object({
     .optional()
     .describe(
       "Absolute path to a local image file. The server reads, auto-compresses if needed, and " +
-      "encodes it. Mutually exclusive with image. If neither image nor image_path is provided " +
-      "and OPENROUTER_API_KEY is configured, an image is generated automatically.",
+        "encodes it. Mutually exclusive with image. If neither image nor image_path is provided " +
+        "and OPENROUTER_API_KEY is configured, an image is generated automatically.",
     ),
   chains: z.array(caip2ChainId).min(1).describe("Chains to deploy on"),
   initial_buy: initialBuy,
