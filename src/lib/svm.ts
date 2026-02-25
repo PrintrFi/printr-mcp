@@ -8,8 +8,9 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
+import { env } from "~/lib/env.js";
 
-export const DEFAULT_SVM_RPC = "https://api.mainnet-beta.solana.com";
+export const DEFAULT_SVM_RPC = env.SVM_RPC_URL ?? "https://api.mainnet-beta.solana.com";
 
 export type SvmInstruction = {
   program_id: string;

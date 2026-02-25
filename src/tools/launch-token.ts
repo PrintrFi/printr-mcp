@@ -1,10 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { errAsync, ResultAsync } from "neverthrow";
+import { ResultAsync } from "neverthrow";
 import { z } from "zod";
 import type { PrintrClient } from "~/lib/client.js";
 import { PrintrApiError, toToolResponseAsync } from "~/lib/client.js";
 import { env } from "~/lib/env.js";
 import { type EvmPayload, signAndSubmitEvm } from "~/lib/evm.js";
+import { appendQr } from "~/lib/qr.js";
 import {
   caip2ChainId,
   caip10Address,
@@ -36,8 +37,8 @@ const inputSchema = z.object({
     .optional()
     .describe(
       "Absolute path to a local image file. Auto-compressed if needed. " +
-      "Mutually exclusive with image. If neither is provided and OPENROUTER_API_KEY is set, " +
-      "an image is generated automatically.",
+        "Mutually exclusive with image. If neither is provided and OPENROUTER_API_KEY is set, " +
+        "an image is generated automatically.",
     ),
   chains: z.array(caip2ChainId).min(1).describe("Chains to deploy on"),
   initial_buy: initialBuy,
@@ -48,15 +49,15 @@ const inputSchema = z.object({
     .optional()
     .describe(
       "Private key to sign immediately after token creation. " +
-      "EVM: hex (with or without 0x prefix). SVM: base58 64-byte keypair. " +
-      "WARNING: handle with care — never share or commit this value. " +
-      "If omitted, a browser signing session is started instead.",
+        "EVM: hex (with or without 0x prefix). SVM: base58 64-byte keypair. " +
+        "WARNING: handle with care — never share or commit this value. " +
+        "If omitted, a browser signing session is started instead.",
     ),
   rpc_url: z
     .url()
     .optional()
     .describe(
-      `RPC endpoint. Required for EVM when private_key is provided. SVM defaults to ${DEFAULT_SVM_RPC}.`,
+      `RPC endpoint override. EVM falls back to the chain's default public RPC. SVM defaults to ${DEFAULT_SVM_RPC}.`,
     ),
 });
 
@@ -109,16 +110,11 @@ export function registerLaunchTokenTool(server: McpServer, client: PrintrClient)
       inputSchema,
       outputSchema,
     },
-    ({ private_key, rpc_url, ...tokenParams }) =>
-      toToolResponseAsync(
+    async ({ private_key, rpc_url, ...tokenParams }) => {
+      const response = await toToolResponseAsync(
         buildToken(tokenParams, client).andThen(({ token_id, payload, quote }) => {
           if (private_key) {
             if (isEvmPayload(payload)) {
-              if (!rpc_url) {
-                return errAsync(
-                  new PrintrApiError(400, "rpc_url is required for EVM signing"),
-                );
-              }
               return ResultAsync.fromPromise(
                 signAndSubmitEvm(payload, private_key, rpc_url),
                 mapErr,
@@ -174,6 +170,16 @@ export function registerLaunchTokenTool(server: McpServer, client: PrintrClient)
             mapErr,
           );
         }),
-      ),
+      );
+
+      if ("structuredContent" in response) {
+        const data = response.structuredContent as { status?: string; url?: string };
+        if (data.status === "awaiting_signature" && data.url) {
+          const text = await appendQr(response.content[0]?.text ?? "", data.url);
+          return { ...response, content: [{ type: "text" as const, text }] };
+        }
+      }
+      return response;
+    },
   );
 }

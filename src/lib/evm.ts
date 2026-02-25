@@ -7,6 +7,7 @@ import {
   http,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import { getChainMeta } from "~/lib/chains.js";
 
 /** Parse chain ID and address from a CAIP-10 string (e.g. "eip155:8453:0x...") */
 export function parseEvmCaip10(caip10: string): { chainId: number; address: Address } {
@@ -43,21 +44,33 @@ export type EvmSubmitResult = {
 export async function signAndSubmitEvm(
   payload: EvmPayload,
   privateKey: string,
-  rpcUrl: string,
+  rpcUrl?: string,
 ): Promise<EvmSubmitResult> {
   const { chainId, address: toAddress } = parseEvmCaip10(payload.to);
+  const caip2 = `eip155:${chainId}`;
+  const meta = getChainMeta(caip2);
+  const rpc = rpcUrl ?? meta?.defaultRpc;
+  if (!rpc) {
+    throw new Error(
+      `No RPC URL for chain ${caip2}. Pass rpc_url explicitly or add a defaultRpc to CHAIN_META.`,
+    );
+  }
 
   const chain = defineChain({
     id: chainId,
-    name: `eip155:${chainId}`,
-    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-    rpcUrls: { default: { http: [rpcUrl] } },
+    name: meta?.name ?? caip2,
+    nativeCurrency: {
+      name: meta?.name ?? "Ether",
+      symbol: meta?.symbol ?? "ETH",
+      decimals: meta?.decimals ?? 18,
+    },
+    rpcUrls: { default: { http: [rpc] } },
   });
 
   const account = privateKeyToAccount(normalisePrivateKey(privateKey));
 
-  const walletClient = createWalletClient({ account, chain, transport: http(rpcUrl) });
-  const publicClient = createPublicClient({ chain, transport: http(rpcUrl) });
+  const walletClient = createWalletClient({ account, chain, transport: http(rpc) });
+  const publicClient = createPublicClient({ chain, transport: http(rpc) });
 
   const hash = await walletClient.sendTransaction({
     to: toAddress,
