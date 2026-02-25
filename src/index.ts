@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// biome-ignore-all lint/suspicious/noFallthroughSwitchClause: process.exit() never returns
 
 import { version } from "../package.json";
 import { startMcpServer } from "./mcp.js";
@@ -7,20 +8,17 @@ import { startMcpServer } from "./mcp.js";
 const [, , command] = process.argv;
 
 switch (command) {
-  // biome-ignore lint/suspicious/noFallthroughSwitchClause: process.exit() never returns
   case "setup": {
     const { runSetup } = await import("./cli/setup/index.js");
     await runSetup(process.argv.slice(3));
     process.exit(0);
   }
   case "--version":
-  // biome-ignore lint/suspicious/noFallthroughSwitchClause: process.exit() never returns
   case "-v": {
     process.stdout.write(`${version}\n`);
     process.exit(0);
   }
   case "--help":
-  // biome-ignore lint/suspicious/noFallthroughSwitchClause: process.exit() never returns
   case "-h": {
     process.stdout.write(`
 Usage: printr-mcp [command] [options]
@@ -42,8 +40,6 @@ Docs:    https://github.com/PrintrFi/printr-mcp
 `);
     process.exit(0);
   }
-  default: {
-    await startMcpServer();
-    process.exit(0);
-  }
 }
+
+startMcpServer();
