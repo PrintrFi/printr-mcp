@@ -6,8 +6,9 @@ import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
 import { buildApp } from "./app.js";
 
+const thisDir = dirname(fileURLToPath(import.meta.url));
+
 function loadCerts(): { cert: Buffer; key: Buffer } | null {
-  const thisDir = dirname(fileURLToPath(import.meta.url));
   // prod: dist/index.js → ../certs   dev: src/server/index.ts → ../../certs
   for (const rel of ["..", "../.."]) {
     const dir = join(thisDir, rel, "certs");
