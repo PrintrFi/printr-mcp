@@ -130,3 +130,16 @@ export async function toToolResponseAsync<T, E extends ErrorWithMessage>(
     }),
   );
 }
+
+/** Build a successful MCP tool response from a plain data object. */
+export function toolOk(data: Record<string, unknown>) {
+  return {
+    structuredContent: data,
+    content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+  };
+}
+
+/** Build an error MCP tool response. */
+export function toolError(text: string) {
+  return { content: [{ type: "text" as const, text }], isError: true as const };
+}

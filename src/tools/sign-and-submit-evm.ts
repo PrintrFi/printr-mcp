@@ -1,9 +1,10 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { caip10ToChainId } from "~/lib/chains.js";
+import { toolError, toolOk } from "~/lib/client.js";
 import { env } from "~/lib/env.js";
 import { signAndSubmitEvm } from "~/lib/evm.js";
-import { resolveWallet, type WalletResolution } from "~/lib/wallet-elicit.js";
+import { insufficientFundsMessage, resolveWallet } from "~/lib/wallet-elicit.js";
 
 const inputSchema = z.object({
   payload: z.object({
@@ -20,7 +21,12 @@ const inputSchema = z.object({
         "WARNING: handle with care — never share or commit this value. " +
         "Falls back to EVM_WALLET_PRIVATE_KEY env var or interactive wallet selection.",
     ),
-  rpc_url: z.url().describe("HTTP RPC endpoint for the target chain"),
+  rpc_url: z
+    .url()
+    .optional()
+    .describe(
+      "HTTP RPC endpoint for the target chain. Falls back to the chain's default public RPC if omitted.",
+    ),
 });
 
 const outputSchema = z.object({
@@ -28,44 +34,6 @@ const outputSchema = z.object({
   block_number: z.string().describe("Block number (as string)"),
   status: z.enum(["success", "reverted"]).describe("Transaction status"),
 });
-
-function toolError(text: string) {
-  return { content: [{ type: "text" as const, text }], isError: true as const };
-}
-
-function toolOk(data: Record<string, unknown>) {
-  return {
-    structuredContent: data,
-    content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
-  };
-}
-
-function browserRequiredMessage(
-  resolution: Extract<WalletResolution, { kind: "browser_required" }>,
-): string {
-  const { action, url, newWallet } = resolution;
-  const prefix =
-    action === "new" && newWallet
-      ? `New wallet created for ${newWallet.chain}.\n\nAddress: ${newWallet.address}\n\n` +
-        `Fund it with ${newWallet.symbol} then ask me to sign again.\n\n`
-      : "";
-  const prompts: Record<typeof action, string> = {
-    unlock: "unlock your wallet",
-    provide: "enter your private key",
-    new: "save your new wallet",
-  };
-  return `${prefix}Open this URL to ${prompts[action]}:\n\n${url}\n\nOnce complete, ask me to sign again.`;
-}
-
-function insufficientFundsMessage(
-  r: Extract<WalletResolution, { kind: "insufficient_funds" }>,
-): string {
-  return (
-    `Wallet ${r.address} on ${r.chain} has insufficient ${r.symbol}.\n` +
-    `Balance:  ${r.balance} ${r.symbol}\n` +
-    `Required: ${r.required} ${r.symbol}\n\nFund the wallet and try again.`
-  );
-}
 
 export function registerSignAndSubmitEvmTool(server: McpServer): void {
   server.registerTool(
@@ -97,12 +65,8 @@ export function registerSignAndSubmitEvmTool(server: McpServer): void {
         if (resolution.kind === "ready") {
           return toolOk(await signAndSubmitEvm(payload, resolution.privateKey, rpc_url));
         }
-        if (resolution.kind === "browser_required")
-          return toolError(browserRequiredMessage(resolution));
         if (resolution.kind === "insufficient_funds")
           return toolError(insufficientFundsMessage(resolution));
-        if (resolution.kind === "declined")
-          return toolError("Wallet selection cancelled. Provide a private_key to sign.");
         return toolError(resolution.message);
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));

@@ -29,6 +29,8 @@ type Keystore = {
 };
 
 const DEFAULT_KDF_PARAMS = { N: 131072, r: 8, p: 1, dkLen: 32 } as const;
+// 128 * N * r bytes required; default OpenSSL cap is 32 MB — raise it to 256 MB.
+const SCRYPT_MAXMEM = 256 * 1024 * 1024;
 
 export function keystorePath(): string {
   return env.PRINTR_WALLET_STORE ?? join(homedir(), ".printr", "wallets.json");
@@ -60,6 +62,7 @@ export function encryptKey(
     N: kdfParams.N,
     r: kdfParams.r,
     p: kdfParams.p,
+    maxmem: SCRYPT_MAXMEM,
   });
   const cipher = createCipheriv("aes-256-gcm", dk, iv);
   const ct = Buffer.concat([cipher.update(privateKey, "utf-8"), cipher.final()]);
@@ -85,6 +88,7 @@ export function decryptKey(entry: WalletEntry, password: string): Result<string,
       N: kdfParams.N,
       r: kdfParams.r,
       p: kdfParams.p,
+      maxmem: SCRYPT_MAXMEM,
     });
     const decipher = createDecipheriv("aes-256-gcm", dk, ivBuf);
     decipher.setAuthTag(tag);
@@ -108,4 +112,13 @@ export function addWallet(entry: WalletEntry): void {
   const ks = loadKeystore();
   ks.wallets.push(entry);
   saveKeystore(ks);
+}
+
+export function removeWallet(id: string): boolean {
+  const ks = loadKeystore();
+  const idx = ks.wallets.findIndex((w) => w.id === id);
+  if (idx === -1) return false;
+  ks.wallets.splice(idx, 1);
+  saveKeystore(ks);
+  return true;
 }
