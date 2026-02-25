@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import { env } from "~/lib/env.js";
+import { appendQr } from "~/lib/qr.js";
 import { createSession, LOCAL_SESSION_ORIGIN, startSessionServer } from "~/server";
 
 const tokenMeta = z.object({
@@ -64,7 +65,9 @@ export function registerOpenWebSignerTool(server: McpServer): void {
 
         return {
           structuredContent: result,
-          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+          content: [
+            { type: "text" as const, text: await appendQr(JSON.stringify(result, null, 2), url) },
+          ],
         };
       } catch (error) {
         return {
