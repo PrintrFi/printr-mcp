@@ -36,7 +36,7 @@ export function SelectionScreen({
 
   return (
     <Box flexDirection="column" paddingLeft={2}>
-      <Text dimColor>↑↓ move  ·  space toggle  ·  enter confirm</Text>
+      <Text dimColor>↑↓ move · space toggle · enter confirm</Text>
       <Box flexDirection="column" marginTop={1}>
         {clients.map((c, i) => {
           const isDetected = detectedIds.has(c.id);
@@ -44,10 +44,16 @@ export function SelectionScreen({
           const isCursor = i === cursor;
           return (
             <Box key={c.id}>
-              <Text color={isCursor ? "cyan" : undefined}>{isCursor ? "›" : " "}{"  "}</Text>
-              <Text color={isSelected ? "green" : undefined}>{isSelected ? "◉" : "○"}{"  "}</Text>
+              <Text color={isCursor ? "cyan" : undefined}>
+                {isCursor ? "›" : " "}
+                {"  "}
+              </Text>
+              <Text color={isSelected ? "green" : undefined}>
+                {isSelected ? "◉" : "○"}
+                {"  "}
+              </Text>
               <Text dimColor={!isDetected}>{c.label}</Text>
-              {!isDetected && <Text dimColor>  — not detected</Text>}
+              {!isDetected && <Text dimColor> — not detected</Text>}
             </Box>
           );
         })}
