@@ -35,5 +35,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 .gemini/
 
+# Claude Code local settings (secrets, personal config)
+.claude/settings.local.json
+
 # temp files
 .tmp/
