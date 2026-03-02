@@ -2,6 +2,7 @@ import { errAsync, okAsync } from "neverthrow";
 import type { PrintrClient, paths } from "~/lib/client.js";
 import { unwrapResultAsync } from "~/lib/client.js";
 import { env } from "~/lib/env.js";
+import { ensureHex } from "~/lib/hex.js";
 import { generateTokenImage, processImagePath } from "~/lib/image.js";
 
 type CreateTokenRequestBody = paths["/print"]["post"]["requestBody"]["content"]["application/json"];
@@ -45,6 +46,20 @@ export function buildToken({ image, image_path, ...rest }: BuildTokenInput, clie
       client.POST("/print", {
         body: { ...rest, image: resolvedImage } as CreateTokenRequestBody,
       }),
-    ),
+    ).map((response) => {
+      // Normalize EVM payload fields to 0x-prefixed hex
+      if (response.payload && "calldata" in response.payload) {
+        const payload = response.payload as { calldata: string };
+        if (payload.calldata) {
+          payload.calldata = ensureHex(payload.calldata);
+        }
+      }
+
+      if (response.payload?.hash) {
+        response.payload.hash = ensureHex(response.payload.hash);
+      }
+
+      return response;
+    }),
   );
 }

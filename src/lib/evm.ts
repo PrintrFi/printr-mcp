@@ -8,6 +8,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { getChainMeta } from "~/lib/chains.js";
+import { ensureHex } from "~/lib/hex.js";
 
 /** Parse chain ID and address from a CAIP-10 string (e.g. "eip155:8453:0x...") */
 export function parseEvmCaip10(caip10: string): { chainId: number; address: Address } {
@@ -74,7 +75,7 @@ export async function signAndSubmitEvm(
 
   const hash = await walletClient.sendTransaction({
     to: toAddress,
-    data: (payload.calldata.startsWith("0x") ? payload.calldata : `0x${payload.calldata}`) as Hex,
+    data: ensureHex(payload.calldata),
     value: BigInt(payload.value),
     gas: BigInt(payload.gas_limit),
   });
