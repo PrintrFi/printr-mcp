@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/PrintrFi/printr-mcp/compare/v0.4.0...v0.4.1) (2026-03-02)
+
+
+### Bug Fixes
+
+* correct mcpName case to match GitHub org ([f9a371c](https://github.com/PrintrFi/printr-mcp/commit/f9a371c6ca46a5cec7d8c83ab7f61b47dd88fffd))
+
 ## [0.4.0](https://github.com/PrintrFi/printr-mcp/compare/v0.3.3...v0.4.0) (2026-03-02)
 
 
