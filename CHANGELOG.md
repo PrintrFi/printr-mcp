@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.0](https://github.com/PrintrFi/printr-mcp/compare/v0.3.3...v0.4.0) (2026-03-02)
+
+
+### Features
+
+* **lib:** add ensureHex utility for base64/hex normalization ([af4a1f4](https://github.com/PrintrFi/printr-mcp/commit/af4a1f45c4cdbdd7f5ab7b07557a11c35010dc84))
+* MCP registry support and hex normalization ([61de503](https://github.com/PrintrFi/printr-mcp/commit/61de5033c4c2ee6f23fd36ec83c39d6025284a1f))
+* **wallet:** add bulk remove tool for keystore cleanup ([673aefe](https://github.com/PrintrFi/printr-mcp/commit/673aefeebab2041fa1324e0161d8c5d4607fccb1))
+
 ## [0.3.3](https://github.com/PrintrFi/printr-mcp/compare/v0.3.2...v0.3.3) (2026-02-25)
 
 
