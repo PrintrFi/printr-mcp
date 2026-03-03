@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.2](https://github.com/PrintrFi/printr-mcp/compare/v0.4.1...v0.4.2) (2026-03-03)
+
+
+### Bug Fixes
+
+* correct RPC endpoints for Monad, HyperEVM, and MegaETH ([0f6b05b](https://github.com/PrintrFi/printr-mcp/commit/0f6b05b93b8a92744fea669d63a1fa0d9bcb5677))
+* correct RPC endpoints for Monad, HyperEVM, and MegaETH ([d6ce3fd](https://github.com/PrintrFi/printr-mcp/commit/d6ce3fd67dcbc822bd8a699b018b06df14764b91))
+
 ## [0.4.1](https://github.com/PrintrFi/printr-mcp/compare/v0.4.0...v0.4.1) (2026-03-02)
 
 
