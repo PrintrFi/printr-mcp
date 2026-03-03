@@ -38,6 +38,7 @@
     "test": "bun test src/lib src/server src/tools src/integration.spec.ts",
     "test:coverage": "bun test --coverage --coverage-reporter=lcov src/lib src/server src/tools src/integration.spec.ts",
     "test:e2e": "bun test src/e2e.spec.ts",
+    "test:rpc": "bun test src/lib/chains.rpc.spec.ts",
     "test:all": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
