@@ -31,13 +31,13 @@ export const CHAIN_META: Record<string, ChainMeta> = {
     name: "Monad",
     symbol: "MON",
     decimals: 18,
-    defaultRpc: "https://testnet-rpc.monad.xyz",
+    defaultRpc: "https://monad-mainnet.drpc.org",
   },
   "eip155:999": {
     name: "HyperEVM",
     symbol: "HYPE",
     decimals: 18,
-    defaultRpc: "https://rpc.hyperliquid-evm.xyz/evm",
+    defaultRpc: "https://rpc.hyperliquid.xyz/evm",
   },
   "eip155:5000": {
     name: "Mantle",
@@ -45,11 +45,11 @@ export const CHAIN_META: Record<string, ChainMeta> = {
     decimals: 18,
     defaultRpc: "https://rpc.mantle.xyz",
   },
-  "eip155:6342": {
+  "eip155:4326": {
     name: "MegaETH",
     symbol: "ETH",
     decimals: 18,
-    defaultRpc: "https://carrot.megaeth.com/rpc",
+    defaultRpc: "https://mainnet.megaeth.com/rpc",
   },
   "eip155:8453": {
     name: "Base",
