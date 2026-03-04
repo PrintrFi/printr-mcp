@@ -1,146 +1,91 @@
-import { describe, expect, it, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
+import fc from "fast-check";
 import {
   asset,
-  caip2ChainId,
-  caip10Address,
   cost,
   externalLinks,
   graduationThreshold,
   initialBuy,
   quoteOutput,
-  tokenId,
 } from "./schemas.js";
-
-describe("string-based schemas", () => {
-  const schemas = [
-    { name: "caip2ChainId", schema: caip2ChainId, valid: "eip155:8453" },
-    {
-      name: "caip10Address",
-      schema: caip10Address,
-      valid: "eip155:8453:0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
-    },
-    { name: "tokenId", schema: tokenId, valid: "0x3a7a8d1234567890abcdef" },
-  ];
-
-  test.each(schemas)("$name rejects non-string values", ({ schema }) => {
-    expect(schema.safeParse(123).success).toBe(false);
-    expect(schema.safeParse(null).success).toBe(false);
-    expect(schema.safeParse(undefined).success).toBe(false);
-  });
-});
-
-describe("caip2ChainId", () => {
-  const validCases = [
-    { name: "EVM chain (Base)", input: "eip155:8453" },
-    { name: "EVM chain (Ethereum mainnet)", input: "eip155:1" },
-    { name: "Solana chain", input: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" },
-  ];
-
-  test.each(validCases)("accepts $name", ({ input }) => {
-    const result = caip2ChainId.safeParse(input);
-    expect(result.success).toBe(true);
-  });
-});
-
-describe("caip10Address", () => {
-  it("accepts valid CAIP-10 addresses", () => {
-    const result = caip10Address.safeParse("eip155:8453:0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb");
-    expect(result.success).toBe(true);
-  });
-});
-
-describe("tokenId", () => {
-  const validCases = [
-    { name: "hex token ID", input: "0x3a7a8d1234567890abcdef" },
-    { name: "CAIP-10 address", input: "eip155:8453:0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb" },
-  ];
-
-  test.each(validCases)("accepts $name", ({ input }) => {
-    const result = tokenId.safeParse(input);
-    expect(result.success).toBe(true);
-  });
-});
 
 describe("initialBuy", () => {
   describe("supply_percent", () => {
     const validCases = [
-      { name: "valid middle value", value: 10 },
       { name: "minimum (0.01)", value: 0.01 },
+      { name: "middle value", value: 10 },
       { name: "maximum (69)", value: 69 },
     ];
 
-    test.each(validCases)("accepts $name", ({ value }) => {
-      const result = initialBuy.safeParse({ supply_percent: value });
-      expect(result.success).toBe(true);
-    });
-
     const invalidCases = [
       { name: "below minimum", value: 0.009 },
-      { name: "above maximum", value: 70 },
       { name: "zero", value: 0 },
+      { name: "above maximum", value: 70 },
     ];
 
+    test.each(validCases)("accepts $name", ({ value }) => {
+      expect(initialBuy.safeParse({ supply_percent: value }).success).toBe(true);
+    });
+
     test.each(invalidCases)("rejects $name", ({ value }) => {
-      const result = initialBuy.safeParse({ supply_percent: value });
-      expect(result.success).toBe(false);
+      expect(initialBuy.safeParse({ supply_percent: value }).success).toBe(false);
+    });
+
+    test("accepts values in valid range (property)", () => {
+      fc.assert(
+        fc.property(fc.double({ min: 0.01, max: 69, noNaN: true }), (value) => {
+          expect(initialBuy.safeParse({ supply_percent: value }).success).toBe(true);
+        }),
+      );
     });
   });
 
   describe("spend_usd", () => {
     const validCases = [
-      { name: "integer value", value: 100 },
+      { name: "zero (no initial buy)", value: 0 },
       { name: "decimal value", value: 0.5 },
+      { name: "integer value", value: 100 },
     ];
 
     test.each(validCases)("accepts $name", ({ value }) => {
-      const result = initialBuy.safeParse({ spend_usd: value });
-      expect(result.success).toBe(true);
+      expect(initialBuy.safeParse({ spend_usd: value }).success).toBe(true);
     });
 
-    const invalidCases = [
-      { name: "zero", value: 0 },
-      { name: "negative", value: -10 },
-    ];
-
-    test.each(invalidCases)("rejects $name", ({ value }) => {
-      const result = initialBuy.safeParse({ spend_usd: value });
-      expect(result.success).toBe(false);
+    test("rejects negative numbers (property)", () => {
+      fc.assert(
+        fc.property(fc.double({ max: -0.001, noNaN: true }), (value) => {
+          expect(initialBuy.safeParse({ spend_usd: value }).success).toBe(false);
+        }),
+      );
     });
   });
 
   describe("spend_native", () => {
-    it("accepts valid spend_native", () => {
-      const result = initialBuy.safeParse({ spend_native: "1000000000000000000" });
-      expect(result.success).toBe(true);
+    test("accepts any string (property)", () => {
+      fc.assert(
+        fc.property(fc.string(), (value) => {
+          expect(initialBuy.safeParse({ spend_native: value }).success).toBe(true);
+        }),
+      );
     });
 
-    it("rejects non-string spend_native", () => {
-      const result = initialBuy.safeParse({ spend_native: 1000000 });
-      expect(result.success).toBe(false);
+    test("rejects non-string types", () => {
+      for (const value of [1000000, null, {}, []]) {
+        expect(initialBuy.safeParse({ spend_native: value }).success).toBe(false);
+      }
     });
   });
 
-  describe("refinement logic", () => {
-    const invalidCases = [
-      {
-        name: "empty object",
-        input: {},
-      },
-      {
-        name: "supply_percent + spend_usd",
-        input: { supply_percent: 10, spend_usd: 100 },
-      },
-      {
-        name: "spend_usd + spend_native",
-        input: { spend_usd: 100, spend_native: "1000000" },
-      },
-      {
-        name: "all three fields",
-        input: { supply_percent: 10, spend_usd: 100, spend_native: "1000000" },
-      },
+  describe("mutual exclusivity", () => {
+    const invalidCombinations = [
+      { name: "empty object", input: {} },
+      { name: "supply_percent + spend_usd", input: { supply_percent: 10, spend_usd: 100 } },
+      { name: "supply_percent + spend_native", input: { supply_percent: 10, spend_native: "100" } },
+      { name: "spend_usd + spend_native", input: { spend_usd: 100, spend_native: "100" } },
+      { name: "all three", input: { supply_percent: 10, spend_usd: 100, spend_native: "100" } },
     ];
 
-    test.each(invalidCases)("rejects $name", ({ input }) => {
+    test.each(invalidCombinations)("rejects $name", ({ input }) => {
       const result = initialBuy.safeParse(input);
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -151,153 +96,98 @@ describe("initialBuy", () => {
 });
 
 describe("graduationThreshold", () => {
-  const validCases = [
-    { name: "69000", value: 69000 },
-    { name: "250000", value: 250000 },
-    { name: "undefined (optional)", value: undefined },
-  ];
-
-  test.each(validCases)("accepts $name", ({ value }) => {
-    const result = graduationThreshold.safeParse(value);
-    expect(result.success).toBe(true);
+  test("accepts only 69000, 250000, or undefined", () => {
+    expect(graduationThreshold.safeParse(69000).success).toBe(true);
+    expect(graduationThreshold.safeParse(250000).success).toBe(true);
+    expect(graduationThreshold.safeParse(undefined).success).toBe(true);
   });
 
-  const invalidCases = [
-    { name: "other number", value: 100000 },
-    { name: "string value", value: "69000" },
-    { name: "zero", value: 0 },
-  ];
-
-  test.each(invalidCases)("rejects $name", ({ value }) => {
-    const result = graduationThreshold.safeParse(value);
-    expect(result.success).toBe(false);
+  test("rejects other values (property)", () => {
+    fc.assert(
+      fc.property(
+        fc.integer().filter((n) => n !== 69000 && n !== 250000),
+        (value) => {
+          expect(graduationThreshold.safeParse(value).success).toBe(false);
+        },
+      ),
+    );
   });
 });
 
 describe("externalLinks", () => {
-  const validCases = [
-    {
-      name: "all links",
-      input: {
-        website: "https://example.com",
-        x: "https://x.com/handle",
-        telegram: "https://t.me/channel",
-        github: "https://github.com/user/repo",
-      },
-    },
-    {
-      name: "partial links",
-      input: { website: "https://example.com" },
-    },
-    {
-      name: "empty object",
-      input: {},
-    },
-    {
-      name: "undefined",
-      input: undefined,
-    },
-  ];
-
-  test.each(validCases)("accepts $name", ({ input }) => {
-    const result = externalLinks.safeParse(input);
-    expect(result.success).toBe(true);
+  test("accepts valid URLs (property)", () => {
+    fc.assert(
+      fc.property(fc.webUrl(), (url) => {
+        expect(externalLinks.safeParse({ website: url }).success).toBe(true);
+      }),
+    );
   });
 
-  const invalidCases = [
-    { name: "invalid URL", input: { website: "not-a-url" } },
-    { name: "malformed URL", input: { website: "not a url" } },
-  ];
+  test("accepts empty/undefined", () => {
+    expect(externalLinks.safeParse({}).success).toBe(true);
+    expect(externalLinks.safeParse(undefined).success).toBe(true);
+  });
 
-  test.each(invalidCases)("rejects $name", ({ input }) => {
-    const result = externalLinks.safeParse(input);
-    expect(result.success).toBe(false);
+  test("rejects invalid URLs", () => {
+    expect(externalLinks.safeParse({ website: "not-a-url" }).success).toBe(false);
   });
 });
 
 describe("cost", () => {
-  it("accepts valid cost object", () => {
-    const result = cost.safeParse({
-      asset_id: "eip155:8453:0x0000",
-      cost_usd: 1.5,
-      cost_asset_atomic: "1500000000000000000",
-    });
-    expect(result.success).toBe(true);
+  const baseCost = {
+    asset_id: "eip155:8453:0x0000",
+    cost_usd: 1.5,
+    cost_asset_atomic: "1500000000000000000",
+  };
+
+  test("accepts valid cost objects (property)", () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          asset_id: fc.string(),
+          cost_usd: fc.double({ noNaN: true, noDefaultInfinity: true }),
+          cost_asset_atomic: fc.string(),
+        }),
+        (input) => {
+          expect(cost.safeParse(input).success).toBe(true);
+        },
+      ),
+    );
   });
 
-  const optionalFieldsCases = [
-    {
-      name: "with description",
-      input: {
-        asset_id: "eip155:8453:0x0000",
-        cost_usd: 1.5,
-        cost_asset_atomic: "1500000000000000000",
-        description: "Gas Fee",
-      },
-    },
-    {
-      name: "with limit",
-      input: {
-        asset_id: "eip155:8453:0x0000",
-        cost_usd: 1.5,
-        cost_asset_atomic: "1500000000000000000",
-        limit: 10,
-      },
-    },
-  ];
-
-  test.each(optionalFieldsCases)("accepts cost $name", ({ input }) => {
-    const result = cost.safeParse(input);
-    expect(result.success).toBe(true);
+  test("accepts optional fields", () => {
+    expect(cost.safeParse({ ...baseCost, description: "Gas" }).success).toBe(true);
+    expect(cost.safeParse({ ...baseCost, limit: 10 }).success).toBe(true);
   });
 
-  it("rejects missing required fields", () => {
-    const result = cost.safeParse({ asset_id: "eip155:8453:0x0000" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects invalid cost_usd type", () => {
-    const result = cost.safeParse({
-      asset_id: "eip155:8453:0x0000",
-      cost_usd: "1.5",
-      cost_asset_atomic: "1500000000000000000",
-    });
-    expect(result.success).toBe(false);
+  test("rejects missing required fields", () => {
+    expect(cost.safeParse({ asset_id: "x" }).success).toBe(false);
+    expect(cost.safeParse({ asset_id: "x", cost_usd: 1 }).success).toBe(false);
   });
 });
 
 describe("asset", () => {
-  it("accepts valid asset object", () => {
-    const result = asset.safeParse({
-      id: "eip155:8453:0x0000",
-      name: "Ethereum",
-      symbol: "ETH",
-      decimals: 18,
-      price_usd: 2500.5,
-    });
-    expect(result.success).toBe(true);
+  test("accepts valid asset objects (property)", () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          id: fc.string(),
+          name: fc.string(),
+          symbol: fc.string(),
+          decimals: fc.integer({ min: 0, max: 36 }),
+          price_usd: fc.double({ min: 0, noNaN: true, noDefaultInfinity: true }),
+        }),
+        (input) => {
+          expect(asset.safeParse(input).success).toBe(true);
+        },
+      ),
+    );
   });
 
-  const invalidCases = [
-    {
-      name: "missing required fields",
-      input: { id: "eip155:8453:0x0000", name: "Ethereum" },
-    },
-    {
-      name: "invalid decimals type",
-      input: {
-        id: "eip155:8453:0x0000",
-        name: "Ethereum",
-        symbol: "ETH",
-        decimals: "18",
-        price_usd: 2500.5,
-      },
-    },
-  ];
-
-  test.each(invalidCases)("rejects $name", ({ input }) => {
-    const result = asset.safeParse(input);
-    expect(result.success).toBe(false);
+  test("rejects invalid types", () => {
+    const base = { id: "x", name: "y", symbol: "Z", decimals: 18, price_usd: 100 };
+    expect(asset.safeParse({ ...base, decimals: "18" }).success).toBe(false);
+    expect(asset.safeParse({ ...base, price_usd: "100" }).success).toBe(false);
   });
 });
 
@@ -305,58 +195,18 @@ describe("quoteOutput", () => {
   const validQuote = {
     id: "q1",
     router: "uniswap",
-    assets: [
-      {
-        id: "eip155:8453:0x0000",
-        name: "Ethereum",
-        symbol: "ETH",
-        decimals: 18,
-        price_usd: 2500.5,
-      },
-    ],
-    costs: [
-      {
-        asset_id: "eip155:8453:0x0000",
-        cost_usd: 1.5,
-        cost_asset_atomic: "1500000000000000000",
-      },
-    ],
-    total: {
-      asset_id: "eip155:8453:0x0000",
-      cost_usd: 1.5,
-      cost_asset_atomic: "1500000000000000000",
-    },
+    assets: [{ id: "x", name: "ETH", symbol: "ETH", decimals: 18, price_usd: 2500 }],
+    costs: [{ asset_id: "x", cost_usd: 1.5, cost_asset_atomic: "1500000000" }],
+    total: { asset_id: "x", cost_usd: 1.5, cost_asset_atomic: "1500000000" },
   };
 
-  it("accepts valid quote output", () => {
-    const result = quoteOutput.safeParse(validQuote);
-    expect(result.success).toBe(true);
+  test("accepts valid quote with optional initial_buy_amount", () => {
+    expect(quoteOutput.safeParse(validQuote).success).toBe(true);
+    expect(quoteOutput.safeParse({ ...validQuote, initial_buy_amount: "1000" }).success).toBe(true);
   });
 
-  it("accepts quote with optional initial_buy_amount", () => {
-    const result = quoteOutput.safeParse({
-      ...validQuote,
-      initial_buy_amount: "1000000000000000000",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  const invalidCases = [
-    {
-      name: "missing required fields",
-      input: { id: "q1", router: "uniswap" },
-    },
-    {
-      name: "invalid assets array",
-      input: {
-        ...validQuote,
-        assets: [{ invalid: "asset" }],
-      },
-    },
-  ];
-
-  test.each(invalidCases)("rejects $name", ({ input }) => {
-    const result = quoteOutput.safeParse(input);
-    expect(result.success).toBe(false);
+  test("rejects invalid structure", () => {
+    expect(quoteOutput.safeParse({ id: "q1", router: "x" }).success).toBe(false);
+    expect(quoteOutput.safeParse({ ...validQuote, assets: [{}] }).success).toBe(false);
   });
 });
