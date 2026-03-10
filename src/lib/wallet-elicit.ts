@@ -6,7 +6,6 @@ import { checkEvmBalance, checkSvmBalance } from "~/lib/balance.js";
 import { getChainMeta } from "~/lib/chains.js";
 import { env } from "~/lib/env.js";
 import { normalisePrivateKey, parseEvmCaip10 } from "~/lib/evm.js";
-import { DEFAULT_SVM_RPC } from "~/lib/svm.js";
 import { type ActiveWallet, activeWallets, type ChainType } from "~/server/wallet-sessions.js";
 
 export type { ChainType, ActiveWallet };
@@ -61,8 +60,7 @@ async function checkBalance(
       symbol: r.value.symbol,
     };
   }
-  const rpc = ctx.type === "svm" ? ctx.rpcUrl : DEFAULT_SVM_RPC;
-  const r = await checkSvmBalance(address, rpc);
+  const r = await checkSvmBalance(address, ctx.type === "svm" ? ctx.rpcUrl : undefined);
   if (r.isErr()) return fallback;
   return {
     sufficient: r.value.sufficient,

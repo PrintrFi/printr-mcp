@@ -2,8 +2,8 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { err, ok, type Result } from "neverthrow";
 import { createPublicClient, defineChain, erc20Abi, formatUnits, http } from "viem";
 import type { ChainMeta } from "~/lib/chains.js";
-import { getChainMeta } from "~/lib/chains.js";
-import { DEFAULT_SVM_RPC } from "~/lib/svm.js";
+import { getChainMeta, getRpcUrl, toCaip2 } from "~/lib/chains.js";
+import { getSvmRpcUrl } from "~/lib/svm.js";
 
 export type SimpleBalanceResult = {
   readonly balance_atomic: string;
@@ -32,9 +32,9 @@ export async function checkEvmBalance(
   gasLimit: number,
   rpcUrl?: string,
 ): Promise<Result<BalanceInfo, BalanceError>> {
-  const caip2 = `eip155:${chainId}`;
+  const caip2 = toCaip2("eip155", chainId);
   const meta = getChainMeta(caip2);
-  const rpc = rpcUrl ?? meta?.defaultRpc;
+  const rpc = getRpcUrl(caip2, rpcUrl);
   if (!rpc) return err("no_rpc");
 
   try {
@@ -76,7 +76,7 @@ export async function checkSvmBalance(
   address: string,
   rpcUrl?: string,
 ): Promise<Result<BalanceInfo, BalanceError>> {
-  const rpc = rpcUrl ?? DEFAULT_SVM_RPC;
+  const rpc = getSvmRpcUrl(rpcUrl);
   try {
     const connection = new Connection(rpc, "confirmed");
     const balance = BigInt(await connection.getBalance(new PublicKey(address)));
@@ -194,15 +194,11 @@ export const getSplTokenBalance = async (
   };
 };
 
-export const resolveRpcUrl = (
-  namespace: string,
-  rpcOverride?: string,
-  defaultRpc?: string,
-): string => {
-  if (rpcOverride) return rpcOverride;
-  if (namespace === "solana") return defaultRpc ?? DEFAULT_SVM_RPC;
-  if (!defaultRpc) throw new Error("No RPC URL available. Pass rpc_url explicitly.");
-  return defaultRpc;
+export const resolveRpcUrl = (caip2: string, rpcOverride?: string): string => {
+  if (caip2.startsWith("solana:")) return getSvmRpcUrl(rpcOverride);
+  const resolved = getRpcUrl(caip2, rpcOverride);
+  if (resolved) return resolved;
+  throw new Error(`No RPC URL available for ${caip2}. Pass rpc_url explicitly or set RPC_URLS.`);
 };
 
 export const fetchNativeBalance = async (
@@ -212,7 +208,8 @@ export const fetchNativeBalance = async (
   meta: ChainMeta,
   rpcOverride?: string,
 ): Promise<SimpleBalanceResult> => {
-  const rpcUrl = resolveRpcUrl(namespace, rpcOverride, meta.defaultRpc);
+  const caip2 = toCaip2(namespace as "eip155" | "solana", chainRef);
+  const rpcUrl = resolveRpcUrl(caip2, rpcOverride);
   return namespace === "solana"
     ? getSvmNativeBalance(address, rpcUrl)
     : getEvmNativeBalance(Number(chainRef), address as `0x${string}`, rpcUrl, meta);
@@ -226,7 +223,8 @@ export const fetchTokenBalance = async (
   meta: ChainMeta,
   rpcOverride?: string,
 ): Promise<SimpleBalanceResult> => {
-  const rpcUrl = resolveRpcUrl(namespace, rpcOverride, meta.defaultRpc);
+  const caip2 = toCaip2(namespace as "eip155" | "solana", chainRef);
+  const rpcUrl = resolveRpcUrl(caip2, rpcOverride);
   return namespace === "solana"
     ? getSplTokenBalance(tokenAddress, walletAddress, rpcUrl)
     : getEvmTokenBalance(
