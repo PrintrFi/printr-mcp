@@ -8,9 +8,16 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
-import { env } from "~/lib/env.js";
+import { getRpcUrl } from "~/lib/chains.js";
 
-export const DEFAULT_SVM_RPC = env.SVM_RPC_URL ?? "https://api.mainnet-beta.solana.com";
+export const SOLANA_MAINNET_CAIP2 = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
+
+/** Default public RPC for Solana mainnet */
+export const DEFAULT_SVM_RPC = "https://api.mainnet-beta.solana.com";
+
+/** Get the RPC URL for Solana, respecting RPC_URLS config */
+export const getSvmRpcUrl = (rpcOverride?: string): string =>
+  getRpcUrl(SOLANA_MAINNET_CAIP2, rpcOverride) ?? DEFAULT_SVM_RPC;
 
 export type SvmInstruction = {
   program_id: string;
@@ -33,8 +40,9 @@ export type SvmSubmitResult = {
 export async function signAndSubmitSvm(
   payload: SvmPayload,
   privateKey: string,
-  rpcUrl: string = DEFAULT_SVM_RPC,
+  rpcUrlOverride?: string,
 ): Promise<SvmSubmitResult> {
+  const rpcUrl = getSvmRpcUrl(rpcUrlOverride);
   const connection = new Connection(rpcUrl, "confirmed");
   const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
 

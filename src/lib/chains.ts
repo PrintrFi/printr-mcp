@@ -1,5 +1,7 @@
 /** Minimal CAIP-2 chain metadata derived from printr/web/app/stores/chains/defs.ts */
 
+import { ALCHEMY_RPC_TEMPLATES, env } from "~/lib/env.js";
+
 export type ChainMeta = {
   name: string;
   symbol: string;
@@ -82,8 +84,30 @@ export const CHAIN_META: Record<string, ChainMeta> = {
   },
 };
 
+/** Additional aliases for chain names (lowercase) */
+const CHAIN_ALIASES: Record<string, string> = {
+  eth: "eip155:1",
+  bsc: "eip155:56",
+  arb: "eip155:42161",
+  avax: "eip155:43114",
+  sol: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+};
+
+/** Map of lowercase chain names to CAIP-2 IDs (derived from CHAIN_META + aliases) */
+const CHAIN_NAME_TO_CAIP2: Record<string, string> = {
+  ...Object.fromEntries(
+    Object.entries(CHAIN_META).map(([caip2, meta]) => [meta.name.toLowerCase(), caip2]),
+  ),
+  ...CHAIN_ALIASES,
+};
+
 export function getChainMeta(caip2: string): ChainMeta | undefined {
   return CHAIN_META[caip2];
+}
+
+/** Construct a CAIP-2 ID from namespace and chain reference */
+export function toCaip2(namespace: "eip155" | "solana", chainRef: string | number): string {
+  return `${namespace}:${chainRef}`;
 }
 
 /**
@@ -96,4 +120,55 @@ export function caip10ToChainId(caip10: string): string {
   if (parts[0] === "eip155") return `eip155:${parts[1]}`;
   if (parts[0] === "solana") return `solana:${parts[1]}`;
   return parts.slice(0, 2).join(":");
+}
+
+/**
+ * Look up user-configured RPC from RPC_URLS env var.
+ * Checks CAIP-2 ID, chain name, and aliases (e.g. "eth", "sol", "arb").
+ */
+function getUserRpc(caip2: string): string | undefined {
+  // Direct CAIP-2 lookup
+  if (env.RPC_URLS[caip2]) return env.RPC_URLS[caip2];
+
+  // Find all names/aliases that map to this caip2
+  for (const [name, chainCaip2] of Object.entries(CHAIN_NAME_TO_CAIP2)) {
+    if (chainCaip2 === caip2 && env.RPC_URLS[name]) {
+      return env.RPC_URLS[name];
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Get Alchemy RPC URL for a chain if ALCHEMY_API_KEY is set.
+ */
+function getAlchemyRpc(caip2: string): string | undefined {
+  if (!env.ALCHEMY_API_KEY) return undefined;
+
+  const meta = CHAIN_META[caip2];
+  if (!meta) return undefined;
+
+  const template = ALCHEMY_RPC_TEMPLATES[meta.name.toLowerCase()];
+  if (!template) return undefined;
+
+  return template.replace("{key}", env.ALCHEMY_API_KEY);
+}
+
+/**
+ * Get the RPC URL for a chain, with the following precedence:
+ * 1. Explicit `rpcOverride` parameter (per-call override)
+ * 2. User-configured RPC from `RPC_URLS` env var (by chain name or CAIP-2)
+ * 3. Alchemy RPC (if `ALCHEMY_API_KEY` is set and chain is supported)
+ * 4. Default public RPC from `CHAIN_META`
+ *
+ * Returns undefined if no RPC is available.
+ */
+export function getRpcUrl(caip2: string, rpcOverride?: string): string | undefined {
+  if (rpcOverride) return rpcOverride;
+  const userConfigured = getUserRpc(caip2);
+  if (userConfigured) return userConfigured;
+  const alchemyRpc = getAlchemyRpc(caip2);
+  if (alchemyRpc) return alchemyRpc;
+  return CHAIN_META[caip2]?.defaultRpc;
 }

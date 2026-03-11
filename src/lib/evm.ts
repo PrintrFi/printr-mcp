@@ -7,7 +7,7 @@ import {
   http,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { getChainMeta } from "~/lib/chains.js";
+import { getChainMeta, getRpcUrl } from "~/lib/chains.js";
 import { ensureHex } from "~/lib/hex.js";
 
 /** Parse chain ID and address from a CAIP-10 string (e.g. "eip155:8453:0x...") */
@@ -50,11 +50,9 @@ export async function signAndSubmitEvm(
   const { chainId, address: toAddress } = parseEvmCaip10(payload.to);
   const caip2 = `eip155:${chainId}`;
   const meta = getChainMeta(caip2);
-  const rpc = rpcUrl ?? meta?.defaultRpc;
+  const rpc = getRpcUrl(caip2, rpcUrl);
   if (!rpc) {
-    throw new Error(
-      `No RPC URL for chain ${caip2}. Pass rpc_url explicitly or add a defaultRpc to CHAIN_META.`,
-    );
+    throw new Error(`No RPC URL for chain ${caip2}. Pass rpc_url explicitly or set RPC_URLS.`);
   }
 
   const chain = defineChain({

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { caip10ToChainId } from "~/lib/chains.js";
 import { toolError, toolOk } from "~/lib/client.js";
 import { env } from "~/lib/env.js";
-import { DEFAULT_SVM_RPC, signAndSubmitSvm } from "~/lib/svm.js";
+import { signAndSubmitSvm } from "~/lib/svm.js";
 import { insufficientFundsMessage, resolveWallet } from "~/lib/wallet-elicit.js";
 
 const svmInstruction = z.object({
@@ -33,7 +33,7 @@ const inputSchema = z.object({
         "WARNING: handle with care — never share or commit this value. " +
         "If omitted, the user will be prompted to select or provision a wallet.",
     ),
-  rpc_url: z.url().optional().describe(`Solana RPC endpoint (default: ${DEFAULT_SVM_RPC})`),
+  rpc_url: z.url().optional().describe("Solana RPC endpoint override"),
 });
 
 const outputSchema = z.object({

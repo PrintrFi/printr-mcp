@@ -261,13 +261,57 @@ If tools are not visible, the client likely needs to be restarted.
 | `OPENROUTER_IMAGE_MODEL` | Override image model (default: `google/gemini-2.5-flash-image`) |
 | `EVM_WALLET_PRIVATE_KEY` | EVM private key for autonomous signing (`AGENT_MODE=1`) |
 | `SVM_WALLET_PRIVATE_KEY` | Solana private key (base58) for autonomous signing (`AGENT_MODE=1`) |
-| `SVM_RPC_URL` | Solana RPC endpoint (default: `https://api.mainnet-beta.solana.com`) |
+| `ALCHEMY_API_KEY` | Alchemy API key - auto-provides RPCs for all supported chains |
+| `RPC_URLS` | JSON map of chain names to custom RPC URLs (overrides Alchemy) |
 | `AGENT_MODE` | Set to `1` to sign automatically using env-var keys instead of interactive wallet selection |
 | `PRINTR_API_KEY` | Partner API key (falls back to the default public key) |
 | `PRINTR_API_BASE_URL` | Override API base URL |
 | `PRINTR_APP_URL` | Override Printr web app URL |
 
 Set these in the `env` block of the server entry in the relevant config file.
+
+### Custom RPC endpoints
+
+**Option 1: Alchemy API key (recommended)**
+
+Set `ALCHEMY_API_KEY` to automatically use Alchemy RPCs for supported chains:
+
+```json
+{
+  "mcpServers": {
+    "printr": {
+      "command": "npx",
+      "args": ["-y", "@printr/mcp@latest"],
+      "env": {
+        "ALCHEMY_API_KEY": "your-alchemy-api-key"
+      }
+    }
+  }
+}
+```
+
+Alchemy-supported chains: Ethereum, BNB, Unichain, HyperEVM, Mantle, Base, Arbitrum, Avalanche, Solana. Other chains (Monad, MegaETH, Plasma) fall back to public RPCs.
+
+**Option 2: Custom RPC URLs**
+
+Use `RPC_URLS` for other providers (Helius, QuickNode, etc.) or to override Alchemy:
+
+```json
+{
+  "env": {
+    "ALCHEMY_API_KEY": "your-alchemy-key",
+    "RPC_URLS": "{'solana': 'https://mainnet.helius-rpc.com/?api-key=YOUR_KEY'}"
+  }
+}
+```
+
+**RPC resolution order:**
+1. Per-call `rpc_url` parameter
+2. `RPC_URLS` (by chain name)
+3. Alchemy (if `ALCHEMY_API_KEY` is set)
+4. Default public RPC
+
+**Supported chain names for `RPC_URLS`:** `ethereum`, `eth`, `base`, `arbitrum`, `arb`, `avalanche`, `avax`, `bnb`, `bsc`, `solana`, `sol`, `mantle`, `monad`, `unichain`, `hyperevm`, `megaeth`, `plasma`
 
 ---
 

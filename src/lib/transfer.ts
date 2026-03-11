@@ -11,8 +11,9 @@ import bs58 from "bs58";
 import { createWalletClient, defineChain, http, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { ChainMeta } from "~/lib/chains.js";
+import { getRpcUrl } from "~/lib/chains.js";
 import { normalisePrivateKey } from "~/lib/evm.js";
-import { DEFAULT_SVM_RPC } from "~/lib/svm.js";
+import { getSvmRpcUrl } from "~/lib/svm.js";
 
 export type EvmTransferResult = {
   readonly type: "evm";
@@ -85,15 +86,17 @@ export const executeTransfer = async (
   meta: ChainMeta,
   rpcOverride?: string,
 ): Promise<TransferResult> => {
+  const caip2 = namespace === "solana" ? `solana:${chainRef}` : `eip155:${chainRef}`;
+
   if (namespace === "solana") {
-    const rpc = rpcOverride ?? meta.defaultRpc ?? DEFAULT_SVM_RPC;
+    const rpc = getSvmRpcUrl(rpcOverride);
     const lamports = BigInt(Math.floor(Number.parseFloat(amount) * LAMPORTS_PER_SOL));
     return transferSvm(toAddress, lamports, privateKey, rpc);
   }
 
-  const rpc = rpcOverride ?? meta.defaultRpc;
+  const rpc = getRpcUrl(caip2, rpcOverride);
   if (!rpc) {
-    throw new Error(`No RPC URL for chain eip155:${chainRef}. Pass rpc_url explicitly.`);
+    throw new Error(`No RPC URL for chain ${caip2}. Pass rpc_url explicitly or set RPC_URLS.`);
   }
 
   const amountAtomic = parseUnits(amount, meta.decimals);

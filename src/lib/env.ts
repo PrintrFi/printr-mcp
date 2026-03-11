@@ -1,5 +1,38 @@
 import { z } from "zod";
 
+/**
+ * Parse RPC_URLS from a JSON-like string to a Record<string, string>.
+ * Supports single quotes for easier config: {'base': 'https://...', 'solana': 'https://...'}
+ */
+export const rpcUrlsSchema = z
+  .string()
+  .optional()
+  .transform((val) => {
+    if (!val) return {} as Record<string, string>;
+    try {
+      // Convert single quotes to double quotes for JSON.parse compatibility
+      const normalized = val.replace(/'/g, '"');
+      const parsed = JSON.parse(normalized);
+      if (typeof parsed !== "object" || parsed === null) return {};
+      return parsed as Record<string, string>;
+    } catch {
+      return {};
+    }
+  });
+
+/** Alchemy RPC URL templates for supported chains (chain name → URL with {key} placeholder) */
+export const ALCHEMY_RPC_TEMPLATES: Record<string, string> = {
+  ethereum: "https://eth-mainnet.g.alchemy.com/v2/{key}",
+  bnb: "https://bnb-mainnet.g.alchemy.com/v2/{key}",
+  unichain: "https://unichain-mainnet.g.alchemy.com/v2/{key}",
+  hyperevm: "https://hyperliquid-mainnet.g.alchemy.com/v2/{key}",
+  mantle: "https://mantle-mainnet.g.alchemy.com/v2/{key}",
+  base: "https://base-mainnet.g.alchemy.com/v2/{key}",
+  arbitrum: "https://arb-mainnet.g.alchemy.com/v2/{key}",
+  avalanche: "https://avax-mainnet.g.alchemy.com/v2/{key}",
+  solana: "https://solana-mainnet.g.alchemy.com/v2/{key}",
+};
+
 const schema = z.object({
   PRINTR_API_KEY: z
     .string()
@@ -11,7 +44,10 @@ const schema = z.object({
   OPENROUTER_IMAGE_MODEL: z.string().default("google/gemini-2.5-flash-image"),
   EVM_WALLET_PRIVATE_KEY: z.string().optional(),
   SVM_WALLET_PRIVATE_KEY: z.string().optional(),
-  SVM_RPC_URL: z.string().optional(),
+  /** Alchemy API key - automatically provides RPCs for supported chains */
+  ALCHEMY_API_KEY: z.string().optional(),
+  /** JSON map of chain names to custom RPC URLs (overrides Alchemy), e.g. {'base': 'https://...'} */
+  RPC_URLS: rpcUrlsSchema,
   AGENT_MODE: z.string().optional(),
   PRINTR_WALLET_STORE: z.string().optional(),
   // dev only

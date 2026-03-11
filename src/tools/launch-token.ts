@@ -14,7 +14,7 @@ import {
   initialBuy,
   quoteOutput,
 } from "~/lib/schemas.js";
-import { DEFAULT_SVM_RPC, type SvmPayload, signAndSubmitSvm } from "~/lib/svm.js";
+import { type SvmPayload, signAndSubmitSvm } from "~/lib/svm.js";
 import { buildToken } from "~/lib/token.js";
 import { createSession, LOCAL_SESSION_ORIGIN, startSessionServer } from "~/server";
 
@@ -56,9 +56,7 @@ const inputSchema = z.object({
   rpc_url: z
     .url()
     .optional()
-    .describe(
-      `RPC endpoint override. EVM falls back to the chain's default public RPC. SVM defaults to ${DEFAULT_SVM_RPC}.`,
-    ),
+    .describe("RPC endpoint override. Falls back to RPC_URLS config or chain defaults."),
 });
 
 const outputSchema = z.object({
