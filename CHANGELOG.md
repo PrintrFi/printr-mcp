@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.6.0](https://github.com/PrintrFi/printr-mcp/compare/v0.5.0...v0.6.0) (2026-03-11)
+
+
+### Features
+
+* **chains:** add getRpcUrl with Alchemy and custom RPC support ([5adbe1f](https://github.com/PrintrFi/printr-mcp/commit/5adbe1f115b5fdd40d1c6d850325685bf6c79a04))
+* custom RPC configuration with Alchemy support ([eba790a](https://github.com/PrintrFi/printr-mcp/commit/eba790a7011e064edc9627f6fcf57c02bcfad168))
+* **env:** add RPC_URLS and ALCHEMY_API_KEY config ([1398f29](https://github.com/PrintrFi/printr-mcp/commit/1398f292b379535e721bdcd46be750b9688b6fef))
+
 ## [0.5.0](https://github.com/PrintrFi/printr-mcp/compare/v0.4.2...v0.5.0) (2026-03-04)
 
 
