@@ -8,6 +8,7 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
+import { err, ok, type Result } from "neverthrow";
 import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
@@ -15,21 +16,120 @@ import { type ChainType, chainTypeFromCaip2, parseCaip2 } from "~/lib/caip.js";
 import type { ChainMeta } from "~/lib/chains.js";
 import { getChainMeta, getRpcUrl } from "~/lib/chains.js";
 import { toolError, toolOk } from "~/lib/client.js";
+import { env } from "~/lib/env.js";
 import { normalisePrivateKey } from "~/lib/evm.js";
+import { decryptKey, getWallet } from "~/lib/keystore.js";
+import {
+  clearActiveWalletId,
+  clearLastDeploymentWalletId,
+  getActiveWalletId,
+  getLastDeploymentWalletId,
+} from "~/lib/state.js";
 import { getSvmRpcUrl, sendAndConfirmSvmTransaction } from "~/lib/svm.js";
 import { getTreasuryKeyOrError } from "~/lib/treasury.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
-type ActiveWalletResult = { error: string } | { wallet: { privateKey: string; address: string } };
+type DrainError = { message: string };
 
-function getActiveWalletOrError(type: ChainType): ActiveWalletResult {
-  const wallet = activeWallets.get(type);
-  if (!wallet) {
-    return {
-      error: `No active ${type.toUpperCase()} deployment wallet. Call printr_fund_deployment_wallet first.`,
-    };
+type ResolvedWallet = { privateKey: string; address: string; walletId: string };
+
+function getDeploymentPassword(): Result<string, DrainError> {
+  const password = env.PRINTR_DEPLOYMENT_PASSWORD;
+  if (!password) {
+    return err({
+      message:
+        "PRINTR_DEPLOYMENT_PASSWORD environment variable is required to decrypt deployment wallets. " +
+        "This is the same password used when creating deployment wallets.",
+    });
   }
-  return { wallet };
+  return ok(password);
+}
+
+function resolveWallet(type: ChainType, walletId?: string): Result<ResolvedWallet, DrainError> {
+  // Priority 1: Explicit wallet_id parameter
+  if (walletId) {
+    return getDeploymentPassword().andThen((password) => {
+      const entry = getWallet(walletId);
+      if (!entry) {
+        return err({ message: `Wallet not found in keystore: ${walletId}` });
+      }
+      return decryptKey(entry, password)
+        .map((privateKey) => ({ privateKey, address: entry.address, walletId: entry.id }))
+        .mapErr(
+          () =>
+            ({
+              message:
+                "Failed to decrypt wallet. Check that PRINTR_DEPLOYMENT_PASSWORD matches " +
+                "the password used when the wallet was created.",
+            }) as DrainError,
+        );
+    });
+  }
+
+  // Priority 2: In-memory active wallet (current session)
+  const memoryWallet = activeWallets.get(type);
+  if (memoryWallet) {
+    const activeId = getActiveWalletId(type);
+    return ok({
+      privateKey: memoryWallet.privateKey,
+      address: memoryWallet.address,
+      walletId: activeId ?? "unknown",
+    });
+  }
+
+  // Priority 3: Persisted active wallet ID (after restart recovery)
+  const persistedActiveId = getActiveWalletId(type);
+  if (persistedActiveId) {
+    return getDeploymentPassword().andThen((password) => {
+      const entry = getWallet(persistedActiveId);
+      if (!entry) {
+        return err({
+          message:
+            `Previously active wallet ${persistedActiveId} not found in keystore. ` +
+            "It may have been removed.",
+        });
+      }
+      return decryptKey(entry, password)
+        .map((privateKey) => ({ privateKey, address: entry.address, walletId: entry.id }))
+        .mapErr(
+          () =>
+            ({
+              message:
+                "Failed to decrypt previously active wallet. Check PRINTR_DEPLOYMENT_PASSWORD.",
+            }) as DrainError,
+        );
+    });
+  }
+
+  // Priority 4: Last deployment wallet ID (fallback recovery)
+  const lastDeploymentId = getLastDeploymentWalletId();
+  if (lastDeploymentId) {
+    return getDeploymentPassword().andThen((password) => {
+      const entry = getWallet(lastDeploymentId);
+      if (!entry) {
+        return err({
+          message:
+            `Last deployment wallet ${lastDeploymentId} not found in keystore. ` +
+            "It may have been removed.",
+        });
+      }
+      return decryptKey(entry, password)
+        .map((privateKey) => ({ privateKey, address: entry.address, walletId: entry.id }))
+        .mapErr(
+          () =>
+            ({
+              message:
+                "Failed to decrypt last deployment wallet. Check PRINTR_DEPLOYMENT_PASSWORD.",
+            }) as DrainError,
+        );
+    });
+  }
+
+  return err({
+    message:
+      `No active ${type.toUpperCase()} deployment wallet found. ` +
+      "Either call printr_fund_deployment_wallet first, or provide wallet_id explicitly.",
+  });
 }
 
 type EvmConfigResult = { error: string } | { chainId: number; rpc: string };
@@ -59,6 +159,7 @@ function buildDrainResult(
   fromAddress: string,
   toAddress: string,
   remainingAtomic: bigint,
+  walletId: string,
   tx?: { type: "svm"; signature: string } | { type: "evm"; hash: string },
 ) {
   return {
@@ -70,18 +171,19 @@ function buildDrainResult(
     ...(tx?.type === "svm" ? { tx_signature: tx.signature } : {}),
     ...(tx?.type === "evm" ? { tx_hash: tx.hash } : {}),
     remaining_balance: formatAmount(remainingAtomic, meta.decimals),
+    wallet_id: walletId,
   };
 }
 
 async function drainSvm(
-  activeWallet: { privateKey: string; address: string },
+  wallet: ResolvedWallet,
   treasuryKey: string,
   keepMinimum: number,
   meta: ChainMeta,
 ) {
   const rpc = getSvmRpcUrl();
   const connection = new Connection(rpc, "confirmed");
-  const deploymentKeypair = Keypair.fromSecretKey(bs58.decode(activeWallet.privateKey));
+  const deploymentKeypair = Keypair.fromSecretKey(bs58.decode(wallet.privateKey));
   const treasuryKeypair = Keypair.fromSecretKey(bs58.decode(treasuryKey));
   const treasuryAddress = treasuryKeypair.publicKey.toBase58();
 
@@ -95,7 +197,14 @@ async function drainSvm(
 
   if (drainAmount <= 0n) {
     return {
-      result: buildDrainResult(0n, meta, activeWallet.address, treasuryAddress, balanceLamports),
+      result: buildDrainResult(
+        0n,
+        meta,
+        wallet.address,
+        treasuryAddress,
+        balanceLamports,
+        wallet.walletId,
+      ),
     };
   }
 
@@ -112,29 +221,37 @@ async function drainSvm(
   ]);
   const finalBalance = await connection.getBalance(deploymentKeypair.publicKey);
 
+  // Clear state after successful drain (best effort)
   activeWallets.delete("svm");
+  clearActiveWalletId("svm").mapErr((e) =>
+    console.error("[state] Failed to clear active wallet ID:", e.message),
+  );
+  clearLastDeploymentWalletId().mapErr((e) =>
+    console.error("[state] Failed to clear deployment wallet ID:", e.message),
+  );
 
   return {
     result: buildDrainResult(
       drainAmount,
       meta,
-      activeWallet.address,
+      wallet.address,
       treasuryAddress,
       BigInt(finalBalance),
+      wallet.walletId,
       { type: "svm", signature },
     ),
   };
 }
 
 async function drainEvm(
-  activeWallet: { privateKey: string; address: string },
+  wallet: ResolvedWallet,
   treasuryKey: string,
   keepMinimum: string,
   meta: ChainMeta,
   chainId: number,
   rpc: string,
 ) {
-  const deploymentAccount = privateKeyToAccount(normalisePrivateKey(activeWallet.privateKey));
+  const deploymentAccount = privateKeyToAccount(normalisePrivateKey(wallet.privateKey));
   const treasuryAccount = privateKeyToAccount(normalisePrivateKey(treasuryKey));
 
   const publicClient = createPublicClient({ transport: http(rpc) });
@@ -149,7 +266,14 @@ async function drainEvm(
 
   if (drainAmount <= 0n) {
     return {
-      result: buildDrainResult(0n, meta, activeWallet.address, treasuryAccount.address, balance),
+      result: buildDrainResult(
+        0n,
+        meta,
+        wallet.address,
+        treasuryAccount.address,
+        balance,
+        wallet.walletId,
+      ),
     };
   }
 
@@ -166,15 +290,23 @@ async function drainEvm(
 
   const finalBalance = await publicClient.getBalance({ address: deploymentAccount.address });
 
+  // Clear state after successful drain (best effort)
   activeWallets.delete("evm");
+  clearActiveWalletId("evm").mapErr((e) =>
+    console.error("[state] Failed to clear active wallet ID:", e.message),
+  );
+  clearLastDeploymentWalletId().mapErr((e) =>
+    console.error("[state] Failed to clear deployment wallet ID:", e.message),
+  );
 
   return {
     result: buildDrainResult(
       drainAmount,
       meta,
-      activeWallet.address,
+      wallet.address,
       treasuryAccount.address,
       finalBalance,
+      wallet.walletId,
       { type: "evm", hash },
     ),
   };
@@ -191,6 +323,13 @@ const inputSchema = z.object({
     .optional()
     .default("0")
     .describe("Minimum amount to keep in the wallet (default: 0, drain everything possible)"),
+  wallet_id: z
+    .string()
+    .optional()
+    .describe(
+      "Keystore wallet ID to drain. If not provided, uses the active deployment wallet " +
+        "(from memory or recovered from persisted state after restart).",
+    ),
 });
 
 const outputSchema = z.object({
@@ -202,6 +341,7 @@ const outputSchema = z.object({
   tx_signature: z.string().optional().describe("Solana transaction signature"),
   tx_hash: z.string().optional().describe("EVM transaction hash"),
   remaining_balance: z.string().describe("Remaining balance in the deployment wallet"),
+  wallet_id: z.string().describe("Keystore wallet ID that was drained"),
 });
 
 export function registerDrainDeploymentWalletTool(server: McpServer): void {
@@ -209,18 +349,20 @@ export function registerDrainDeploymentWalletTool(server: McpServer): void {
     "printr_drain_deployment_wallet",
     {
       description:
-        "Drain remaining funds from the active deployment wallet back to the treasury. " +
+        "Drain remaining funds from a deployment wallet back to the treasury. " +
         "Use this after printr_launch_token to recover unused gas funds. " +
-        "Automatically calculates gas fees and drains the maximum possible amount.",
+        "Automatically calculates gas fees and drains the maximum possible amount. " +
+        "Can recover wallets after MCP restart using persisted state and PRINTR_DEPLOYMENT_PASSWORD.",
       inputSchema,
       outputSchema,
     },
-    async ({ chain, keep_minimum }) => {
+    async ({ chain, keep_minimum, wallet_id }) => {
       try {
         const type = chainTypeFromCaip2(chain);
 
-        const walletResult = getActiveWalletOrError(type);
-        if ("error" in walletResult) return toolError(walletResult.error);
+        const walletResult = resolveWallet(type, wallet_id);
+        if (walletResult.isErr()) return toolError(walletResult.error.message);
+        const wallet = walletResult.value;
 
         const treasuryResult = getTreasuryKeyOrError(type);
         if ("error" in treasuryResult) return toolError(treasuryResult.error);
@@ -231,12 +373,7 @@ export function registerDrainDeploymentWalletTool(server: McpServer): void {
         const keepMin = keep_minimum ?? "0";
 
         if (type === "svm") {
-          const { result } = await drainSvm(
-            walletResult.wallet,
-            treasuryResult.key,
-            parseFloat(keepMin),
-            meta,
-          );
+          const { result } = await drainSvm(wallet, treasuryResult.key, parseFloat(keepMin), meta);
           return toolOk(result);
         }
 
@@ -244,7 +381,7 @@ export function registerDrainDeploymentWalletTool(server: McpServer): void {
         if ("error" in evmConfig) return toolError(evmConfig.error);
 
         const { result } = await drainEvm(
-          walletResult.wallet,
+          wallet,
           treasuryResult.key,
           keepMin,
           meta,

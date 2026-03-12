@@ -19,8 +19,13 @@ describe("printr_fund_deployment_wallet", () => {
     const schema = tool.config.inputSchema as { shape: Record<string, unknown> };
     expect(schema.shape).toHaveProperty("chain");
     expect(schema.shape).toHaveProperty("amount");
-    expect(schema.shape).toHaveProperty("label");
-    expect(schema.shape).toHaveProperty("password");
+  });
+
+  test("does not have label or password input fields (uses master password)", () => {
+    const tool = setup();
+    const schema = tool.config.inputSchema as { shape: Record<string, unknown> };
+    expect(schema.shape).not.toHaveProperty("label");
+    expect(schema.shape).not.toHaveProperty("password");
   });
 
   test("has required output schema fields", () => {
@@ -33,7 +38,12 @@ describe("printr_fund_deployment_wallet", () => {
     expect(schema.shape).toHaveProperty("amount_atomic");
     expect(schema.shape).toHaveProperty("symbol");
     expect(schema.shape).toHaveProperty("wallet_id");
-    expect(schema.shape).toHaveProperty("generated_password");
+  });
+
+  test("does not have generated_password output field (uses master password)", () => {
+    const tool = setup();
+    const schema = tool.config.outputSchema as { shape: Record<string, unknown> };
+    expect(schema.shape).not.toHaveProperty("generated_password");
   });
 
   test("wallet_id is a required output field (not optional)", () => {
@@ -44,29 +54,13 @@ describe("printr_fund_deployment_wallet", () => {
     expect(schema.shape.wallet_id.isOptional()).toBe(false);
   });
 
-  test("generated_password is an optional output field", () => {
-    const tool = setup();
-    const schema = tool.config.outputSchema as {
-      shape: Record<string, { isOptional: () => boolean }>;
-    };
-    expect(schema.shape.generated_password.isOptional()).toBe(true);
-  });
-
-  test.each([
-    {
-      input: { chain: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", amount: "0.1" },
-      error: "SVM_WALLET_PRIVATE_KEY",
-      description: "missing SVM treasury key",
-    },
-    {
-      input: { chain: "eip155:8453", amount: "0.1" },
-      error: "EVM_WALLET_PRIVATE_KEY",
-      description: "missing EVM treasury key",
-    },
-  ])("rejects when $description", async ({ input, error }) => {
-    const result = await setup().handler(input);
+  test("rejects when PRINTR_DEPLOYMENT_PASSWORD is not set", async () => {
+    const result = await setup().handler({
+      chain: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+      amount: "0.1",
+    });
     expect((result as any)?.isError).toBe(true);
-    expect((result as any)?.content?.[0]?.text).toContain(error);
+    expect((result as any)?.content?.[0]?.text).toContain("PRINTR_DEPLOYMENT_PASSWORD");
   });
 
   test("rejects invalid chain format", async () => {

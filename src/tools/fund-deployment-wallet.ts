@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { accessSync, constants } from "node:fs";
 import { dirname } from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,16 +10,36 @@ import { z } from "zod";
 import { type ChainType, chainTypeFromCaip2, parseCaip2 } from "~/lib/caip.js";
 import { getChainMeta } from "~/lib/chains.js";
 import { toToolResponseAsync } from "~/lib/client.js";
+import { env } from "~/lib/env.js";
 import { normalisePrivateKey } from "~/lib/evm.js";
 import { addWallet, encryptKey, keystorePath } from "~/lib/keystore.js";
+import { setActiveWalletId, setLastDeploymentWalletId } from "~/lib/state.js";
 import { executeTransfer } from "~/lib/transfer.js";
 import { getTreasuryErrorMsg, getTreasuryKey } from "~/lib/treasury.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
 type FundError = { message: string };
 
-function generateSecurePassword(): string {
-  return randomBytes(32).toString("base64url");
+const MIN_PASSWORD_LENGTH = 16;
+
+function getDeploymentPassword(): Result<string, FundError> {
+  const password = env.PRINTR_DEPLOYMENT_PASSWORD;
+  if (!password) {
+    return err({
+      message:
+        "PRINTR_DEPLOYMENT_PASSWORD environment variable is required. " +
+        "This password encrypts deployment wallet private keys for recovery. " +
+        "Generate one with: openssl rand -base64 32",
+    });
+  }
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return err({
+      message:
+        `PRINTR_DEPLOYMENT_PASSWORD must be at least ${MIN_PASSWORD_LENGTH} characters. ` +
+        "Use a strong random password: openssl rand -base64 32",
+    });
+  }
+  return ok(password);
 }
 
 function verifyKeystoreWritable(): ResultAsync<void, FundError> {
@@ -74,25 +94,21 @@ function buildTxField(
 
 type PersistedWallet = {
   wallet_id: string;
-  generated_password?: string;
   privateKey: string;
   address: string;
 };
 
 function persistWallet(
-  label: string | undefined,
-  password: string | undefined,
+  masterPassword: string,
   chain: string,
   type: ChainType,
 ): Result<PersistedWallet, FundError> {
   const { privateKey, address } = generateWallet(type);
-  const effectiveLabel = label ?? `deploy-${address.slice(0, 8)}`;
-  const generatedPassword = password ? undefined : generateSecurePassword();
-  const effectivePassword = password ?? generatedPassword!;
+  const label = `deploy-${address.slice(0, 8)}`;
 
   try {
-    const wallet_id = saveToKeystore(effectiveLabel, effectivePassword, chain, address, privateKey);
-    return ok({ wallet_id, generated_password: generatedPassword, privateKey, address });
+    const wallet_id = saveToKeystore(label, masterPassword, chain, address, privateKey);
+    return ok({ wallet_id, privateKey, address });
   } catch (e) {
     return err({
       message:
@@ -109,11 +125,6 @@ const inputSchema = z.object({
       "CAIP-2 chain ID (e.g. 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' for Solana mainnet)",
     ),
   amount: z.string().describe("Amount to fund in human-readable units (e.g. '0.6' for 0.6 SOL)"),
-  label: z.string().optional().describe("Optional label for saving the wallet to keystore"),
-  password: z
-    .string()
-    .optional()
-    .describe("Password to encrypt the wallet (required if label is provided)"),
 });
 
 const outputSchema = z.object({
@@ -126,10 +137,6 @@ const outputSchema = z.object({
   tx_signature: z.string().optional().describe("Solana transaction signature"),
   tx_hash: z.string().optional().describe("EVM transaction hash"),
   wallet_id: z.string().describe("Keystore wallet ID for the persisted wallet"),
-  generated_password: z
-    .string()
-    .optional()
-    .describe("Auto-generated password (only returned if no password was provided - save this!)"),
 });
 
 function validateInputs(chain: string): Result<
@@ -138,29 +145,32 @@ function validateInputs(chain: string): Result<
     treasuryKey: string;
     meta: NonNullable<ReturnType<typeof getChainMeta>>;
     parsed: NonNullable<ReturnType<typeof parseCaip2>>;
+    masterPassword: string;
   },
   FundError
 > {
-  const type = chainTypeFromCaip2(chain);
+  return getDeploymentPassword().andThen((masterPassword) => {
+    const type = chainTypeFromCaip2(chain);
 
-  const treasuryKey = getTreasuryKey(type);
-  if (!treasuryKey) {
-    return err({ message: getTreasuryErrorMsg(type) });
-  }
+    const treasuryKey = getTreasuryKey(type);
+    if (!treasuryKey) {
+      return err({ message: getTreasuryErrorMsg(type) });
+    }
 
-  const meta = getChainMeta(chain);
-  if (!meta) {
-    return err({ message: `Unsupported chain: ${chain}` });
-  }
+    const meta = getChainMeta(chain);
+    if (!meta) {
+      return err({ message: `Unsupported chain: ${chain}` });
+    }
 
-  const parsed = parseCaip2(chain);
-  if (!parsed) {
-    return err({
-      message: `Invalid CAIP-2 chain format: ${chain}. Expected 'namespace:chainRef'.`,
-    });
-  }
+    const parsed = parseCaip2(chain);
+    if (!parsed) {
+      return err({
+        message: `Invalid CAIP-2 chain format: ${chain}. Expected 'namespace:chainRef'.`,
+      });
+    }
 
-  return ok({ type, treasuryKey, meta, parsed });
+    return ok({ type, treasuryKey, meta, parsed, masterPassword });
+  });
 }
 
 export function registerFundDeploymentWalletTool(server: McpServer): void {
@@ -171,19 +181,20 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
         "Create a fresh deployment wallet and fund it from the treasury wallet. " +
         "Uses the SVM_WALLET_PRIVATE_KEY or EVM_WALLET_PRIVATE_KEY environment variable " +
         "as the funding source. The new wallet is set as the active wallet for signing. " +
-        "Use this before printr_launch_token to deploy tokens without exposing the treasury.",
+        "Use this before printr_launch_token to deploy tokens without exposing the treasury. " +
+        "Requires PRINTR_DEPLOYMENT_PASSWORD to be set for wallet encryption.",
       inputSchema,
       outputSchema,
     },
-    ({ chain, amount, label, password }) =>
+    ({ chain, amount }) =>
       toToolResponseAsync(
         // 1. Validate keystore is writable (prevents fund loss)
         verifyKeystoreWritable()
-          // 2. Validate all inputs
+          // 2. Validate all inputs including master password
           .andThen(() => validateInputs(chain))
           // 3. Persist wallet BEFORE funding (prevents fund loss if persistence fails)
-          .andThen(({ type, treasuryKey, meta, parsed }) =>
-            persistWallet(label, password, chain, type).map((wallet) => ({
+          .andThen(({ type, treasuryKey, meta, parsed, masterPassword }) =>
+            persistWallet(masterPassword, chain, type).map((wallet) => ({
               type,
               treasuryKey,
               meta,
@@ -201,8 +212,15 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
               treasuryKey,
               meta,
             ).map((result) => {
-              // 5. Set as active wallet for immediate use
+              // 5. Set as active wallet for immediate use (in-memory)
               activeWallets.set(type, { privateKey: wallet.privateKey, address: wallet.address });
+              // 6. Persist active wallet ID and deployment wallet ID for recovery (best effort)
+              setActiveWalletId(type, wallet.wallet_id).mapErr((e) =>
+                console.error("[state] Failed to persist active wallet ID:", e.message),
+              );
+              setLastDeploymentWalletId(wallet.wallet_id).mapErr((e) =>
+                console.error("[state] Failed to persist deployment wallet ID:", e.message),
+              );
               return {
                 address: wallet.address,
                 chain,
@@ -212,9 +230,6 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
                 symbol: meta.symbol,
                 ...buildTxField(result),
                 wallet_id: wallet.wallet_id,
-                ...(wallet.generated_password
-                  ? { generated_password: wallet.generated_password }
-                  : {}),
               };
             }),
           ),
