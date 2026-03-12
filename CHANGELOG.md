@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.8.0](https://github.com/PrintrFi/printr-mcp/compare/v0.7.0...v0.8.0) (2026-03-12)
+
+
+### Features
+
+* **lib:** add sleep utility function ([6bb6e8c](https://github.com/PrintrFi/printr-mcp/commit/6bb6e8c1acd2fd5decad2b7d68dc70cc3725215e))
+* **svm:** add websocket-to-polling fallback for tx confirmation ([a4e1ee9](https://github.com/PrintrFi/printr-mcp/commit/a4e1ee90d79057b0e9dd2705e0e8e5e0b3503dad))
+* **svm:** WebSocket-to-polling fallback for transaction confirmation ([5463518](https://github.com/PrintrFi/printr-mcp/commit/5463518b35ed88047a9dafecb1357e4fca9d8799))
+
 ## [0.7.0](https://github.com/PrintrFi/printr-mcp/compare/v0.6.0...v0.7.0) (2026-03-12)
 
 
