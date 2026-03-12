@@ -32,6 +32,24 @@ describe("printr_fund_deployment_wallet", () => {
     expect(schema.shape).toHaveProperty("amount_funded");
     expect(schema.shape).toHaveProperty("amount_atomic");
     expect(schema.shape).toHaveProperty("symbol");
+    expect(schema.shape).toHaveProperty("wallet_id");
+    expect(schema.shape).toHaveProperty("generated_password");
+  });
+
+  test("wallet_id is a required output field (not optional)", () => {
+    const tool = setup();
+    const schema = tool.config.outputSchema as {
+      shape: Record<string, { isOptional: () => boolean }>;
+    };
+    expect(schema.shape.wallet_id.isOptional()).toBe(false);
+  });
+
+  test("generated_password is an optional output field", () => {
+    const tool = setup();
+    const schema = tool.config.outputSchema as {
+      shape: Record<string, { isOptional: () => boolean }>;
+    };
+    expect(schema.shape.generated_password.isOptional()).toBe(true);
   });
 
   test.each([
@@ -49,5 +67,13 @@ describe("printr_fund_deployment_wallet", () => {
     const result = await setup().handler(input);
     expect((result as any)?.isError).toBe(true);
     expect((result as any)?.content?.[0]?.text).toContain(error);
+  });
+
+  test("rejects invalid chain format", async () => {
+    const result = await setup().handler({
+      chain: "invalid-chain",
+      amount: "0.1",
+    });
+    expect((result as any)?.isError).toBe(true);
   });
 });
