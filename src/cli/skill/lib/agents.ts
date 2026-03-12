@@ -7,41 +7,44 @@ export type AgentDef = {
   id: string;
   label: string;
   detect: () => boolean;
+  /** Path to SKILL.md inside the skill directory */
   skillPath: () => string;
 };
 
 export type InstallResult = "installed" | "already_exists" | "failed";
 
+/**
+ * Agent Skills standard locations:
+ * - Claude Code: ~/.claude/skills/<name>/SKILL.md
+ * - Cursor: ~/.cursor/skills/<name>/SKILL.md (also supports ~/.claude/skills/)
+ * - Gemini CLI: ~/.gemini/skills/<name>/SKILL.md
+ *
+ * Note: Windsurf uses a different system (.windsurf/rules/) and is not supported.
+ */
 export const AGENTS: AgentDef[] = [
   {
     id: "claude-code",
-    label: "Claude Code",
+    label: "Claude Code (~/.claude/skills/)",
     detect: () => commandExists("claude"),
-    skillPath: () => join(homedir(), ".claude", "skills", "printr.md"),
+    skillPath: () => join(homedir(), ".claude", "skills", "printr", "SKILL.md"),
   },
   {
     id: "cursor",
-    label: "Cursor",
+    label: "Cursor (~/.cursor/skills/)",
     detect: () => commandExists("cursor") || existsSync(join(homedir(), ".cursor")),
-    skillPath: () => join(homedir(), ".cursor", "skills", "printr.md"),
-  },
-  {
-    id: "windsurf",
-    label: "Windsurf",
-    detect: () => commandExists("windsurf") || existsSync(join(homedir(), ".codeium", "windsurf")),
-    skillPath: () => join(homedir(), ".codeium", "windsurf", "skills", "printr.md"),
+    skillPath: () => join(homedir(), ".cursor", "skills", "printr", "SKILL.md"),
   },
   {
     id: "gemini",
-    label: "Gemini CLI",
+    label: "Gemini CLI (~/.gemini/skills/)",
     detect: () => commandExists("gemini") || existsSync(join(homedir(), ".gemini")),
-    skillPath: () => join(homedir(), ".gemini", "skills", "printr.md"),
+    skillPath: () => join(homedir(), ".gemini", "skills", "printr", "SKILL.md"),
   },
   {
     id: "local",
     label: "Local project (.claude/skills/)",
     detect: () => existsSync(".claude") || existsSync(".git"),
-    skillPath: () => join(process.cwd(), ".claude", "skills", "printr.md"),
+    skillPath: () => join(process.cwd(), ".claude", "skills", "printr", "SKILL.md"),
   },
 ];
 

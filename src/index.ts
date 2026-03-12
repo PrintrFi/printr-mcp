@@ -42,8 +42,7 @@ Commands:
 
             Options:
               --agent <name>               Target a specific agent (repeatable).
-                                           Values: claude-code, cursor, windsurf,
-                                                   gemini, local
+                                           Values: claude-code, cursor, gemini, local
 
   (none)    Start the MCP server over stdio — default mode for AI clients.
 
