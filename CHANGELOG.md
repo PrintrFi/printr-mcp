@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/PrintrFi/printr-mcp/compare/v0.8.1...v0.9.0) (2026-03-12)
+
+
+### Features
+
+* **cli:** add agent skill with interactive installer ([fd9e110](https://github.com/PrintrFi/printr-mcp/commit/fd9e110b44f767bcbb4ece48f8f8f17ae4b67444))
+
 ## [0.8.1](https://github.com/PrintrFi/printr-mcp/compare/v0.8.0...v0.8.1) (2026-03-12)
 
 
