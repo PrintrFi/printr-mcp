@@ -106,10 +106,23 @@ function isWebSocketError(error: unknown): boolean {
   );
 }
 
+/** Check if RPC URL is known to not support WebSocket subscriptions */
+function isHttpOnlyRpc(rpcUrl: string): boolean {
+  const url = rpcUrl.toLowerCase();
+  return (
+    url.includes("alchemy.com") ||
+    url.includes("g.alchemy.com") ||
+    url.includes("ankr.com") // Ankr also uses HTTP-only for some endpoints
+  );
+}
+
 /**
  * Confirm a transaction, trying WebSocket first and falling back to polling.
  * This provides optimal performance on WebSocket-capable RPCs while maintaining
  * compatibility with HTTP-only providers like Alchemy Solana.
+ *
+ * For known HTTP-only providers (Alchemy, Ankr), skips WebSocket entirely to
+ * avoid noisy console errors from the Solana web3.js retry logic.
  */
 async function confirmTransaction(
   connection: Connection,
@@ -118,6 +131,11 @@ async function confirmTransaction(
   lastValidBlockHeight: number,
   commitment: Commitment = "confirmed",
 ): Promise<ConfirmationResult> {
+  // Skip WebSocket for known HTTP-only RPC providers
+  if (isHttpOnlyRpc(connection.rpcEndpoint)) {
+    return confirmTransactionPolling(connection, signature, commitment);
+  }
+
   try {
     return await confirmTransactionWebSocket(
       connection,
