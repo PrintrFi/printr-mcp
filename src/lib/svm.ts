@@ -107,13 +107,9 @@ function isWebSocketError(error: unknown): boolean {
 }
 
 /** Check if RPC URL is known to not support WebSocket subscriptions */
-function isHttpOnlyRpc(rpcUrl: string): boolean {
+export function isHttpOnlyRpc(rpcUrl: string): boolean {
   const url = rpcUrl.toLowerCase();
-  return (
-    url.includes("alchemy.com") ||
-    url.includes("g.alchemy.com") ||
-    url.includes("ankr.com") // Ankr also uses HTTP-only for some endpoints
-  );
+  return url.includes("alchemy.com") || url.includes("ankr.com");
 }
 
 /**
