@@ -73,6 +73,10 @@ function buildDrainResult(
   };
 }
 
+// Minimum rent-exempt balance for a basic account (0 data bytes)
+// This is approximately 890,880 lamports (~0.00089 SOL)
+const RENT_EXEMPT_MINIMUM = 890_880n;
+
 async function drainSvm(
   activeWallet: { privateKey: string; address: string },
   treasuryKey: string,
@@ -91,7 +95,11 @@ async function drainSvm(
   // Use 5000 lamports as base fee estimate with safety buffer
   const estimatedFee = 10000n;
   const keepMinimumLamports = BigInt(Math.floor(keepMinimum * LAMPORTS_PER_SOL));
-  const drainAmount = balanceLamports - estimatedFee - keepMinimumLamports;
+
+  // Must keep rent-exempt minimum to avoid "insufficient funds for rent" error
+  // The account needs to either stay rent-exempt or be closed entirely
+  const mustKeep = estimatedFee + keepMinimumLamports + RENT_EXEMPT_MINIMUM;
+  const drainAmount = balanceLamports > mustKeep ? balanceLamports - mustKeep : 0n;
 
   if (drainAmount <= 0n) {
     return {
