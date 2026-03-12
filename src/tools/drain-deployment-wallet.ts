@@ -5,7 +5,6 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
-  sendAndConfirmTransaction,
   Transaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
@@ -17,7 +16,7 @@ import type { ChainMeta } from "~/lib/chains.js";
 import { getChainMeta, getRpcUrl } from "~/lib/chains.js";
 import { toolError, toolOk } from "~/lib/client.js";
 import { normalisePrivateKey } from "~/lib/evm.js";
-import { getSvmRpcUrl } from "~/lib/svm.js";
+import { getSvmRpcUrl, sendAndConfirmSvmTransaction } from "~/lib/svm.js";
 import { getTreasuryKeyOrError } from "~/lib/treasury.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
@@ -108,7 +107,9 @@ async function drainSvm(
     }),
   );
 
-  const signature = await sendAndConfirmTransaction(connection, transaction, [deploymentKeypair]);
+  const signature = await sendAndConfirmSvmTransaction(connection, transaction, [
+    deploymentKeypair,
+  ]);
   const finalBalance = await connection.getBalance(deploymentKeypair.publicKey);
 
   activeWallets.delete("svm");

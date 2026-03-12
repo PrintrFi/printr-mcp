@@ -4,7 +4,6 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
-  sendAndConfirmTransaction,
   Transaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
@@ -13,7 +12,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import type { ChainMeta } from "~/lib/chains.js";
 import { getRpcUrl } from "~/lib/chains.js";
 import { normalisePrivateKey } from "~/lib/evm.js";
-import { getSvmRpcUrl } from "~/lib/svm.js";
+import { getSvmRpcUrl, sendAndConfirmSvmTransaction } from "~/lib/svm.js";
 
 export type EvmTransferResult = {
   readonly type: "evm";
@@ -72,7 +71,7 @@ export const transferSvm = async (
     }),
   );
 
-  const signature = await sendAndConfirmTransaction(connection, transaction, [keypair]);
+  const signature = await sendAndConfirmSvmTransaction(connection, transaction, [keypair]);
 
   return { type: "svm", signature, amount_atomic: lamports.toString() };
 };
