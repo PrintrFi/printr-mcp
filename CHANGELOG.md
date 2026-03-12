@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.0](https://github.com/PrintrFi/printr-mcp/compare/v0.6.0...v0.7.0) (2026-03-12)
+
+
+### Features
+
+* autonomous wallet funding from treasury ([93eb73b](https://github.com/PrintrFi/printr-mcp/commit/93eb73bc1f830e75399536b29619670cbcf986f1))
+* **caip:** add parseCaip2 and chainTypeFromCaip2 utilities ([83fa8fd](https://github.com/PrintrFi/printr-mcp/commit/83fa8fdf5619229257b3b95507a999c198c57dc6))
+* **mcp:** register treasury and deployment wallet tools ([70cf65d](https://github.com/PrintrFi/printr-mcp/commit/70cf65d63d0bd73a09b2afa474311a4ef1a6e059))
+* **tools:** add printr_drain_deployment_wallet tool ([ab894ee](https://github.com/PrintrFi/printr-mcp/commit/ab894eea664f52cdc7a0e60461bf1604277230ae))
+* **tools:** add printr_fund_deployment_wallet tool ([4f5901e](https://github.com/PrintrFi/printr-mcp/commit/4f5901e1b6f0b6fe7c5b35adf01dd080316daad6))
+* **tools:** add printr_set_treasury_wallet tool ([7a4d431](https://github.com/PrintrFi/printr-mcp/commit/7a4d431ccd38f40f58665e1985e6a51807c248c7))
+* **treasury:** add treasury wallet utilities ([cf3cc25](https://github.com/PrintrFi/printr-mcp/commit/cf3cc25156fe7a701d61ef0440193105e200ec9c))
+
 ## [0.6.0](https://github.com/PrintrFi/printr-mcp/compare/v0.5.0...v0.6.0) (2026-03-11)
 
 
