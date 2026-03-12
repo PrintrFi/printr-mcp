@@ -26,7 +26,7 @@ switch (command) {
   case "--help":
   case "-h": {
     process.stdout.write(`
-Usage: printr-mcp [command] [options]
+Usage: bunx @printr/mcp@latest [command] [options]
 
 Commands:
   setup     Configure Printr MCP for all detected AI clients.
