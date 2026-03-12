@@ -25,8 +25,8 @@ const DEFAULT_STATE: PersistentState = {
 };
 
 export function statePath(): string {
-  const keystorePath = env.PRINTR_WALLET_STORE ?? join(homedir(), ".printr", "wallets.json");
-  return join(dirname(keystorePath), "state.json");
+  const dir = env.PRINTR_WALLET_STORE ?? join(homedir(), ".printr");
+  return join(dir, "state.json");
 }
 
 const toStateError = (e: unknown): StateError => ({

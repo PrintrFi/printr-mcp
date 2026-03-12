@@ -49,6 +49,7 @@ const schema = z.object({
   /** JSON map of chain names to custom RPC URLs (overrides Alchemy), e.g. {'base': 'https://...'} */
   RPC_URLS: rpcUrlsSchema,
   AGENT_MODE: z.string().optional(),
+  /** Directory for wallet data (wallets.json, state.json). Defaults to ~/.printr */
   PRINTR_WALLET_STORE: z.string().optional(),
   /** Master password for encrypting deployment wallet private keys */
   PRINTR_DEPLOYMENT_PASSWORD: z.string().optional(),
