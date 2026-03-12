@@ -73,13 +73,14 @@ By default, token creation returns an unsigned transaction that you sign via bro
 
 ## Environment variables
 
-| Variable                  | Description                                                            |
-| ------------------------- | ---------------------------------------------------------------------- |
-| `PRINTR_API_KEY`          | Partner API key. Falls back to the default public AI-integration key.  |
-| `OPENROUTER_API_KEY`      | Enables auto image generation and the `printr_generate_image` tool     |
-| `OPENROUTER_IMAGE_MODEL`  | Image model override (default: `google/gemini-2.5-flash-image`)        |
-| `EVM_WALLET_PRIVATE_KEY`  | Default EVM private key for autonomous signing                         |
-| `SVM_WALLET_PRIVATE_KEY`  | Default Solana keypair secret for autonomous signing                   |
+| Variable                      | Description                                                            |
+| ----------------------------- | ---------------------------------------------------------------------- |
+| `PRINTR_API_KEY`              | Partner API key. Falls back to the default public AI-integration key.  |
+| `OPENROUTER_API_KEY`          | Enables auto image generation and the `printr_generate_image` tool     |
+| `OPENROUTER_IMAGE_MODEL`      | Image model override (default: `google/gemini-2.5-flash-image`)        |
+| `EVM_WALLET_PRIVATE_KEY`      | Default EVM private key for autonomous signing                         |
+| `SVM_WALLET_PRIVATE_KEY`      | Default Solana keypair secret for autonomous signing                   |
+| `PRINTR_DEPLOYMENT_PASSWORD`  | Master password for encrypting deployment wallets (min 16 chars). Required for `printr_fund_deployment_wallet`. Generate with: `openssl rand -base64 32` |
 
 ### Dev / self-hosting
 

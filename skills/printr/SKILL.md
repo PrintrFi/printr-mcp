@@ -16,9 +16,11 @@ description: Launches cross-chain tokens via Printr MCP tools. Use when creating
 For production, use ephemeral wallets to protect the treasury:
 
 1. `printr_set_treasury_wallet` — unlock funding source (once per session)
-2. `printr_fund_deployment_wallet` — create & fund ephemeral wallet
+2. `printr_fund_deployment_wallet` — create & fund ephemeral wallet (requires `PRINTR_DEPLOYMENT_PASSWORD`)
 3. `printr_launch_token` — deploy (uses active wallet automatically)
 4. `printr_drain_deployment_wallet` — return unused funds
+
+**Recovery after restart**: If MCP restarts before draining, call `printr_drain_deployment_wallet` again — it recovers from persisted state using `PRINTR_DEPLOYMENT_PASSWORD`.
 
 ## Cost Estimation
 

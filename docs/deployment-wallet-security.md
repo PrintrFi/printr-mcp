@@ -1,4 +1,4 @@
-# Deployment Wallet Security Specification
+# Deployment Wallet Security
 
 ## Problem Statement
 
