@@ -7,12 +7,15 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
+import { errAsync, ResultAsync } from "neverthrow";
 import { createWalletClient, defineChain, http, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { ChainMeta } from "~/lib/chains.js";
 import { getRpcUrl } from "~/lib/chains.js";
 import { normalisePrivateKey } from "~/lib/evm.js";
 import { getSvmRpcUrl, sendAndConfirmSvmTransaction } from "~/lib/svm.js";
+
+export type TransferError = { message: string };
 
 export type EvmTransferResult = {
   readonly type: "evm";
@@ -76,7 +79,11 @@ export const transferSvm = async (
   return { type: "svm", signature, amount_atomic: lamports.toString() };
 };
 
-export const executeTransfer = async (
+const toTransferError = (e: unknown): TransferError => ({
+  message: e instanceof Error ? e.message : String(e),
+});
+
+export const executeTransfer = (
   namespace: string,
   chainRef: string,
   toAddress: string,
@@ -84,27 +91,28 @@ export const executeTransfer = async (
   privateKey: string,
   meta: ChainMeta,
   rpcOverride?: string,
-): Promise<TransferResult> => {
+): ResultAsync<TransferResult, TransferError> => {
   const caip2 = namespace === "solana" ? `solana:${chainRef}` : `eip155:${chainRef}`;
 
   if (namespace === "solana") {
     const rpc = getSvmRpcUrl(rpcOverride);
     const lamports = BigInt(Math.floor(Number.parseFloat(amount) * LAMPORTS_PER_SOL));
-    return transferSvm(toAddress, lamports, privateKey, rpc);
+    return ResultAsync.fromPromise(
+      transferSvm(toAddress, lamports, privateKey, rpc),
+      toTransferError,
+    );
   }
 
   const rpc = getRpcUrl(caip2, rpcOverride);
   if (!rpc) {
-    throw new Error(`No RPC URL for chain ${caip2}. Pass rpc_url explicitly or set RPC_URLS.`);
+    return errAsync({
+      message: `No RPC URL for chain ${caip2}. Pass rpc_url explicitly or set RPC_URLS.`,
+    });
   }
 
   const amountAtomic = parseUnits(amount, meta.decimals);
-  return transferEvm(
-    Number(chainRef),
-    toAddress as `0x${string}`,
-    amountAtomic,
-    privateKey,
-    rpc,
-    meta,
+  return ResultAsync.fromPromise(
+    transferEvm(Number(chainRef), toAddress as `0x${string}`, amountAtomic, privateKey, rpc, meta),
+    toTransferError,
   );
 };

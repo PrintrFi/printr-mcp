@@ -33,7 +33,8 @@ const DEFAULT_KDF_PARAMS = { N: 131072, r: 8, p: 1, dkLen: 32 } as const;
 const SCRYPT_MAXMEM = 256 * 1024 * 1024;
 
 export function keystorePath(): string {
-  return env.PRINTR_WALLET_STORE ?? join(homedir(), ".printr", "wallets.json");
+  const dir = env.PRINTR_WALLET_STORE ?? join(homedir(), ".printr");
+  return join(dir, "wallets.json");
 }
 
 function loadKeystore(): Keystore {
