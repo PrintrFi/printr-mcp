@@ -1,5 +1,3 @@
-/** @jsxImportSource react */
-
 import { Box, Text } from "ink";
 import Spinner from "ink-spinner";
 import type { StepResult, StepStatus } from "../types.js";

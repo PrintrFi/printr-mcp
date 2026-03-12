@@ -1,5 +1,3 @@
-/** @jsxImportSource react */
-
 import { Box, Text } from "ink";
 
 export function Banner() {

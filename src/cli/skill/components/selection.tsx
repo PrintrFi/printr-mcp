@@ -1,13 +1,13 @@
 import { Box, Text, useInput } from "ink";
 import { useState } from "react";
-import type { ClientDef } from "../types.js";
+import type { AgentDef } from "../lib/agents.js";
 
 export function SelectionScreen({
-  clients,
+  agents,
   detectedIds,
   onConfirm,
 }: {
-  clients: ClientDef[];
+  agents: AgentDef[];
   detectedIds: Set<string>;
   onConfirm: (ids: string[]) => void;
 }) {
@@ -16,11 +16,11 @@ export function SelectionScreen({
 
   useInput((input, key) => {
     if (key.upArrow) {
-      setCursor((c) => (c - 1 + clients.length) % clients.length);
+      setCursor((c) => (c - 1 + agents.length) % agents.length);
     } else if (key.downArrow) {
-      setCursor((c) => (c + 1) % clients.length);
+      setCursor((c) => (c + 1) % agents.length);
     } else if (input === " ") {
-      const id = clients[cursor]!.id;
+      const id = agents[cursor]!.id;
       setSelected((prev) => {
         const next = new Set(prev);
         if (next.has(id)) next.delete(id);
@@ -36,12 +36,12 @@ export function SelectionScreen({
     <Box flexDirection="column" paddingLeft={2}>
       <Text dimColor>↑↓ move · space toggle · enter confirm</Text>
       <Box flexDirection="column" marginTop={1}>
-        {clients.map((c, i) => {
-          const isDetected = detectedIds.has(c.id);
-          const isSelected = selected.has(c.id);
+        {agents.map((a, i) => {
+          const isDetected = detectedIds.has(a.id);
+          const isSelected = selected.has(a.id);
           const isCursor = i === cursor;
           return (
-            <Box key={c.id}>
+            <Box key={a.id}>
               <Text color={isCursor ? "cyan" : undefined}>
                 {isCursor ? "›" : " "}
                 {"  "}
@@ -50,7 +50,7 @@ export function SelectionScreen({
                 {isSelected ? "◉" : "○"}
                 {"  "}
               </Text>
-              <Text dimColor={!isDetected}>{c.label}</Text>
+              <Text dimColor={!isDetected}>{a.label}</Text>
               {!isDetected && <Text dimColor> — not detected</Text>}
             </Box>
           );

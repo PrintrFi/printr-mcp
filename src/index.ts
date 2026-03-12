@@ -13,6 +13,11 @@ switch (command) {
     await runSetup(process.argv.slice(3));
     process.exit(0);
   }
+  case "skill": {
+    const { runSkillInstall } = await import("./cli/skill/index.js");
+    await runSkillInstall(process.argv.slice(3));
+    process.exit(0);
+  }
   case "--version":
   case "-v": {
     process.stdout.write(`${version}\n`);
@@ -21,7 +26,7 @@ switch (command) {
   case "--help":
   case "-h": {
     process.stdout.write(`
-Usage: printr-mcp [command] [options]
+Usage: bunx @printr/mcp@latest [command] [options]
 
 Commands:
   setup     Configure Printr MCP for all detected AI clients.
@@ -32,6 +37,12 @@ Commands:
                                                    windsurf, gemini, claude-code
               --openrouter-api-key <key>   Add OPENROUTER_API_KEY to the config.
                                            Falls back to OPENROUTER_API_KEY env var.
+
+  skill     Install the Printr agent skill to selected AI agents.
+
+            Options:
+              --agent <name>               Target a specific agent (repeatable).
+                                           Values: claude-code, cursor, gemini, local
 
   (none)    Start the MCP server over stdio — default mode for AI clients.
 

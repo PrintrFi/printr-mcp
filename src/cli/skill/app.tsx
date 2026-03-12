@@ -4,35 +4,28 @@ import { Banner } from "./components/banner.js";
 import { SelectionScreen } from "./components/selection.js";
 import { StepRow } from "./components/step-row.js";
 import { Summary } from "./components/summary.js";
-import { CLIENTS } from "./lib/clients.js";
-import { runSetupLogic } from "./lib/logic.js";
+import { AGENTS } from "./lib/agents.js";
+import { runSkillInstall } from "./lib/logic.js";
 import type { StepResult } from "./types.js";
 
 type Phase = "selecting" | "running" | "done";
 
-export function SetupApp({
-  preselectedIds,
-  openrouterApiKey,
-}: {
-  preselectedIds: string[] | null;
-  openrouterApiKey: string;
-}) {
+export function SkillApp({ preselectedIds }: { preselectedIds: string[] | null }) {
   const { exit } = useApp();
 
-  // Detect which clients are installed once on mount (synchronous fs/process checks).
   const [detectedIds] = useState<Set<string>>(
-    () => new Set(CLIENTS.filter((c) => c.detect()).map((c) => c.id)),
+    () => new Set(AGENTS.filter((a) => a.detect()).map((a) => a.id)),
   );
 
   const [phase, setPhase] = useState<Phase>(preselectedIds !== null ? "running" : "selecting");
   const [selectedIds, setSelectedIds] = useState<string[]>(preselectedIds ?? []);
   const [completedSteps, setCompletedSteps] = useState<StepResult[]>([]);
   const [currentStep, setCurrentStep] = useState<StepResult | null>(null);
-  const [configured, setConfigured] = useState<number | null>(null);
+  const [installed, setInstalled] = useState<number | null>(null);
 
   useEffect(() => {
     if (phase !== "running") return;
-    runSetupLogic(selectedIds, openrouterApiKey, (step) => {
+    runSkillInstall(selectedIds, (step) => {
       if (step.status === "running") {
         setCurrentStep(step);
       } else {
@@ -40,15 +33,15 @@ export function SetupApp({
         setCompletedSteps((prev) => [...prev, step]);
       }
     }).then((n) => {
-      setConfigured(n);
+      setInstalled(n);
       setPhase("done");
     });
-  }, [phase, selectedIds, openrouterApiKey]);
+  }, [phase, selectedIds]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: exit is stable
   useEffect(() => {
-    if (configured !== null) exit();
-  }, [configured]);
+    if (installed !== null) exit();
+  }, [installed]);
 
   function handleConfirm(ids: string[]) {
     setSelectedIds(ids);
@@ -59,7 +52,7 @@ export function SetupApp({
     <Box flexDirection="column" paddingTop={1}>
       <Banner />
       {phase === "selecting" && (
-        <SelectionScreen clients={CLIENTS} detectedIds={detectedIds} onConfirm={handleConfirm} />
+        <SelectionScreen agents={AGENTS} detectedIds={detectedIds} onConfirm={handleConfirm} />
       )}
       {phase !== "selecting" && (
         <Box flexDirection="column" paddingLeft={2}>
@@ -67,7 +60,7 @@ export function SetupApp({
           {currentStep && <StepRow step={currentStep} />}
         </Box>
       )}
-      {configured !== null && <Summary configured={configured} />}
+      {installed !== null && <Summary installed={installed} />}
     </Box>
   );
 }

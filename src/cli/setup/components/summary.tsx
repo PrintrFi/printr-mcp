@@ -1,5 +1,3 @@
-/** @jsxImportSource react */
-
 import { Box, Text } from "ink";
 import { CLIENTS } from "../lib/clients.js";
 
