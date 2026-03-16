@@ -44,7 +44,7 @@ jobs:
         run: bun run build
 
       - name: Check types
-        run: bunx tsc --noEmit
+        run: bun run typecheck
 
   e2e:
     name: E2E Tests

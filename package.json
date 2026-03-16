@@ -15,6 +15,8 @@
     "inspect": "bun run --cwd packages/mcp inspect",
     "test": "bun run --filter '*' test",
     "test:all": "bun run --filter '*' test:all",
+    "test:coverage": "bun run --filter '*' test --coverage",
+    "test:e2e": "bun run --cwd packages/mcp test:e2e",
     "typecheck": "bun run --filter '*' typecheck",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
