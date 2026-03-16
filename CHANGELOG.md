@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.0](https://github.com/PrintrFi/printr-mcp/compare/v0.10.1...v0.11.0) (2026-03-16)
+
+
+### Features
+
+* add creator fee querying and claiming tools ([594fbe2](https://github.com/PrintrFi/printr-mcp/commit/594fbe2121f089e892f0dcc58e43aaec9c497861))
+* **tools:** add printr_claim_fees tool ([7a977c1](https://github.com/PrintrFi/printr-mcp/commit/7a977c1fcaf4bf981163dd79c1b2f68e47f547aa))
+
 ## [0.10.1](https://github.com/PrintrFi/printr-mcp/compare/v0.10.0...v0.10.1) (2026-03-12)
 
 
