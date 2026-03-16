@@ -1,5 +1,9 @@
+import { Keypair } from "@solana/web3.js";
+import bs58 from "bs58";
+import { privateKeyToAccount } from "viem/accounts";
 import type { ChainType } from "~/lib/caip.js";
 import { env } from "~/lib/env.js";
+import { normalisePrivateKey } from "~/lib/evm.js";
 import { treasuryWallets } from "~/server/wallet-sessions.js";
 
 /**
@@ -26,4 +30,20 @@ export function getTreasuryKeyOrError(type: ChainType): { error: string } | { ke
   const key = getTreasuryKey(type);
   if (!key) return { error: getTreasuryErrorMsg(type) };
   return { key };
+}
+
+/**
+ * Get treasury public address from private key.
+ */
+export function getTreasuryAddress(type: ChainType): string | undefined {
+  const key = getTreasuryKey(type);
+  if (!key) return undefined;
+
+  if (type === "svm") {
+    const keypair = Keypair.fromSecretKey(bs58.decode(key));
+    return keypair.publicKey.toBase58();
+  }
+
+  const account = privateKeyToAccount(normalisePrivateKey(key));
+  return account.address;
 }

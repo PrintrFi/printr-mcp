@@ -2,11 +2,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createPrintrClient } from "~/lib/client.js";
 import { env } from "~/lib/env.js";
+import { registerClaimFeesTool } from "~/tools/claim-fees.js";
 import { registerCreateTokenTool } from "~/tools/create-token.js";
 import { registerDrainDeploymentWalletTool } from "~/tools/drain-deployment-wallet.js";
 import { registerFundDeploymentWalletTool } from "~/tools/fund-deployment-wallet.js";
 import { registerGenerateImageTool } from "~/tools/generate-image.js";
 import { registerGetBalanceTool } from "~/tools/get-balance.js";
+import { registerGetCreatorFeesTool } from "~/tools/get-creator-fees.js";
 import { registerGetDeploymentsTool } from "~/tools/get-deployments.js";
 import { registerGetTokenTool } from "~/tools/get-token.js";
 import { registerGetTokenBalanceTool } from "~/tools/get-token-balance.js";
@@ -48,6 +50,8 @@ export async function startMcpServer() {
   registerFundDeploymentWalletTool(server);
   registerDrainDeploymentWalletTool(server);
   registerSupportedChainsTool(server);
+  registerGetCreatorFeesTool(server);
+  registerClaimFeesTool(server);
   if (env.OPENROUTER_API_KEY) {
     registerGenerateImageTool(server);
   }

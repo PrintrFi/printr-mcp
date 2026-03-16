@@ -53,6 +53,8 @@ const schema = z.object({
   PRINTR_WALLET_STORE: z.string().optional(),
   /** Master password for encrypting deployment wallet private keys */
   PRINTR_DEPLOYMENT_PASSWORD: z.string().optional(),
+  /** Backend gRPC API URL for fee claiming */
+  PRINTR_BACKEND_URL: z.string().default("https://api.printr.money"),
   // dev only
   PRINTR_APP_URL: z.string().default("https://app.printr.money"),
   PRINTR_CDN_URL: z.string().default("https://cdn.printr.money"),
