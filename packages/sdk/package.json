@@ -65,8 +65,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target node --format esm && tsc --emitDeclarationOnly --outDir ./dist",
-    "dev": "bun build ./src/index.ts --outdir ./dist --target node --format esm --watch",
+    "build": "bun run scripts/build.ts",
+    "dev": "bun run scripts/build.ts --watch",
     "test": "bun test src/",
     "test:all": "bun test",
     "typecheck": "tsc --noEmit"
