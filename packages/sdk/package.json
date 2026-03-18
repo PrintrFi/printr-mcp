@@ -51,7 +51,7 @@
       "import": "./dist/image.js"
     }
   },
-  "files": ["dist", "LICENSE"],
+  "files": ["dist", "LICENSE", "README.md"],
   "publishConfig": {
     "access": "public"
   },
