@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type PrintrClient, tokenId, toToolResponseAsync, unwrapResultAsync } from "@printr/sdk";
 import { z } from "zod";
+import { logToolExecution } from "~/lib/logging.js";
 
 const xChainTransaction = z.object({
   chain_id: z.string().describe("CAIP-2 chain"),
@@ -41,10 +42,10 @@ export function registerGetDeploymentsTool(server: McpServer, client: PrintrClie
       inputSchema,
       outputSchema,
     },
-    async ({ id }) => {
+    logToolExecution("printr_get_deployments", async ({ id }) => {
       return toToolResponseAsync(
         unwrapResultAsync(client.GET("/tokens/{id}/deployments", { params: { path: { id } } })),
       );
-    },
+    }),
   );
 }

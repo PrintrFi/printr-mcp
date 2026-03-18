@@ -13,6 +13,7 @@ import {
   toolOk,
 } from "@printr/sdk";
 import { z } from "zod";
+import { logToolExecution } from "~/lib/logging.js";
 import { getTreasuryAddress, getTreasuryKey } from "~/lib/treasury.js";
 
 const inputSchema = z.object({
@@ -76,7 +77,7 @@ export function registerClaimFeesTool(server: McpServer): void {
       outputSchema,
     },
     // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Multi-chain claim logic
-    async ({ token_id, chain }) => {
+    logToolExecution("printr_claim_fees", async ({ token_id, chain }) => {
       try {
         const chainType = chainTypeFromCaip2(chain);
 
@@ -168,6 +169,6 @@ export function registerClaimFeesTool(server: McpServer): void {
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
       }
-    },
+    }),
   );
 }

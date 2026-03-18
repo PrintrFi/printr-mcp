@@ -12,6 +12,7 @@ import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
 import { privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
+import { logToolExecution } from "~/lib/logging.js";
 import { treasuryWallets } from "~/server/wallet-sessions.js";
 
 function deriveAddress(privateKey: string, type: ChainType): string {
@@ -42,7 +43,7 @@ export function registerSetTreasuryWalletTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    ({ wallet_id, password }) => {
+    logToolExecution("printr_set_treasury_wallet", ({ wallet_id, password }) => {
       try {
         const entry = getWallet(wallet_id);
         if (!entry) return toolError(`Wallet ${wallet_id} not found in keystore.`);
@@ -76,6 +77,6 @@ export function registerSetTreasuryWalletTool(server: McpServer): void {
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
       }
-    },
+    }),
   );
 }

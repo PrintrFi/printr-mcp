@@ -11,6 +11,7 @@ import {
   toolOk,
 } from "@printr/sdk";
 import { z } from "zod";
+import { logToolExecution } from "~/lib/logging.js";
 
 const inputSchema = z.object({
   account: z
@@ -57,7 +58,7 @@ export function registerGetBalanceTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    async ({ account, rpc_url }) => {
+    logToolExecution("printr_get_balance", async ({ account, rpc_url }) => {
       try {
         const parsed = parseCaip10(account);
         const caip2 = toCaip2(parsed);
@@ -85,6 +86,6 @@ export function registerGetBalanceTool(server: McpServer): void {
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
       }
-    },
+    }),
   );
 }

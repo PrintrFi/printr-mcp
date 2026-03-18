@@ -12,6 +12,7 @@ import {
 } from "@printr/sdk";
 import { err, fromThrowable, ok, type Result } from "neverthrow";
 import { z } from "zod";
+import { logToolExecution } from "~/lib/logging.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
 type TransferToolError = { message: string };
@@ -114,7 +115,7 @@ export function registerTransferTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    ({ to, amount, private_key, rpc_url }) =>
+    logToolExecution("printr_transfer", ({ to, amount, private_key, rpc_url }) =>
       toToolResponseAsync(
         validateInputs(to, private_key).asyncAndThen(
           ({ namespace, chainRef, address, caip2, meta, key }) =>
@@ -133,5 +134,6 @@ export function registerTransferTool(server: McpServer): void {
             ),
         ),
       ),
+    ),
   );
 }

@@ -11,6 +11,7 @@ import {
   toolOk,
 } from "@printr/sdk";
 import { z } from "zod";
+import { logToolExecution } from "~/lib/logging.js";
 
 const inputSchema = z.object({
   token: z
@@ -61,7 +62,7 @@ export function registerGetTokenBalanceTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    async ({ token, wallet, rpc_url }) => {
+    logToolExecution("printr_get_token_balance", async ({ token, wallet, rpc_url }) => {
       try {
         const tokenParsed = parseCaip10(token);
         const walletParsed = parseCaip10(wallet);
@@ -101,6 +102,6 @@ export function registerGetTokenBalanceTool(server: McpServer): void {
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
       }
-    },
+    }),
   );
 }

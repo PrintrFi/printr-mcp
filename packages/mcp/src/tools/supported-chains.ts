@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { CHAIN_META, toolOk } from "@printr/sdk";
 import { z } from "zod";
+import { logToolExecution } from "~/lib/logging.js";
 
 const outputSchema = z.object({
   chains: z.array(
@@ -24,7 +25,7 @@ export function registerSupportedChainsTool(server: McpServer): void {
       inputSchema: z.object({}),
       outputSchema,
     },
-    () => {
+    logToolExecution("printr_supported_chains", () => {
       const chains = Object.entries(CHAIN_META).map(([chainId, meta]) => ({
         chain_id: chainId,
         name: meta.name,
@@ -34,6 +35,6 @@ export function registerSupportedChainsTool(server: McpServer): void {
       }));
 
       return toolOk({ chains });
-    },
+    }),
   );
 }

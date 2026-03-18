@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getProtocolFees, toolError, toolOk } from "@printr/sdk";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
+import { logToolExecution } from "~/lib/logging.js";
 
 const inputSchema = z.object({
   token_id: z.string().describe("Telecoin ID (hex) or CAIP-10 token address"),
@@ -53,7 +54,7 @@ export function registerGetCreatorFeesTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    async ({ token_id, chains }) => {
+    logToolExecution("printr_get_creator_fees", async ({ token_id, chains }) => {
       try {
         const response = await getProtocolFees({
           telecoinId: token_id,
@@ -88,6 +89,6 @@ export function registerGetCreatorFeesTool(server: McpServer): void {
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
       }
-    },
+    }),
   );
 }

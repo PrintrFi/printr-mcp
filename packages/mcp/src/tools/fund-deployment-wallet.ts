@@ -23,6 +23,7 @@ import { err, errAsync, ok, okAsync, type Result, type ResultAsync } from "never
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
+import { logToolExecution } from "~/lib/logging.js";
 import { getTreasuryErrorMsg, getTreasuryKey } from "~/lib/treasury.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
@@ -194,7 +195,7 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    ({ chain, amount }) =>
+    logToolExecution("printr_fund_deployment_wallet", ({ chain, amount }) =>
       toToolResponseAsync(
         // 1. Validate keystore is writable (prevents fund loss)
         verifyKeystoreWritable()
@@ -242,5 +243,6 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
             }),
           ),
       ),
+    ),
   );
 }

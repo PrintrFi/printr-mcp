@@ -18,6 +18,7 @@ import {
 import { ResultAsync } from "neverthrow";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
+import { logToolExecution } from "~/lib/logging.js";
 import { appendQr } from "~/lib/qr.js";
 import { createSession, LOCAL_SESSION_ORIGIN, startSessionServer } from "~/server";
 
@@ -111,7 +112,7 @@ export function registerLaunchTokenTool(server: McpServer, client: PrintrClient)
       inputSchema,
       outputSchema,
     },
-    async ({ private_key, rpc_url, ...tokenParams }) => {
+    logToolExecution("printr_launch_token", async ({ private_key, rpc_url, ...tokenParams }) => {
       const response = await toToolResponseAsync(
         buildToken(tokenParams, client).andThen(({ token_id, payload, quote }) => {
           if (private_key) {
@@ -181,6 +182,6 @@ export function registerLaunchTokenTool(server: McpServer, client: PrintrClient)
         }
       }
       return response;
-    },
+    }),
   );
 }

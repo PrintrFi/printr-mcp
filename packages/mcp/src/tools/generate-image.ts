@@ -6,6 +6,7 @@ import { generateImageFromPrompt } from "@printr/sdk";
 import { ResultAsync } from "neverthrow";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
+import { logToolExecution } from "~/lib/logging.js";
 
 const inputSchema = z.object({
   prompt: z
@@ -48,7 +49,7 @@ export function registerGenerateImageTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    async ({ prompt, model }) => {
+    logToolExecution("printr_generate_image", async ({ prompt, model }) => {
       // generateImageFromPrompt already runs the output through sharp (JPEG, ≤512px).
       // We just need to decode the base64 and write it to a temp file.
       const result = await generateImageFromPrompt(prompt, {
@@ -79,6 +80,6 @@ export function registerGenerateImageTool(server: McpServer): void {
         structuredContent: data,
         content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
       };
-    },
+    }),
   );
 }
