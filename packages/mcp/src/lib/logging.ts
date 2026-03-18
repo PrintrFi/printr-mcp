@@ -5,6 +5,8 @@ import { logger } from "@printr/sdk";
  *
  * Automatically redacts sensitive fields like private_key, password, etc.
  *
+ * Supports both synchronous and asynchronous handlers.
+ *
  * @example
  * ```ts
  * export const handler = logToolExecution("printr_launch_token", async (input) => {
@@ -15,7 +17,7 @@ import { logger } from "@printr/sdk";
  */
 export function logToolExecution<TInput, TOutput>(
   toolName: string,
-  handler: (input: TInput) => Promise<TOutput>,
+  handler: (input: TInput) => TOutput | Promise<TOutput>,
 ): (input: TInput) => Promise<TOutput> {
   return async (input: TInput) => {
     const start = Date.now();
@@ -24,7 +26,7 @@ export function logToolExecution<TInput, TOutput>(
     toolLogger.debug({ input }, "Tool execution started");
 
     try {
-      const result = await handler(input);
+      const result = await Promise.resolve(handler(input));
       const duration_ms = Date.now() - start;
 
       // Check if result is an error (MCP tools return { isError: true })
