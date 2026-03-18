@@ -1,0 +1,14 @@
+{
+  "name": "example-mcp-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run index.ts",
+    "test": "bun run index.ts"
+  },
+  "dependencies": {
+    "@printr/mcp": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  }
+}
