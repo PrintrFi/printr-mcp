@@ -7,7 +7,7 @@ import { ALCHEMY_RPC_TEMPLATES, rpcUrlsSchema, env as sdkEnv } from "@printr/sdk
 import { z } from "zod";
 
 // Re-export SDK env utilities
-export { rpcUrlsSchema, ALCHEMY_RPC_TEMPLATES };
+export { ALCHEMY_RPC_TEMPLATES, rpcUrlsSchema };
 
 const mcpSchema = z.object({
   // Inherit all SDK env vars
