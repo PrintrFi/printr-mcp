@@ -43,7 +43,7 @@ flowchart LR
 
 ### MCP Server — `printr_open_web_signer` tool
 
-**Source:** [src/tools/open-web-signer.ts](../src/tools/open-web-signer.ts)
+**Source:** [packages/mcp/src/tools/open-web-signer.ts](../packages/mcp/src/tools/open-web-signer.ts)
 
 Accepts the unsigned payload from `printr_create_token` and:
 
@@ -74,7 +74,7 @@ Accepts the unsigned payload from `printr_create_token` and:
 
 ### Session HTTP Server
 
-**Source:** [src/server/](../src/server/)
+**Source:** [packages/mcp/src/server/](../packages/mcp/src/server/)
 
 A minimal [Hono](https://hono.dev) HTTPS server started on demand inside the MCP process. Binds to `127.0.0.1` on the first free port in the range **5174–5200**.
 
@@ -121,7 +121,7 @@ Returns the full `TxSession` object on success.
 
 ### Session Data Model
 
-**Source:** [src/server/sessions.ts](../src/server/sessions.ts)
+**Source:** [packages/mcp/src/server/sessions.ts](../packages/mcp/src/server/sessions.ts)
 
 Sessions are stored in a `Map<string, TxSession>` for the lifetime of the MCP process. There is no persistence — sessions are lost if the process restarts.
 

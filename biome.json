@@ -8,7 +8,12 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx"]
+    "includes": [
+      "packages/*/src/**/*.ts",
+      "packages/*/src/**/*.tsx",
+      "packages/*/src/**/*.js",
+      "packages/*/src/**/*.jsx"
+    ]
   },
   "formatter": {
     "enabled": true,

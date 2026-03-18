@@ -1,0 +1,94 @@
+{
+  "name": "@printr/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for the Printr API - create and manage tokens across EVM chains and Solana",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    },
+    "./chains": {
+      "types": "./dist/chains.d.ts",
+      "import": "./dist/chains.js"
+    },
+    "./evm": {
+      "types": "./dist/evm.d.ts",
+      "import": "./dist/evm.js"
+    },
+    "./svm": {
+      "types": "./dist/svm.d.ts",
+      "import": "./dist/svm.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas.d.ts",
+      "import": "./dist/schemas.js"
+    },
+    "./caip": {
+      "types": "./dist/caip.d.ts",
+      "import": "./dist/caip.js"
+    },
+    "./balance": {
+      "types": "./dist/balance.d.ts",
+      "import": "./dist/balance.js"
+    },
+    "./transfer": {
+      "types": "./dist/transfer.d.ts",
+      "import": "./dist/transfer.js"
+    },
+    "./keystore": {
+      "types": "./dist/keystore.d.ts",
+      "import": "./dist/keystore.js"
+    },
+    "./image": {
+      "types": "./dist/image.d.ts",
+      "import": "./dist/image.js"
+    }
+  },
+  "files": ["dist", "LICENSE"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PrintrFi/printr-mcp",
+    "directory": "packages/sdk"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "bun run scripts/build.ts",
+    "dev": "bun run scripts/build.ts --watch",
+    "test": "bun test src/",
+    "test:all": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "^1.10.0",
+    "@connectrpc/connect": "^1.6.1",
+    "@connectrpc/connect-web": "^1.6.1",
+    "@openrouter/sdk": "^0.8.0",
+    "@solana/web3.js": "^1.98.4",
+    "bs58": "^6.0.0",
+    "neverthrow": "^8.2.0",
+    "openapi-fetch": "^0.17.0",
+    "sharp": "^0.34.5",
+    "viem": "^2.46.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

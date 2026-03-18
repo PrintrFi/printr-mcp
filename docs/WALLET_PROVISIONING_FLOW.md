@@ -276,7 +276,7 @@ sign tool invoked
 ## Chain metadata
 
 Derived from `../printr/web/app/stores/chains/defs.ts` (source of truth). A lightweight
-static copy lives in `src/lib/chains.ts` — no React dependency.
+static copy lives in `packages/sdk/src/chains.ts` — no React dependency.
 
 | CAIP-2 | Name | Symbol | Decimals |
 |---|---|---|---|
@@ -322,14 +322,14 @@ static copy lives in `src/lib/chains.ts` — no React dependency.
 
 | Component | File | Notes |
 |---|---|---|
-| Chain metadata | `src/lib/chains.ts` | Static map derived from web app defs |
-| Keystore read/write | `src/lib/keystore.ts` | AES-256-GCM + scrypt via `node:crypto` |
-| Balance checker | `src/lib/balance.ts` | `viem` for EVM, `@solana/web3.js` for SVM |
-| Wallet elicitation helper | `src/lib/wallet-elicit.ts` | Shared logic called by both sign tools |
-| Wallet session routes | `src/server/app.ts` | 6 new routes |
-| Browser pages | `src/server/pages/wallet-unlock.html` | Password prompt |
-|               | `src/server/pages/wallet-provide.html` | Key input + optional save |
-|               | `src/server/pages/wallet-new.html` | One-time key display + label + password |
-| `AGENT_MODE` env var | `src/lib/env.ts` | Boolean flag |
-| Updated sign tools | `src/tools/sign-and-submit-evm.ts` | Call elicitation helper when no key in input |
-|                    | `src/tools/sign-and-submit-svm.ts` | Same |
+| Chain metadata | `packages/sdk/src/chains.ts` | Static map derived from web app defs |
+| Keystore read/write | `packages/sdk/src/keystore.ts` | AES-256-GCM + scrypt via `node:crypto` |
+| Balance checker | `packages/sdk/src/balance.ts` | `viem` for EVM, `@solana/web3.js` for SVM |
+| Wallet elicitation helper | `packages/mcp/src/lib/wallet-elicit.ts` | Shared logic called by both sign tools |
+| Wallet session routes | `packages/mcp/src/server/app.ts` | 6 new routes |
+| Browser pages | `packages/mcp/src/server/pages/wallet-unlock.html` | Password prompt |
+|               | `packages/mcp/src/server/pages/wallet-provide.html` | Key input + optional save |
+|               | `packages/mcp/src/server/pages/wallet-new.html` | One-time key display + label + password |
+| `AGENT_MODE` env var | `packages/mcp/src/lib/env.ts` | Boolean flag |
+| Updated sign tools | `packages/mcp/src/tools/sign-and-submit-evm.ts` | Call elicitation helper when no key in input |
+|                    | `packages/mcp/src/tools/sign-and-submit-svm.ts` | Same |

@@ -1,52 +1,32 @@
 {
-  "name": "@printr/mcp",
-  "version": "0.11.0",
-  "mcpName": "io.github.PrintrFi/printr",
+  "name": "printr-monorepo",
+  "private": true,
   "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/PrintrFi/printr-mcp"
   },
   "license": "Apache-2.0",
-  "engines": {
-    "node": ">=18"
-  },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "bin": {
-    "printr-mcp": "./dist/index.js"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "dist",
-    "certs",
-    "LICENSE"
-  ],
+  "workspaces": ["packages/*"],
   "scripts": {
-    "certs:renew": "sh scripts/renew-certs.sh",
-    "generate:api": "sh scripts/generate-api.sh",
-    "build": "sh scripts/build.sh",
-    "build:ui": "bun run --cwd apps/wallet build",
-    "dev": "bun --hot src/index.ts",
-    "dev:ui": "bun run --cwd apps/wallet dev",
-    "dev:stub-session": "bun scripts/stub-session.ts",
-    "dev:stub-wallet": "bun scripts/stub-wallet-session.ts",
-    "start": "bun src/index.ts",
-    "inspect": "bunx @modelcontextprotocol/inspector bun src/index.ts",
-    "test": "bun test src/lib src/server src/tools src/integration.spec.ts",
-    "test:coverage": "bun test --coverage --coverage-reporter=lcov src/lib src/server src/tools src/integration.spec.ts",
-    "test:e2e": "bun test src/e2e.spec.ts",
-    "test:rpc": "bun test src/lib/chains.rpc.spec.ts",
-    "test:all": "bun test",
-    "typecheck": "tsc --noEmit",
+    "build": "bun run build:sdk && bun run build:packages",
+    "build:sdk": "bun run --cwd packages/sdk build",
+    "build:packages": "bun run --filter '@printr/mcp' --filter '@printr/cli' build",
+    "dev": "bun run --cwd packages/cli dev",
+    "dev:mcp": "bun run --cwd packages/mcp dev",
+    "start": "bun run --cwd packages/cli start",
+    "start:mcp": "bun run --cwd packages/mcp start",
+    "inspect": "bun run --cwd packages/mcp inspect",
+    "test": "bun run --filter '*' test",
+    "test:all": "bun run --filter '*' test:all",
+    "test:coverage": "bun run build:sdk && bun run --filter '@printr/mcp' --filter '@printr/cli' test --coverage",
+    "test:e2e": "bun run build:sdk && bun run --cwd packages/mcp test:e2e",
+    "typecheck": "bun run build:sdk && bun run --filter '*' typecheck",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "check": "bun typecheck && bun lint && bun test",
-    "prepublishOnly": "bun run build",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -54,33 +34,8 @@
     "@commitlint/cli": "^20.4.2",
     "@commitlint/config-conventional": "^20.4.2",
     "@types/bun": "latest",
-    "@types/qrcode": "^1.5.6",
-    "@types/sharp": "^0.32.0",
     "husky": "^9.1.7",
     "openapi-typescript": "^7.13.0",
-    "react-devtools-core": "^7.0.1"
-  },
-  "peerDependencies": {
     "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@bufbuild/protobuf": "^1.10.0",
-    "@connectrpc/connect": "^1.6.1",
-    "@connectrpc/connect-web": "^1.6.1",
-    "@hono/node-server": "^1.19.9",
-    "@modelcontextprotocol/sdk": "^1.26.0",
-    "@openrouter/sdk": "^0.8.0",
-    "@solana/web3.js": "^1.98.4",
-    "bs58": "^6.0.0",
-    "hono": "^4.12.0",
-    "ink": "^6.6.0",
-    "ink-spinner": "^5.0.0",
-    "neverthrow": "^8.2.0",
-    "openapi-fetch": "^0.17.0",
-    "qrcode": "^1.5.4",
-    "react": "^19.0.0",
-    "sharp": "^0.34.5",
-    "viem": "^2.46.2",
-    "zod": "^4.3.6"
   }
 }
