@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.12.1](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.12.0...mcp-v0.12.1) (2026-03-18)
+
+
+### Bug Fixes
+
+* add npm keywords for package discoverability ([af55b2c](https://github.com/PrintrFi/printr-mcp/commit/af55b2c97bfe7403352ab8534f485b36f041f549))
+* add shared tsconfig.base.json to reduce duplication ([aadb43b](https://github.com/PrintrFi/printr-mcp/commit/aadb43b833ee430505ebfe1f0a7f22c7f13339a4))
+* **mcp:** convert build script from sh to ts for consistency ([e304fb5](https://github.com/PrintrFi/printr-mcp/commit/e304fb5851ba0215e0ccf524597373c9bc0fbd52))
+* streamline build config and trigger patch release ([dcc04b1](https://github.com/PrintrFi/printr-mcp/commit/dcc04b1a163f3f082c24e0eaa85205c2e4df50b3))
+
 ## [0.12.0](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.11.0...mcp-v0.12.0) (2026-03-18)
 
 

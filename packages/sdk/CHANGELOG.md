@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.1](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.2.0...sdk-v0.2.1) (2026-03-18)
+
+
+### Bug Fixes
+
+* add npm keywords for package discoverability ([af55b2c](https://github.com/PrintrFi/printr-mcp/commit/af55b2c97bfe7403352ab8534f485b36f041f549))
+* add shared tsconfig.base.json to reduce duplication ([aadb43b](https://github.com/PrintrFi/printr-mcp/commit/aadb43b833ee430505ebfe1f0a7f22c7f13339a4))
+* **sdk:** remove unused path aliases from tsconfig ([534197b](https://github.com/PrintrFi/printr-mcp/commit/534197b5d262eb7efe5f5099d84223e0c36cf329))
+* streamline build config and trigger patch release ([dcc04b1](https://github.com/PrintrFi/printr-mcp/commit/dcc04b1a163f3f082c24e0eaa85205c2e4df50b3))
+
 ## [0.2.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.1.0...sdk-v0.2.0) (2026-03-18)
 
 
