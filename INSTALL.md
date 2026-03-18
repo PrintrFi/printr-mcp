@@ -59,31 +59,31 @@ uname -s
 ### Option A — via npm package (bun/node already installed)
 
 ```bash
-bunx @printr/mcp setup
+bunx @printr/cli setup
 ```
 
 Or with Node.js:
 
 ```bash
-npx @printr/mcp setup
+npx @printr/cli setup
 ```
 
 To target a specific client only:
 
 ```bash
-bunx @printr/mcp setup --client claude-desktop
-bunx @printr/mcp setup --client cursor
-bunx @printr/mcp setup --client windsurf
-bunx @printr/mcp setup --client gemini
-bunx @printr/mcp setup --client claude-code
+bunx @printr/cli setup --client claude-desktop
+bunx @printr/cli setup --client cursor
+bunx @printr/cli setup --client windsurf
+bunx @printr/cli setup --client gemini
+bunx @printr/cli setup --client claude-code
 ```
 
 To include an OpenRouter API key for AI-generated token images:
 
 ```bash
-bunx @printr/mcp setup --openrouter-api-key <key>
+bunx @printr/cli setup --openrouter-api-key <key>
 # or via env var
-OPENROUTER_API_KEY=<key> bunx @printr/mcp setup
+OPENROUTER_API_KEY=<key> bunx @printr/cli setup
 ```
 
 ### Option B — one-liner shell script (bun/node not yet installed)

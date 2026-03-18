@@ -91,9 +91,10 @@ By default, token creation returns an unsigned transaction that you sign via bro
 
 ## Development
 
-This is a monorepo with two packages:
+This is a monorepo with three packages:
 - `@printr/sdk` — Core TypeScript SDK (framework-agnostic)
 - `@printr/mcp` — MCP server wrapping the SDK
+- `@printr/cli` — CLI for setup and configuration
 
 ```sh
 bun install

@@ -7,7 +7,7 @@
     "url": "https://github.com/PrintrFi/printr-mcp"
   },
   "license": "Apache-2.0",
-  "workspaces": ["packages/*"],
+  "workspaces": ["packages/*", "examples/*"],
   "scripts": {
     "build": "bun run build:sdk && bun run build:packages",
     "build:sdk": "bun run --cwd packages/sdk build",
@@ -27,6 +27,7 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "check": "bun typecheck && bun lint && bun test",
+    "examples:test": "bun run --cwd examples/sdk-basic test && bun run --cwd examples/mcp-client test",
     "prepare": "husky"
   },
   "devDependencies": {

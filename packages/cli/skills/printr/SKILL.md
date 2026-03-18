@@ -41,6 +41,8 @@ Specify ONE of:
 | `printr_wallet_import` | Import existing key |
 | `printr_wallet_unlock` | Activate stored wallet |
 | `printr_wallet_list` | List wallets (keys hidden) |
+| `printr_wallet_remove` | Remove wallet from keystore |
+| `printr_wallet_bulk_remove` | Remove multiple wallets |
 
 ## Utility Tools
 
@@ -54,6 +56,17 @@ Specify ONE of:
 | `printr_supported_chains` | List all chains with CAIP-2 IDs |
 | `printr_generate_image` | Generate token avatar via OpenRouter |
 
+## Fee Tools
+
+| Tool | Purpose |
+|------|---------|
+| `printr_get_creator_fees` | Check claimable creator fees |
+| `printr_claim_fees` | Claim accumulated fees to treasury |
+
 ## Chain Format
 
 All tools use CAIP-2 chains and CAIP-10 addresses. Run `printr_supported_chains` for the full list.
+
+## Setup & Troubleshooting
+
+See [INSTALL.md](https://github.com/PrintrFi/printr-mcp/blob/main/INSTALL.md) for detailed setup instructions, environment variables, and RPC configuration.
