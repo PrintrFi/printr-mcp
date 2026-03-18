@@ -28,14 +28,7 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false,
-
-    // Path aliases
-    "baseUrl": ".",
-    "paths": {
-      "@printr/sdk": ["./src/index.ts"],
-      "@printr/sdk/*": ["./src/*"]
-    }
+    "noPropertyAccessFromIndexSignature": false
   },
   "include": ["src/**/*"],
   "exclude": ["**/*.spec.ts", "node_modules", "dist"]
