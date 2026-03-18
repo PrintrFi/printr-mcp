@@ -29,7 +29,8 @@ yarn add @printr/sdk
 import { createPrintrClient, buildToken } from '@printr/sdk';
 
 const client = createPrintrClient({
-  apiKey: process.env.PRINTR_API_KEY, // Optional, falls back to public key
+  apiKey: process.env.PRINTR_API_KEY!,
+  baseUrl: process.env.PRINTR_API_BASE_URL ?? 'https://api-preview.printr.money',
 });
 
 const result = await buildToken(
@@ -44,7 +45,7 @@ const result = await buildToken(
   client,
 );
 
-if (result.ok) {
+if (result.isOk()) {
   console.log('Token created:', result.value.token_id);
 }
 ```
@@ -54,29 +55,29 @@ if (result.ok) {
 ```typescript
 import { signAndSubmitEvm } from '@printr/sdk/evm';
 
-const txResult = await signAndSubmitEvm({
-  chain: 'eip155:8453',
-  payload: result.value.deployments[0].payload,
-  privateKey: process.env.EVM_WALLET_PRIVATE_KEY!,
-  rpcUrl: 'https://mainnet.base.org',
-});
-
-if (txResult.ok) {
-  console.log('Transaction hash:', txResult.value.tx_hash);
+try {
+  const txResult = await signAndSubmitEvm(
+    result.value.deployments[0].payload,
+    process.env.EVM_WALLET_PRIVATE_KEY!,
+    'https://mainnet.base.org',
+  );
+  console.log('Transaction hash:', txResult.tx_hash);
+} catch (error) {
+  console.error('Transaction failed:', error);
 }
 ```
 
 ### Check token balances
 
 ```typescript
-import { getBalance } from '@printr/sdk/balance';
+import { getEvmTokenBalance } from '@printr/sdk/balance';
 
-const balance = await getBalance({
-  chain: 'eip155:8453',
-  tokenAddress: '0x...',
-  walletAddress: '0x...',
-  rpcUrl: 'https://mainnet.base.org',
-});
+const balance = await getEvmTokenBalance(
+  'eip155:8453',
+  '0xTokenAddress',
+  '0xWalletAddress',
+  'https://mainnet.base.org',
+);
 
 console.log(`Balance: ${balance.formatted} ${balance.symbol}`);
 ```

@@ -194,7 +194,7 @@ describe("startSessionServer", () => {
   });
 
   describe("CORS headers", () => {
-    it("rejects requests without whitelisted origin", async () => {
+    it("omits CORS headers when no Origin header is provided", async () => {
       const res = await fetch(`${base}/health`);
       // No origin header means CORS doesn't set Access-Control-Allow-Origin
       expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
