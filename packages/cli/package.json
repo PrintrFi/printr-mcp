@@ -1,6 +1,6 @@
 {
   "name": "@printr/cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI for Printr - configure MCP servers and install agent skills",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,7 +11,11 @@
   "publishConfig": {
     "access": "public"
   },
-  "files": ["dist", "LICENSE", "README.md"],
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/PrintrFi/printr-mcp",
