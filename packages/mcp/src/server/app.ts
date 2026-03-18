@@ -1,3 +1,4 @@
+import { logger } from "@printr/sdk";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import {
@@ -10,6 +11,28 @@ import {
 
 export function buildApp() {
   const app = new Hono();
+
+  // Logging middleware
+  app.use("*", async (c, next) => {
+    const start = Date.now();
+    const path = c.req.path;
+    const method = c.req.method;
+
+    await next();
+
+    const duration_ms = Date.now() - start;
+    const status = c.res.status;
+
+    logger.info(
+      {
+        method,
+        path,
+        status,
+        duration_ms,
+      },
+      "HTTP request",
+    );
+  });
 
   // Allow specific HTTPS origins to fetch this localhost server.
   app.use("*", async (c, next) => {

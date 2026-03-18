@@ -82,6 +82,13 @@ By default, token creation returns an unsigned transaction that you sign via bro
 | `SVM_WALLET_PRIVATE_KEY`      | Default Solana keypair secret for autonomous signing                   |
 | `PRINTR_DEPLOYMENT_PASSWORD`  | Master password for encrypting deployment wallets (min 16 chars). Required for `printr_fund_deployment_wallet`. Generate with: `openssl rand -base64 32` |
 
+### Logging
+
+| Variable                  | Description                                                            |
+| ------------------------- | ---------------------------------------------------------------------- |
+| `LOG_LEVEL`               | Log level: `trace`, `debug`, `info`, `warn`, `error`, `fatal` (default: `info`) |
+| `LOG_FORMAT`              | Log format: `json` for structured logs, `pretty` for development (default: `json`) |
+
 ### Dev / self-hosting
 
 | Variable                  | Description                                                            |

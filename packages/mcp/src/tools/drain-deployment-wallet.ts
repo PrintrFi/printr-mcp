@@ -12,6 +12,7 @@ import {
   getRpcUrl,
   getSvmRpcUrl,
   getWallet,
+  logger,
   normalisePrivateKey,
   parseCaip2,
   sendAndConfirmSvmTransaction,
@@ -238,10 +239,10 @@ async function drainSvm(
   // Clear state after successful drain (best effort)
   activeWallets.delete("svm");
   clearActiveWalletId("svm").mapErr((e) =>
-    console.error("[state] Failed to clear active wallet ID:", e.message),
+    logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
   );
   clearLastDeploymentWalletId().mapErr((e) =>
-    console.error("[state] Failed to clear deployment wallet ID:", e.message),
+    logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
   );
 
   return {
@@ -307,10 +308,10 @@ async function drainEvm(
   // Clear state after successful drain (best effort)
   activeWallets.delete("evm");
   clearActiveWalletId("evm").mapErr((e) =>
-    console.error("[state] Failed to clear active wallet ID:", e.message),
+    logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
   );
   clearLastDeploymentWalletId().mapErr((e) =>
-    console.error("[state] Failed to clear deployment wallet ID:", e.message),
+    logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
   );
 
   return {

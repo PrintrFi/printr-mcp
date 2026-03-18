@@ -10,6 +10,7 @@ import {
   executeTransfer,
   getChainMeta,
   keystorePath,
+  logger,
   normalisePrivateKey,
   parseCaip2,
   setActiveWalletId,
@@ -223,10 +224,10 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
               activeWallets.set(type, { privateKey: wallet.privateKey, address: wallet.address });
               // 6. Persist active wallet ID and deployment wallet ID for recovery (best effort)
               setActiveWalletId(type, wallet.wallet_id).mapErr((e) =>
-                console.error("[state] Failed to persist active wallet ID:", e.message),
+                logger.warn({ error: e.message }, "Failed to persist active wallet ID"),
               );
               setLastDeploymentWalletId(wallet.wallet_id).mapErr((e) =>
-                console.error("[state] Failed to persist deployment wallet ID:", e.message),
+                logger.warn({ error: e.message }, "Failed to persist deployment wallet ID"),
               );
               return {
                 address: wallet.address,

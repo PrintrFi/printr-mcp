@@ -129,6 +129,8 @@ export {
   removeWallets,
   type WalletEntry,
 } from "./keystore.js";
+// Logger
+export { createLogger, logger } from "./logger.js";
 // Schemas
 export {
   asset,
