@@ -41,5 +41,7 @@ await $`${args}`;
 
 // Generate type declarations
 if (!isWatch) {
-  await $`tsc --emitDeclarationOnly --outDir ./dist`;
+  console.log("Generating type declarations...");
+  await $`bunx tsc --emitDeclarationOnly --outDir ./dist`;
+  console.log("Type declarations generated.");
 }

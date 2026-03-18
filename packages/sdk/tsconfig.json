@@ -17,7 +17,6 @@
     "declarationMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "composite": true,
 
     // Best practices
     "strict": true,

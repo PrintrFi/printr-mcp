@@ -20,7 +20,6 @@
     "declarationMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "composite": true,
 
     // Best practices
     "strict": true,
@@ -41,8 +40,5 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["**/*.spec.ts", "node_modules", "dist"],
-  "references": [
-    { "path": "../sdk" }
-  ]
+  "exclude": ["**/*.spec.ts", "node_modules", "dist"]
 }
