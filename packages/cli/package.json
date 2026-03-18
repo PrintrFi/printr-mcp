@@ -25,8 +25,8 @@
     "build": "bun run scripts/build.ts",
     "dev": "bun run scripts/build.ts --watch",
     "start": "bun dist/index.js",
-    "test": "echo 'No tests yet for CLI package' && exit 0",
-    "test:all": "echo 'No tests yet for CLI package' && exit 0",
+    "test": "echo 'No tests yet for CLI package'",
+    "test:all": "echo 'No tests yet for CLI package'",
     "typecheck": "bun run --cwd ../sdk build && tsc --noEmit"
   },
   "dependencies": {
