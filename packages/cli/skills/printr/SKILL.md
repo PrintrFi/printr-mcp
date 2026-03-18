@@ -66,3 +66,7 @@ Specify ONE of:
 ## Chain Format
 
 All tools use CAIP-2 chains and CAIP-10 addresses. Run `printr_supported_chains` for the full list.
+
+## Setup & Troubleshooting
+
+See [INSTALL.md](https://github.com/PrintrFi/printr-mcp/blob/main/INSTALL.md) for detailed setup instructions, environment variables, and RPC configuration.
