@@ -72,16 +72,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@bufbuild/protobuf": "^1.10.0",
-    "@connectrpc/connect": "^1.6.1",
-    "@connectrpc/connect-web": "^1.6.1",
+    "@bufbuild/protobuf": "^1.10.1",
+    "@connectrpc/connect": "^1.7.0",
+    "@connectrpc/connect-web": "^1.7.0",
     "@openrouter/sdk": "^0.8.0",
     "@solana/web3.js": "^1.98.4",
     "bs58": "^6.0.0",
     "neverthrow": "^8.2.0",
     "openapi-fetch": "^0.17.0",
     "sharp": "^0.34.5",
-    "viem": "^2.46.2",
+    "viem": "^2.47.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {
