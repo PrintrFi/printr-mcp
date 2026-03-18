@@ -15,6 +15,12 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
 
+    // Declaration generation (for build only)
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+
     // Best practices
     "strict": true,
     "skipLibCheck": true,
@@ -25,13 +31,14 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+    "noPropertyAccessFromIndexSignature": false,
+
+    // Path aliases
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"]
+    }
   },
-  "references": [
-    { "path": "./packages/sdk" },
-    { "path": "./packages/mcp" },
-    { "path": "./packages/cli" }
-  ],
-  "files": [],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["**/*.spec.ts", "node_modules", "dist"]
 }

@@ -5,7 +5,8 @@ import type { StepResult } from "../types.js";
 import { AGENTS, installSkill } from "./agents.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SKILL_PATH = join(__dirname, "..", "..", "..", "..", "skills", "printr", "SKILL.md");
+// In dist: dist/commands/skill/lib/logic.js -> dist/skills/printr/SKILL.md
+const SKILL_PATH = join(__dirname, "..", "..", "..", "skills", "printr", "SKILL.md");
 
 function getSkillContent(): string {
   return readFileSync(SKILL_PATH, "utf8");

@@ -1,0 +1,47 @@
+{
+  "name": "@printr/cli",
+  "version": "0.1.0",
+  "description": "CLI for Printr - configure MCP servers and install agent skills",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "printr": "./dist/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": ["dist", "LICENSE"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PrintrFi/printr-mcp",
+    "directory": "packages/cli"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "bun run scripts/build.ts",
+    "dev": "bun run scripts/build.ts --watch",
+    "start": "bun dist/index.js",
+    "test": "echo 'No tests yet for CLI package' && exit 0",
+    "test:all": "echo 'No tests yet for CLI package' && exit 0",
+    "typecheck": "bun run --cwd ../sdk build && tsc --noEmit"
+  },
+  "dependencies": {
+    "@printr/sdk": "workspace:*",
+    "ink": "^6.6.0",
+    "ink-spinner": "^5.0.0",
+    "react": "^19.0.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.0.6",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
