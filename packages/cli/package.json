@@ -22,6 +22,18 @@
     "directory": "packages/cli"
   },
   "license": "Apache-2.0",
+  "keywords": [
+    "printr",
+    "cli",
+    "mcp",
+    "ai",
+    "agent",
+    "skills",
+    "solana",
+    "evm",
+    "token",
+    "web3"
+  ],
   "engines": {
     "node": ">=18"
   },
