@@ -65,6 +65,17 @@
     "directory": "packages/sdk"
   },
   "license": "Apache-2.0",
+  "keywords": [
+    "printr",
+    "sdk",
+    "typescript",
+    "solana",
+    "evm",
+    "token",
+    "web3",
+    "crypto",
+    "blockchain"
+  ],
   "engines": {
     "node": ">=18"
   },

@@ -24,11 +24,23 @@
     "directory": "packages/mcp"
   },
   "license": "Apache-2.0",
+  "keywords": [
+    "printr",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "agent",
+    "solana",
+    "evm",
+    "token",
+    "web3",
+    "crypto"
+  ],
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "build": "sh scripts/build.sh",
+    "build": "bun run scripts/build.ts",
     "dev": "bun --hot src/index.ts",
     "start": "bun src/index.ts",
     "inspect": "bunx @modelcontextprotocol/inspector bun src/index.ts",
