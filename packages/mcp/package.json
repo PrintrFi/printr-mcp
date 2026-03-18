@@ -47,8 +47,7 @@
     "test": "bun test src/",
     "test:all": "bun test",
     "test:e2e": "bun test src/e2e.spec.ts",
-    "typecheck": "bun run --cwd ../sdk build && tsc --noEmit",
-    "prepublishOnly": "bun run build"
+    "typecheck": "bun run --cwd ../sdk build && tsc --noEmit"
   },
   "dependencies": {
     "@printr/sdk": "workspace:*",
