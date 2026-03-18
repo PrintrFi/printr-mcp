@@ -30,12 +30,20 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.4",
-    "@commitlint/cli": "^20.4.2",
-    "@commitlint/config-conventional": "^20.4.2",
+    "@biomejs/biome": "^2.4.8",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
     "@types/bun": "latest",
     "husky": "^9.1.7",
     "openapi-typescript": "^7.13.0",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.11",
+    "hono": "^4.12.8",
+    "minimatch": "^10.2.4"
+  },
+  "overrides": {
+    "minimatch": "^10.2.4"
   }
 }

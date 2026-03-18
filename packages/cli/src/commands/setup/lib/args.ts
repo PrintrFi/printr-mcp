@@ -9,13 +9,17 @@ export function parseSetupArgs(args: string[]): SetupArgs {
   let openrouterApiKey = process.env.OPENROUTER_API_KEY ?? "";
 
   for (let i = 0; i < args.length; i++) {
-    const arg = args[i]!;
-    if ((arg === "--client" || arg === "-c") && args[i + 1]) {
-      targetIds.push(args[++i]!);
+    const arg = args[i];
+    if (!arg) continue;
+
+    if ((arg === "--client" || arg === "-c") && i + 1 < args.length) {
+      const nextArg = args[++i];
+      if (nextArg) targetIds.push(nextArg);
     } else if (arg.startsWith("--client=")) {
       targetIds.push(arg.slice("--client=".length));
-    } else if (arg === "--openrouter-api-key" && args[i + 1]) {
-      openrouterApiKey = args[++i]!;
+    } else if (arg === "--openrouter-api-key" && i + 1 < args.length) {
+      const nextArg = args[++i];
+      if (nextArg) openrouterApiKey = nextArg;
     } else if (arg.startsWith("--openrouter-api-key=")) {
       openrouterApiKey = arg.slice("--openrouter-api-key=".length);
     }

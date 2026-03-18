@@ -10,6 +10,7 @@ import {
   executeTransfer,
   getChainMeta,
   keystorePath,
+  logger,
   normalisePrivateKey,
   parseCaip2,
   setActiveWalletId,
@@ -22,6 +23,7 @@ import { err, errAsync, ok, okAsync, type Result, type ResultAsync } from "never
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
+import { logToolExecution } from "~/lib/logging.js";
 import { getTreasuryErrorMsg, getTreasuryKey } from "~/lib/treasury.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
@@ -193,7 +195,7 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    ({ chain, amount }) =>
+    logToolExecution("printr_fund_deployment_wallet", ({ chain, amount }) =>
       toToolResponseAsync(
         // 1. Validate keystore is writable (prevents fund loss)
         verifyKeystoreWritable()
@@ -223,10 +225,10 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
               activeWallets.set(type, { privateKey: wallet.privateKey, address: wallet.address });
               // 6. Persist active wallet ID and deployment wallet ID for recovery (best effort)
               setActiveWalletId(type, wallet.wallet_id).mapErr((e) =>
-                console.error("[state] Failed to persist active wallet ID:", e.message),
+                logger.warn({ error: e.message }, "Failed to persist active wallet ID"),
               );
               setLastDeploymentWalletId(wallet.wallet_id).mapErr((e) =>
-                console.error("[state] Failed to persist deployment wallet ID:", e.message),
+                logger.warn({ error: e.message }, "Failed to persist deployment wallet ID"),
               );
               return {
                 address: wallet.address,
@@ -241,5 +243,6 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
             }),
           ),
       ),
+    ),
   );
 }

@@ -12,6 +12,7 @@ import {
   getRpcUrl,
   getSvmRpcUrl,
   getWallet,
+  logger,
   normalisePrivateKey,
   parseCaip2,
   sendAndConfirmSvmTransaction,
@@ -32,6 +33,7 @@ import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
+import { logToolExecution } from "~/lib/logging.js";
 import { getTreasuryKeyOrError } from "~/lib/treasury.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
@@ -238,10 +240,10 @@ async function drainSvm(
   // Clear state after successful drain (best effort)
   activeWallets.delete("svm");
   clearActiveWalletId("svm").mapErr((e) =>
-    console.error("[state] Failed to clear active wallet ID:", e.message),
+    logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
   );
   clearLastDeploymentWalletId().mapErr((e) =>
-    console.error("[state] Failed to clear deployment wallet ID:", e.message),
+    logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
   );
 
   return {
@@ -307,10 +309,10 @@ async function drainEvm(
   // Clear state after successful drain (best effort)
   activeWallets.delete("evm");
   clearActiveWalletId("evm").mapErr((e) =>
-    console.error("[state] Failed to clear active wallet ID:", e.message),
+    logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
   );
   clearLastDeploymentWalletId().mapErr((e) =>
-    console.error("[state] Failed to clear deployment wallet ID:", e.message),
+    logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
   );
 
   return {
@@ -370,42 +372,50 @@ export function registerDrainDeploymentWalletTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    async ({ chain, keep_minimum, wallet_id }) => {
-      try {
-        const type = chainTypeFromCaip2(chain);
+    logToolExecution(
+      "printr_drain_deployment_wallet",
+      async ({ chain, keep_minimum, wallet_id }) => {
+        try {
+          const type = chainTypeFromCaip2(chain);
 
-        const walletResult = resolveWallet(type, wallet_id);
-        if (walletResult.isErr()) return toolError(walletResult.error.message);
-        const wallet = walletResult.value;
+          const walletResult = resolveWallet(type, wallet_id);
+          if (walletResult.isErr()) return toolError(walletResult.error.message);
+          const wallet = walletResult.value;
 
-        const treasuryResult = getTreasuryKeyOrError(type);
-        if ("error" in treasuryResult) return toolError(treasuryResult.error);
+          const treasuryResult = getTreasuryKeyOrError(type);
+          if ("error" in treasuryResult) return toolError(treasuryResult.error);
 
-        const meta = getChainMeta(chain);
-        if (!meta) return toolError(`Unsupported chain: ${chain}`);
+          const meta = getChainMeta(chain);
+          if (!meta) return toolError(`Unsupported chain: ${chain}`);
 
-        const keepMin = keep_minimum ?? "0";
+          const keepMin = keep_minimum ?? "0";
 
-        if (type === "svm") {
-          const { result } = await drainSvm(wallet, treasuryResult.key, parseFloat(keepMin), meta);
+          if (type === "svm") {
+            const { result } = await drainSvm(
+              wallet,
+              treasuryResult.key,
+              parseFloat(keepMin),
+              meta,
+            );
+            return toolOk(result);
+          }
+
+          const evmConfig = getEvmConfigOrError(chain);
+          if ("error" in evmConfig) return toolError(evmConfig.error);
+
+          const { result } = await drainEvm(
+            wallet,
+            treasuryResult.key,
+            keepMin,
+            meta,
+            evmConfig.chainId,
+            evmConfig.rpc,
+          );
           return toolOk(result);
+        } catch (error) {
+          return toolError(formatError(error));
         }
-
-        const evmConfig = getEvmConfigOrError(chain);
-        if ("error" in evmConfig) return toolError(evmConfig.error);
-
-        const { result } = await drainEvm(
-          wallet,
-          treasuryResult.key,
-          keepMin,
-          meta,
-          evmConfig.chainId,
-          evmConfig.rpc,
-        );
-        return toolOk(result);
-      } catch (error) {
-        return toolError(formatError(error));
-      }
-    },
+      },
+    ),
   );
 }

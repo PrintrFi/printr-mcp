@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
+import { logToolExecution } from "~/lib/logging.js";
 import { appendQr } from "~/lib/qr.js";
 import { createSession, LOCAL_SESSION_ORIGIN, startSessionServer } from "~/server";
 
@@ -46,39 +47,42 @@ export function registerOpenWebSignerTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    async ({ chain_type, payload, token_id, token_meta, rpc_url }) => {
-      try {
-        const port = await startSessionServer();
-        const session = createSession({ chain_type, payload, token_id, token_meta, rpc_url });
+    logToolExecution(
+      "printr_open_web_signer",
+      async ({ chain_type, payload, token_id, token_meta, rpc_url }) => {
+        try {
+          const port = await startSessionServer();
+          const session = createSession({ chain_type, payload, token_id, token_meta, rpc_url });
 
-        const appBase = env.PRINTR_APP_URL;
-        const apiUrl = `${LOCAL_SESSION_ORIGIN}:${port}`;
-        const url = `${appBase}/sign?session=${session.token}&api=${encodeURIComponent(apiUrl)}`;
+          const appBase = env.PRINTR_APP_URL;
+          const apiUrl = `${LOCAL_SESSION_ORIGIN}:${port}`;
+          const url = `${appBase}/sign?session=${session.token}&api=${encodeURIComponent(apiUrl)}`;
 
-        const result = {
-          url,
-          session_token: session.token,
-          api_port: port,
-          expires_at: session.expires_at,
-        };
+          const result = {
+            url,
+            session_token: session.token,
+            api_port: port,
+            expires_at: session.expires_at,
+          };
 
-        return {
-          structuredContent: result,
-          content: [
-            { type: "text" as const, text: await appendQr(JSON.stringify(result, null, 2), url) },
-          ],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: error instanceof Error ? error.message : String(error),
-            },
-          ],
-          isError: true as const,
-        };
-      }
-    },
+          return {
+            structuredContent: result,
+            content: [
+              { type: "text" as const, text: await appendQr(JSON.stringify(result, null, 2), url) },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: error instanceof Error ? error.message : String(error),
+              },
+            ],
+            isError: true as const,
+          };
+        }
+      },
+    ),
   );
 }

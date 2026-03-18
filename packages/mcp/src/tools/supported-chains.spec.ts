@@ -3,10 +3,10 @@ import { createMockServer } from "../lib/test-helpers.js";
 import { registerSupportedChainsTool } from "./supported-chains.js";
 
 describe("printr_supported_chains", () => {
-  test("returns chains with required fields", () => {
+  test("returns chains with required fields", async () => {
     const server = createMockServer();
     registerSupportedChainsTool(server as any);
-    const result = server.getRegisteredTool()!.handler({});
+    const result = await server.getRegisteredTool()!.handler({});
     const chains = (result as any)?.structuredContent?.chains;
 
     expect(Array.isArray(chains)).toBe(true);

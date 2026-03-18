@@ -22,6 +22,13 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .env.production.local
 .env.local
 
+# certificates (except committed local.printr.dev cert)
+*.pem
+*.key
+*.p12
+!packages/mcp/certs/*.pem
+!packages/mcp/certs/*.key
+
 # caches
 .eslintcache
 .cache

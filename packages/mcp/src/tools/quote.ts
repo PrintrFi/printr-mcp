@@ -10,6 +10,7 @@ import {
   unwrapResultAsync,
 } from "@printr/sdk";
 import { z } from "zod";
+import { logToolExecution } from "~/lib/logging.js";
 
 type QuoteRequestBody = paths["/print/quote"]["post"]["requestBody"]["content"]["application/json"];
 
@@ -32,12 +33,12 @@ export function registerQuoteTool(server: McpServer, client: PrintrClient) {
       inputSchema,
       outputSchema,
     },
-    async (params) => {
+    logToolExecution("printr_quote", async (params) => {
       return toToolResponseAsync(
         unwrapResultAsync(client.POST("/print/quote", { body: params as QuoteRequestBody })).map(
           (response) => response.quote,
         ),
       );
-    },
+    }),
   );
 }

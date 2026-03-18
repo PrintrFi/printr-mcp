@@ -14,7 +14,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { env } from "~/lib/env.js";
 import { type ActiveWallet, activeWallets } from "~/server/wallet-sessions.js";
 
-export type { ChainType, ActiveWallet };
+export type { ActiveWallet, ChainType };
 
 /** Thin descriptor of the tx payload needed for balance checks */
 export type TxContext =

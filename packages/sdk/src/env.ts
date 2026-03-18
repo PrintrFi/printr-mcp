@@ -59,6 +59,9 @@ const schema = z.object({
   PRINTR_APP_URL: z.string().default("https://app.printr.money"),
   PRINTR_CDN_URL: z.string().default("https://cdn.printr.money"),
   VERBOSE: z.string().optional(),
+  // logging
+  LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).default("info"),
+  LOG_FORMAT: z.enum(["json", "pretty"]).default("json"),
   // e2e only
   PRINTR_TEST_TOKEN_ID: z.string().optional(),
 });

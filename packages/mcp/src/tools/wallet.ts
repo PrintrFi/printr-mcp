@@ -18,6 +18,7 @@ import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
+import { logToolExecution } from "~/lib/logging.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
 function deriveAddress(privateKey: string, type: ChainType): string {
@@ -50,7 +51,7 @@ export function registerWalletTools(server: McpServer): void {
         wallet_id: z.string().describe("Keystore wallet ID — use with printr_wallet_unlock"),
       }),
     },
-    ({ chain, label, password }) => {
+    logToolExecution("printr_wallet_new", ({ chain, label, password }) => {
       try {
         const type = chainTypeFromCaip2(chain);
         let privateKey: string;
@@ -77,7 +78,7 @@ export function registerWalletTools(server: McpServer): void {
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
       }
-    },
+    }),
   );
 
   server.registerTool(
@@ -104,7 +105,7 @@ export function registerWalletTools(server: McpServer): void {
         wallet_id: z.string().optional().describe("Keystore wallet ID if saved"),
       }),
     },
-    ({ chain, private_key, label, password }) => {
+    logToolExecution("printr_wallet_import", ({ chain, private_key, label, password }) => {
       try {
         const type = chainTypeFromCaip2(chain);
         let address: string;
@@ -132,7 +133,7 @@ export function registerWalletTools(server: McpServer): void {
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
       }
-    },
+    }),
   );
 
   server.registerTool(
@@ -156,7 +157,7 @@ export function registerWalletTools(server: McpServer): void {
         ),
       }),
     },
-    ({ chain }) => {
+    logToolExecution("printr_wallet_list", ({ chain }) => {
       const wallets = listWallets(chain).map(({ id, label, chain: c, address, createdAt }) => ({
         id,
         label,
@@ -165,7 +166,7 @@ export function registerWalletTools(server: McpServer): void {
         created_at: createdAt,
       }));
       return toolOk({ wallets });
-    },
+    }),
   );
 
   server.registerTool(
@@ -184,7 +185,7 @@ export function registerWalletTools(server: McpServer): void {
         chain: z.string().describe("CAIP-2 chain ID"),
       }),
     },
-    ({ wallet_id, password }) => {
+    logToolExecution("printr_wallet_unlock", ({ wallet_id, password }) => {
       const entry = getWallet(wallet_id);
       if (!entry) return toolError(`Wallet ${wallet_id} not found in keystore.`);
       const result = decryptKey(entry, password);
@@ -192,7 +193,7 @@ export function registerWalletTools(server: McpServer): void {
       const type = chainTypeFromCaip2(entry.chain);
       activeWallets.set(type, { privateKey: result.value, address: entry.address });
       return toolOk({ address: entry.address, chain: entry.chain });
-    },
+    }),
   );
 
   server.registerTool(
@@ -208,11 +209,11 @@ export function registerWalletTools(server: McpServer): void {
         ok: z.boolean(),
       }),
     },
-    ({ wallet_id }) => {
+    logToolExecution("printr_wallet_remove", ({ wallet_id }) => {
       const removed = removeWallet(wallet_id);
       if (!removed) return toolError(`Wallet ${wallet_id} not found in keystore.`);
       return toolOk({ ok: true });
-    },
+    }),
   );
 
   server.registerTool(
@@ -228,13 +229,13 @@ export function registerWalletTools(server: McpServer): void {
         removed_count: z.number().describe("Number of wallets actually removed"),
       }),
     },
-    ({ wallet_ids }) => {
+    logToolExecution("printr_wallet_bulk_remove", ({ wallet_ids }) => {
       try {
         const count = removeWallets(wallet_ids);
         return toolOk({ removed_count: count });
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
       }
-    },
+    }),
   );
 }

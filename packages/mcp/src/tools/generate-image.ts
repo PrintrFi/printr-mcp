@@ -6,6 +6,7 @@ import { generateImageFromPrompt } from "@printr/sdk";
 import { ResultAsync } from "neverthrow";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
+import { logToolExecution } from "~/lib/logging.js";
 
 const inputSchema = z.object({
   prompt: z
@@ -35,7 +36,7 @@ const outputSchema = z.object({
   size_bytes: z.number().describe("Compressed file size in bytes"),
 });
 
-export function registerGenerateImageTool(server: McpServer): void {
+export function registerGenerateImageTool(server: McpServer, openrouterApiKey: string): void {
   server.registerTool(
     "printr_generate_image",
     {
@@ -48,11 +49,11 @@ export function registerGenerateImageTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    async ({ prompt, model }) => {
+    logToolExecution("printr_generate_image", async ({ prompt, model }) => {
       // generateImageFromPrompt already runs the output through sharp (JPEG, ≤512px).
       // We just need to decode the base64 and write it to a temp file.
       const result = await generateImageFromPrompt(prompt, {
-        openrouterApiKey: env.OPENROUTER_API_KEY!,
+        openrouterApiKey,
         model,
       })
         .map((base64) => Buffer.from(base64, "base64"))
@@ -79,6 +80,6 @@ export function registerGenerateImageTool(server: McpServer): void {
         structuredContent: data,
         content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
       };
-    },
+    }),
   );
 }

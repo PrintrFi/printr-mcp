@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { caip10ToChainId, signAndSubmitEvm, toolError, toolOk } from "@printr/sdk";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
+import { logToolExecution } from "~/lib/logging.js";
 import { insufficientFundsMessage, resolveWallet } from "~/lib/wallet-elicit.js";
 
 const inputSchema = z.object({
@@ -47,7 +48,7 @@ export function registerSignAndSubmitEvmTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    async ({ payload, private_key, rpc_url }) => {
+    logToolExecution("printr_sign_and_submit_evm", async ({ payload, private_key, rpc_url }) => {
       try {
         if (private_key) {
           return toolOk(await signAndSubmitEvm(payload, private_key, rpc_url));
@@ -69,6 +70,6 @@ export function registerSignAndSubmitEvmTool(server: McpServer): void {
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
       }
-    },
+    }),
   );
 }

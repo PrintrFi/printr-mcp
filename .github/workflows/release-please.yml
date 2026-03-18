@@ -8,26 +8,27 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
-      paths_released: ${{ steps.release.outputs.paths_released }}
+      sdk_release_created: ${{ steps.release.outputs['packages/sdk--release_created'] }}
+      mcp_release_created: ${{ steps.release.outputs['packages/mcp--release_created'] }}
+      cli_release_created: ${{ steps.release.outputs['packages/cli--release_created'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
-  publish:
+  # Shared setup job that all publish jobs depend on
+  setup:
     needs: release-please
     if: ${{ needs.release-please.outputs.releases_created }}
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package: [sdk, mcp, cli]
     steps:
       - uses: actions/checkout@v4
 
@@ -36,21 +37,94 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Setup Node (for npm publish)
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build all packages
+        run: bun run build
+
+      - name: Cache build artifacts
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            packages/*/dist
+            node_modules
+          key: build-${{ github.sha }}
+
+  publish-sdk:
+    needs: [release-please, setup]
+    if: ${{ needs.release-please.outputs.sdk_release_created == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore build artifacts
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            packages/*/dist
+            node_modules
+          key: build-${{ github.sha }}
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - name: Publish @printr/sdk
+        run: cd packages/sdk && npm publish --access public --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Build
-        run: bun run build
+  publish-mcp:
+    needs: [release-please, setup]
+    if: ${{ needs.release-please.outputs.mcp_release_created == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Publish @printr/${{ matrix.package }} to npm
-        run: |
-          cd packages/${{ matrix.package }}
-          npm publish --access public
+      - name: Restore build artifacts
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            packages/*/dist
+            node_modules
+          key: build-${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Publish @printr/mcp
+        run: cd packages/mcp && npm publish --access public --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-cli:
+    needs: [release-please, setup]
+    if: ${{ needs.release-please.outputs.cli_release_created == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore build artifacts
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            packages/*/dist
+            node_modules
+          key: build-${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Publish @printr/cli
+        run: cd packages/cli && npm publish --access public --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

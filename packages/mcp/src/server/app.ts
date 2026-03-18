@@ -1,3 +1,4 @@
+import { logger } from "@printr/sdk";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import {
@@ -11,12 +12,44 @@ import {
 export function buildApp() {
   const app = new Hono();
 
-  // Allow HTTPS origins (e.g. app.printr.money) to fetch this localhost server.
+  // Logging middleware
+  app.use("*", async (c, next) => {
+    const start = Date.now();
+    const path = c.req.path;
+    const method = c.req.method;
+
+    await next();
+
+    const duration_ms = Date.now() - start;
+    const status = c.res.status;
+
+    logger.info(
+      {
+        method,
+        path,
+        status,
+        duration_ms,
+      },
+      "HTTP request",
+    );
+  });
+
+  // Allow specific HTTPS origins to fetch this localhost server.
   app.use("*", async (c, next) => {
     await next();
     c.header("Access-Control-Allow-Private-Network", "true");
   });
-  app.use("*", cors());
+  app.use(
+    "*",
+    cors({
+      origin: [
+        "https://app.printr.money",
+        "https://local.printr.dev",
+        ...(process.env.NODE_ENV === "development" ? ["http://localhost:3000"] : []),
+      ],
+      credentials: true,
+    }),
+  );
 
   app.get("/health", (c) => c.json({ ok: true }));
 

@@ -11,6 +11,7 @@ import {
   toToolResponseAsync,
 } from "@printr/sdk";
 import { z } from "zod";
+import { logToolExecution } from "~/lib/logging.js";
 
 const evmPayload = z.object({
   to: z.string().describe("Target contract (CAIP-10)"),
@@ -95,6 +96,8 @@ export function registerCreateTokenTool(server: McpServer, client: PrintrClient)
       inputSchema,
       outputSchema,
     },
-    (params) => toToolResponseAsync(buildToken(params, client)),
+    logToolExecution("printr_create_token", (params) =>
+      toToolResponseAsync(buildToken(params, client)),
+    ),
   );
 }
