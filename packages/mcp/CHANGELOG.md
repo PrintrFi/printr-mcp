@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.2](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.12.1...mcp-v0.12.2) (2026-03-18)
+
+
+### Bug Fixes
+
+* **mcp:** release workflow ([f6d3825](https://github.com/PrintrFi/printr-mcp/commit/f6d3825e66a8f09b1db98edaa3b813832b335f8c))
+* **mcp:** remove prepublishOnly script and fix CI publish workflow ([29aae4f](https://github.com/PrintrFi/printr-mcp/commit/29aae4fa7e3805411e81dd1f96e17e4fe229bdc0))
+
 ## [0.12.1](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.12.0...mcp-v0.12.1) (2026-03-18)
 
 
