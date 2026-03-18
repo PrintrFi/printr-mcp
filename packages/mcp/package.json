@@ -40,7 +40,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "build": "sh scripts/build.sh",
+    "build": "bun run scripts/build.ts",
     "dev": "bun --hot src/index.ts",
     "start": "bun src/index.ts",
     "inspect": "bunx @modelcontextprotocol/inspector bun src/index.ts",
