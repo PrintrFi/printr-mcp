@@ -1,6 +1,6 @@
 {
   "name": "@printr/mcp",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "MCP server library for the Printr API - enables AI agents to launch tokens across EVM chains and Solana",
   "mcpName": "io.github.PrintrFi/printr",
   "type": "module",
@@ -9,7 +9,12 @@
   "publishConfig": {
     "access": "public"
   },
-  "files": ["dist", "certs", "LICENSE", "README.md"],
+  "files": [
+    "dist",
+    "certs",
+    "LICENSE",
+    "README.md"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/PrintrFi/printr-mcp",
