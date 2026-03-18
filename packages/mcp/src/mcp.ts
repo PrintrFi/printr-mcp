@@ -53,7 +53,7 @@ export async function startMcpServer() {
   registerGetCreatorFeesTool(server);
   registerClaimFeesTool(server);
   if (env.OPENROUTER_API_KEY) {
-    registerGenerateImageTool(server);
+    registerGenerateImageTool(server, env.OPENROUTER_API_KEY);
   }
 
   const transport = new StdioServerTransport();

@@ -36,7 +36,7 @@ const outputSchema = z.object({
   size_bytes: z.number().describe("Compressed file size in bytes"),
 });
 
-export function registerGenerateImageTool(server: McpServer): void {
+export function registerGenerateImageTool(server: McpServer, openrouterApiKey: string): void {
   server.registerTool(
     "printr_generate_image",
     {
@@ -53,7 +53,7 @@ export function registerGenerateImageTool(server: McpServer): void {
       // generateImageFromPrompt already runs the output through sharp (JPEG, ≤512px).
       // We just need to decode the base64 and write it to a temp file.
       const result = await generateImageFromPrompt(prompt, {
-        openrouterApiKey: env.OPENROUTER_API_KEY!,
+        openrouterApiKey,
         model,
       })
         .map((base64) => Buffer.from(base64, "base64"))
