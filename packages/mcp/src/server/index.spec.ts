@@ -194,9 +194,17 @@ describe("startSessionServer", () => {
   });
 
   describe("CORS headers", () => {
-    it("includes Access-Control-Allow-Origin on responses", async () => {
+    it("rejects requests without whitelisted origin", async () => {
       const res = await fetch(`${base}/health`);
-      expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+      // No origin header means CORS doesn't set Access-Control-Allow-Origin
+      expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
+    });
+
+    it("allows whitelisted origins", async () => {
+      const res = await fetch(`${base}/health`, {
+        headers: { origin: "https://app.printr.money" },
+      });
+      expect(res.headers.get("Access-Control-Allow-Origin")).toBe("https://app.printr.money");
     });
 
     it("handles OPTIONS preflight with 204", async () => {

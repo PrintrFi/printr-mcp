@@ -37,5 +37,10 @@
     "husky": "^9.1.7",
     "openapi-typescript": "^7.13.0",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.11",
+    "hono": "^4.12.8",
+    "minimatch": "^10.2.4"
   }
 }

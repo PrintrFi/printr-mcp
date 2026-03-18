@@ -11,12 +11,22 @@ import {
 export function buildApp() {
   const app = new Hono();
 
-  // Allow HTTPS origins (e.g. app.printr.money) to fetch this localhost server.
+  // Allow specific HTTPS origins to fetch this localhost server.
   app.use("*", async (c, next) => {
     await next();
     c.header("Access-Control-Allow-Private-Network", "true");
   });
-  app.use("*", cors());
+  app.use(
+    "*",
+    cors({
+      origin: [
+        "https://app.printr.money",
+        "https://local.printr.dev",
+        ...(process.env.NODE_ENV === "development" ? ["http://localhost:3000"] : []),
+      ],
+      credentials: true,
+    }),
+  );
 
   app.get("/health", (c) => c.json({ ok: true }));
 
