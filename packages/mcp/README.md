@@ -59,6 +59,8 @@ By default, token creation returns an unsigned transaction that you sign via bro
 
 ## Tools
 
+### Token Creation
+
 | Tool                        | Description                                                          |
 | --------------------------- | -------------------------------------------------------------------- |
 | `printr_quote`              | Get cost estimates for token creation                                |
@@ -66,10 +68,55 @@ By default, token creation returns an unsigned transaction that you sign via bro
 | `printr_launch_token`       | Create and sign a token in one call                                  |
 | `printr_get_token`          | Look up token details by ID or address                               |
 | `printr_get_deployments`    | Check deployment status across target chains                         |
+| `printr_generate_image`     | Generate a token avatar via OpenRouter (requires `OPENROUTER_API_KEY`)|
+
+### Signing
+
+| Tool                        | Description                                                          |
+| --------------------------- | -------------------------------------------------------------------- |
 | `printr_sign_and_submit_evm`| Sign and submit an EVM tx payload                                    |
 | `printr_sign_and_submit_svm`| Sign and submit a Solana tx payload                                  |
 | `printr_open_web_signer`    | Start a browser signing session (MetaMask / Phantom)                 |
-| `printr_generate_image`     | Generate a token avatar via OpenRouter (requires `OPENROUTER_API_KEY`)|
+
+### Wallet Management
+
+| Tool                        | Description                                                          |
+| --------------------------- | -------------------------------------------------------------------- |
+| `printr_wallet_new`         | Generate a new encrypted wallet                                      |
+| `printr_wallet_import`      | Import an existing private key                                       |
+| `printr_wallet_unlock`      | Activate a stored wallet for signing                                 |
+| `printr_wallet_list`        | List wallets in keystore (keys hidden)                               |
+| `printr_wallet_remove`      | Remove a wallet from keystore                                        |
+| `printr_wallet_bulk_remove` | Remove multiple wallets from keystore                                |
+
+### Treasury & Deployment Wallets
+
+| Tool                             | Description                                                     |
+| -------------------------------- | --------------------------------------------------------------- |
+| `printr_set_treasury_wallet`     | Unlock treasury wallet for funding deployments                  |
+| `printr_fund_deployment_wallet`  | Create and fund an ephemeral deployment wallet                  |
+| `printr_drain_deployment_wallet` | Return unused funds from deployment wallet to treasury          |
+
+### Balances & Transfers
+
+| Tool                        | Description                                                          |
+| --------------------------- | -------------------------------------------------------------------- |
+| `printr_get_balance`        | Get native token balance for an account                              |
+| `printr_get_token_balance`  | Get ERC-20/SPL token balance                                         |
+| `printr_transfer`           | Send native tokens to an address                                     |
+
+### Fees
+
+| Tool                        | Description                                                          |
+| --------------------------- | -------------------------------------------------------------------- |
+| `printr_get_creator_fees`   | Check claimable creator fees for a token                             |
+| `printr_claim_fees`         | Claim accumulated creator fees                                       |
+
+### Utility
+
+| Tool                        | Description                                                          |
+| --------------------------- | -------------------------------------------------------------------- |
+| `printr_supported_chains`   | List all supported chains with CAIP-2 IDs                            |
 
 ## Environment variables
 
