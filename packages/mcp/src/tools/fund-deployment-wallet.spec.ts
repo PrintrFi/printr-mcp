@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createMockServer } from "../lib/test-helpers.js";
 import { registerFundDeploymentWalletTool } from "./fund-deployment-wallet.js";
 
@@ -55,12 +58,26 @@ describe("printr_fund_deployment_wallet", () => {
   });
 
   test("rejects when PRINTR_DEPLOYMENT_PASSWORD is not set", async () => {
-    const result = await setup().handler({
-      chain: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-      amount: "0.1",
-    });
-    expect((result as any)?.isError).toBe(true);
-    expect((result as any)?.content?.[0]?.text).toContain("PRINTR_DEPLOYMENT_PASSWORD");
+    // Set up temp directory for wallet store to avoid CI environment issues
+    const tempDir = mkdtempSync(join(tmpdir(), "printr-test-"));
+    const originalWalletStore = process.env.PRINTR_WALLET_STORE;
+    process.env.PRINTR_WALLET_STORE = tempDir;
+
+    try {
+      const result = await setup().handler({
+        chain: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        amount: "0.1",
+      });
+      expect((result as any)?.isError).toBe(true);
+      expect((result as any)?.content?.[0]?.text).toContain("PRINTR_DEPLOYMENT_PASSWORD");
+    } finally {
+      // Restore original env var
+      if (originalWalletStore) {
+        process.env.PRINTR_WALLET_STORE = originalWalletStore;
+      } else {
+        delete process.env.PRINTR_WALLET_STORE;
+      }
+    }
   });
 
   test("rejects invalid chain format", async () => {
