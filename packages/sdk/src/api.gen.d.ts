@@ -222,14 +222,37 @@ export interface components {
        * @enum {integer}
        */
       graduation_threshold_per_chain_usd?: 69000 | 250000;
+      /**
+       * @description Optional custom fee configuration.
+       *     Fees are in basis points (100 bps = 1%).
+       *     If omitted, defaults are used.
+       */
+      custom_fees?: {
+        bonding_curve_dev_fee_bps?: number;
+        amm_dev_fee_bps?: number;
+      };
+      /**
+       * @description Where telecoin fees are directed.
+       *     Defaults to "dev" if omitted.
+       * @enum {string}
+       */
+      fee_sink?: "dev" | "stake_pool";
+      /**
+       * @description Ratio of the telecoin supply sold on the bonding curve, in basis points.
+       *     The remainder is deposited into the AMM after graduation.
+       *     Can be used to control initial market cap.
+       *     See docs for formulas.
+       *     Omit or use 0 for a default.
+       */
+      telecoin_supply_on_curve_ratio_bps?: number;
     };
     /**
      * @description Chain Agnostic Improvement Proposal (CAIP-10) account identifier. Provides a universal format for identifying accounts across different blockchain networks. Format: {namespace}:{reference}:{account_address}
      *
      *     Examples:
-     *     - eip155:1:0x742d35Cc6634C0532925a3b844Bc9e7595f5b41 - Ethereum address
+     *     - eip155:1:0xc33f294bae8f55554c7b786306eac562d8fe9566 - Ethereum address
      *     - solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:7S3P4HxJpyyigGzodYwHtCxZyUQe9JiBMHyRWXArAaKv - Solana address
-     * @example eip155:1:0x742d35Cc6634C0532925a3b844Bc9e7595f5b41
+     * @example eip155:1:0xc33f294bae8f55554c7b786306eac562d8fe9566
      */
     CAIP_10_Account: string;
     /** @description A representation of a token or asset associated with a specific chain. */
@@ -341,6 +364,29 @@ export interface components {
        * @enum {integer}
        */
       graduation_threshold_per_chain_usd?: 69000 | 250000;
+      /**
+       * @description Optional custom fee configuration.
+       *     Fees are in basis points (100 bps = 1%).
+       *     If omitted, defaults are used.
+       */
+      custom_fees?: {
+        bonding_curve_dev_fee_bps?: number;
+        amm_dev_fee_bps?: number;
+      };
+      /**
+       * @description Where telecoin fees are directed.
+       *     Defaults to "dev" if omitted.
+       * @enum {string}
+       */
+      fee_sink?: "dev" | "stake_pool";
+      /**
+       * @description Ratio of the telecoin supply sold on the bonding curve, in basis points.
+       *     The remainder is deposited into the AMM after graduation.
+       *     Can be used to control initial market cap.
+       *     See docs for formulas.
+       *     Omit or use 0 for a default.
+       */
+      telecoin_supply_on_curve_ratio_bps?: number;
     };
     /** Payload (EVM) */
     Payload_Evm: {
