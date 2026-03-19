@@ -8,7 +8,7 @@ import { generateTokenImage, processImagePath } from "./image.js";
 type CreateTokenRequestBody = paths["/print"]["post"]["requestBody"]["content"]["application/json"];
 
 export type BuildTokenInput = {
-  creator_accounts: string[];
+  creator_accounts?: string[];
   name: string;
   symbol: string;
   description: string;
