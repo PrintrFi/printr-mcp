@@ -39,7 +39,7 @@ import { activeWallets } from "~/server/wallet-sessions.js";
 
 type DrainError = { message: string };
 
-type ResolvedWallet = { privateKey: string; address: string; walletId: string };
+export type ResolvedWallet = { privateKey: string; address: string; walletId: string };
 
 function getDeploymentPassword(): Result<string, DrainError> {
   const password = env.PRINTR_DEPLOYMENT_PASSWORD;
@@ -187,7 +187,7 @@ function buildDrainResult(
 // This is approximately 890,880 lamports (~0.00089 SOL)
 const RENT_EXEMPT_MINIMUM = 890_880n;
 
-async function drainSvm(
+export async function drainSvm(
   wallet: ResolvedWallet,
   treasuryKey: string,
   keepMinimum: number,
@@ -366,7 +366,8 @@ export function registerDrainDeploymentWalletTool(server: McpServer): void {
     {
       description:
         "Drain remaining funds from a deployment wallet back to the treasury. " +
-        "Use this after printr_launch_token to recover unused gas funds. " +
+        "NOTE: drain runs automatically inside printr_launch_token — only call this tool manually " +
+        "to recover a stuck wallet (e.g. after a crash or if printr_launch_token was not called). " +
         "Automatically calculates gas fees and drains the maximum possible amount. " +
         "Can recover wallets after MCP restart using persisted state and PRINTR_DEPLOYMENT_PASSWORD.",
       inputSchema,
