@@ -9,6 +9,7 @@ import {
   externalLinks,
   getActiveWalletId,
   getChainMeta,
+  getEvmConfig,
   graduationThreshold,
   initialBuy,
   logger,
@@ -21,14 +22,15 @@ import {
   toToolResponseAsync,
 } from "@printr/sdk";
 import { ResultAsync } from "neverthrow";
+import { match } from "ts-pattern";
 import { z } from "zod";
+import { drainEvm, drainSvm, type ResolvedWallet } from "~/lib/drain.js";
 import { env } from "~/lib/env.js";
 import { logToolExecution } from "~/lib/logging.js";
 import { appendQr } from "~/lib/qr.js";
 import { getTreasuryKeyOrError } from "~/lib/treasury.js";
 import { createSession, LOCAL_SESSION_ORIGIN, startSessionServer } from "~/server";
 import { activeWallets } from "~/server/wallet-sessions.js";
-import { drainSvm, type ResolvedWallet } from "./drain-deployment-wallet.js";
 
 const normStr = (v?: string) => (!v || v === "null" || v === "undefined" ? undefined : v);
 
@@ -103,6 +105,23 @@ const outputSchema = z.object({
     .enum(["finalized", "confirmed", "processed"])
     .optional()
     .describe("Solana confirmation level"),
+  // Deployment wallet drain outcome
+  drain_status: z
+    .enum(["ok", "failed", "skipped"])
+    .optional()
+    .describe(
+      "ok: funds returned to treasury. " +
+        "failed: drain attempted but failed — use drain_wallet_id to recover manually. " +
+        "skipped: no tracked deployment wallet was active (key supplied directly).",
+    ),
+  drain_wallet_id: z
+    .string()
+    .optional()
+    .describe("Keystore wallet ID that was drained. Present when drain_status is ok or failed."),
+  drain_error: z
+    .string()
+    .optional()
+    .describe("Drain failure reason. Present when drain_status is failed."),
 });
 
 function mapErr(e: unknown): PrintrApiError {
@@ -182,25 +201,82 @@ function openWebSigner(
   );
 }
 
-async function autoDrainSvmWallet(
+type DrainOutcome =
+  | { status: "ok"; walletId: string }
+  | { status: "failed"; walletId: string; error: string }
+  | { status: "skipped" };
+
+function drainFields(outcome: DrainOutcome) {
+  return match(outcome)
+    .with({ status: "ok" }, ({ walletId }) => ({
+      drain_status: "ok" as const,
+      drain_wallet_id: walletId,
+    }))
+    .with({ status: "failed" }, ({ walletId, error }) => ({
+      drain_status: "failed" as const,
+      drain_wallet_id: walletId,
+      drain_error: error,
+    }))
+    .with({ status: "skipped" }, () => ({ drain_status: "skipped" as const }))
+    .exhaustive();
+}
+
+async function mergeResponse(
+  response: Awaited<ReturnType<typeof toToolResponseAsync>>,
+  outcome: DrainOutcome,
+) {
+  if (!("structuredContent" in response)) return response;
+  const sc = response.structuredContent as { status?: string; url?: string };
+  const merged = { ...sc, ...drainFields(outcome) };
+  if (sc.status === "awaiting_signature" && sc.url) {
+    const text = await appendQr(response.content[0]?.text ?? "", sc.url);
+    return { ...response, structuredContent: merged, content: [{ type: "text" as const, text }] };
+  }
+  return { ...response, structuredContent: merged };
+}
+
+async function autoDrain(
   activeWallet: Omit<ResolvedWallet, "walletId">,
   chainType: ChainType,
   chain: string,
   rpcUrl?: string,
-) {
-  if (chainType !== "svm") return;
-  // Only drain wallets that are tracked deployment wallets (not user-supplied keys)
+): Promise<DrainOutcome> {
+  // Only drain wallets tracked as deployment wallets — not user-supplied keys
   const walletId = getActiveWalletId(chainType);
-  if (!walletId) return;
+  if (!walletId) return { status: "skipped" };
+
   const meta = getChainMeta(chain);
   const treasuryResult = getTreasuryKeyOrError(chainType);
-  if (!meta || "error" in treasuryResult) return;
-  await drainSvm({ ...activeWallet, walletId }, treasuryResult.key, 0, meta, rpcUrl).catch(
-    (e: unknown) => {
-      logger.warn(
-        { error: e instanceof Error ? e.message : String(e) },
-        "Auto-drain after launch failed",
-      );
+  if (!meta || "error" in treasuryResult) return { status: "skipped" };
+
+  const wallet = { ...activeWallet, walletId };
+
+  if (chainType === "svm") {
+    return (await drainSvm(wallet, treasuryResult.key, 0, meta, rpcUrl)).match(
+      () => ({ status: "ok" as const, walletId }),
+      (e) => {
+        logger.warn({ error: e.message }, "Auto-drain after launch failed");
+        return { status: "failed" as const, walletId, error: e.message };
+      },
+    );
+  }
+
+  const evmConfig = getEvmConfig(chain);
+  if ("error" in evmConfig) return { status: "skipped" };
+  return (
+    await drainEvm(
+      wallet,
+      treasuryResult.key,
+      "0",
+      meta,
+      evmConfig.chainId,
+      rpcUrl ?? evmConfig.rpc,
+    )
+  ).match(
+    () => ({ status: "ok" as const, walletId }),
+    (e) => {
+      logger.warn({ error: e.message }, "Auto-drain after launch failed");
+      return { status: "failed" as const, walletId, error: e.message };
     },
   );
 }
@@ -245,22 +321,15 @@ export function registerLaunchTokenTool(server: McpServer, client: PrintrClient)
       );
 
       // Auto-drain the deployment wallet after launch (success or failure).
-      // This runs inside the tool so the agent never needs to call
-      // printr_drain_deployment_wallet separately, eliminating any race condition
-      // caused by the LLM issuing both calls in the same parallel step.
+      // Runs inside the tool to eliminate race conditions from parallel LLM calls.
+      // Result is surfaced in drain_status so the consumer can trigger recovery if needed.
       const chain = tokenParams.chains[0];
-      if (activeWallet && chain) {
-        await autoDrainSvmWallet(activeWallet, chainType, chain, rpc_url);
-      }
+      const drainOutcome: DrainOutcome =
+        activeWallet && chain
+          ? await autoDrain(activeWallet, chainType, chain, rpc_url)
+          : { status: "skipped" };
 
-      if ("structuredContent" in response) {
-        const data = response.structuredContent as { status?: string; url?: string };
-        if (data.status === "awaiting_signature" && data.url) {
-          const text = await appendQr(response.content[0]?.text ?? "", data.url);
-          return { ...response, content: [{ type: "text" as const, text }] };
-        }
-      }
-      return response;
+      return mergeResponse(response, drainOutcome);
     }),
   );
 }
