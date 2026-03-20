@@ -17,7 +17,7 @@ import {
   toToolResponseAsync,
   transferSvm,
 } from "@printr/sdk";
-import { errAsync, okAsync, ResultAsync } from "neverthrow";
+import { err, errAsync, ok, okAsync, type Result, ResultAsync } from "neverthrow";
 import { match } from "ts-pattern";
 import { z } from "zod";
 import { drainSvm } from "~/lib/drain.js";
@@ -88,6 +88,46 @@ function toSvmPayload(payload: PayloadSolana): SvmPayload {
   };
 }
 
+function getTreasuryContext(
+  chain: string,
+): Result<{ treasuryKey: string; treasuryAddress: string }, ClaimError> {
+  const chainType = chainTypeFromCaip2(chain);
+  const treasuryKey = getTreasuryKey(chainType);
+  if (!treasuryKey) {
+    const envVar = chainType === "svm" ? "SVM" : "EVM";
+    return err(
+      claimErr(
+        `Treasury wallet not configured for ${chainType.toUpperCase()}. ` +
+        `Use printr_set_treasury_wallet or set ${envVar}_WALLET_PRIVATE_KEY.`,
+      ),
+    );
+  }
+  const treasuryAddress = getTreasuryAddress(chainType);
+  if (!treasuryAddress) {
+    return err(claimErr("Failed to derive treasury address."));
+  }
+  return ok({ treasuryKey, treasuryAddress });
+}
+
+// Looks up a deployment wallet key in the keystore for the given creator address.
+function findDeploymentKey(
+  chain: string,
+  creatorAddress: string,
+): { key: string; walletId: string } | undefined {
+  const password = env.PRINTR_DEPLOYMENT_PASSWORD;
+  if (!password) {
+    return undefined;
+  }
+  const entry = listWallets(chain).find((w) => w.address === creatorAddress);
+  if (!entry) {
+    return undefined;
+  }
+  return decryptKey(entry, password).match(
+    (key) => ({ key, walletId: entry.id }),
+    () => undefined,
+  );
+}
+
 function fetchChainFees(
   tokenId: string,
   chain: string,
@@ -119,35 +159,33 @@ function resolveClaimContext(
 ): ResultAsync<ClaimContext, ClaimError> {
   return fetchChainFees(tokenId, chain, treasuryAddress).andThen(({ chainFees, telecoinId }) => {
     const creatorAddress = chainFees.dev?.address;
-    const creatorIsNotTreasury = creatorAddress && creatorAddress !== treasuryAddress;
+    const fallback = okAsync({ treasuryKey, signingKey: treasuryKey, chainFees, telecoinId });
 
-    if (creatorIsNotTreasury) {
-      const entry = listWallets(chain).find((w) => w.address === creatorAddress);
-      const password = env.PRINTR_DEPLOYMENT_PASSWORD;
-      if (entry && password) {
-        const keyResult = decryptKey(entry, password);
-        if (keyResult.isOk()) {
-          return fetchChainFees(tokenId, chain, creatorAddress).map(
-            ({ chainFees: creatorFees, telecoinId: creatorTelecoinId }) =>
-              creatorFees.canCollect
-                ? {
-                    treasuryKey,
-                    signingKey: keyResult.value,
-                    chainFees: creatorFees,
-                    telecoinId: creatorTelecoinId,
-                    deploymentWallet: {
-                      privateKey: keyResult.value,
-                      address: creatorAddress,
-                      walletId: entry.id,
-                    },
-                  }
-                : { treasuryKey, signingKey: treasuryKey, chainFees, telecoinId },
-          );
-        }
-      }
+    if (!creatorAddress || creatorAddress === treasuryAddress) {
+      return fallback;
     }
 
-    return okAsync({ treasuryKey, signingKey: treasuryKey, chainFees, telecoinId });
+    const deploymentKey = findDeploymentKey(chain, creatorAddress);
+    if (!deploymentKey) {
+      return fallback;
+    }
+
+    return fetchChainFees(tokenId, chain, creatorAddress).map(
+      ({ chainFees: creatorFees, telecoinId: creatorTelecoinId }) =>
+        creatorFees.canCollect
+          ? {
+            treasuryKey,
+            signingKey: deploymentKey.key,
+            chainFees: creatorFees,
+            telecoinId: creatorTelecoinId,
+            deploymentWallet: {
+              privateKey: deploymentKey.key,
+              address: creatorAddress,
+              walletId: deploymentKey.walletId,
+            },
+          }
+          : { treasuryKey, signingKey: treasuryKey, chainFees, telecoinId },
+    );
   });
 }
 
@@ -164,9 +202,9 @@ function claimSvm(
 
   const fundStep: ResultAsync<undefined, ClaimError> = deploymentWallet
     ? ResultAsync.fromPromise(
-        transferSvm(deploymentWallet.address, GAS_RESERVE, treasuryKey, rpc).then(() => undefined),
-        mapErr,
-      )
+      transferSvm(deploymentWallet.address, GAS_RESERVE, treasuryKey, rpc).then(() => undefined),
+      mapErr,
+    )
     : okAsync(undefined);
 
   return fundStep
@@ -196,7 +234,7 @@ function executeClaim(ctx: ClaimContext, chain: string): ResultAsync<ClaimOutput
     return errAsync(
       claimErr(
         `No fees available to claim on ${chain}. ` +
-          `Creator fees: $${chainFees.devFees?.amountUsd?.toFixed(2) ?? "0.00"}`,
+        `Creator fees: $${chainFees.devFees?.amountUsd?.toFixed(2) ?? "0.00"}`,
       ),
     );
   }
@@ -250,38 +288,14 @@ export function registerClaimFeesTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_claim_fees", ({ token_id, chain }) => {
-      const chainType = chainTypeFromCaip2(chain);
-      const treasuryKey = getTreasuryKey(chainType);
-
-      if (!treasuryKey) {
-        const envVar = chainType === "svm" ? "SVM" : "EVM";
-        return Promise.resolve({
-          content: [
-            {
-              type: "text" as const,
-              text:
-                `Treasury wallet not configured for ${chainType.toUpperCase()}. ` +
-                `Use printr_set_treasury_wallet or set ${envVar}_WALLET_PRIVATE_KEY.`,
-            },
-          ],
-          isError: true as const,
-        });
-      }
-
-      const treasuryAddress = getTreasuryAddress(chainType);
-      if (!treasuryAddress) {
-        return Promise.resolve({
-          content: [{ type: "text" as const, text: "Failed to derive treasury address." }],
-          isError: true as const,
-        });
-      }
-
-      return toToolResponseAsync(
-        resolveClaimContext(token_id, chain, treasuryKey, treasuryAddress).andThen((ctx) =>
-          executeClaim(ctx, chain),
+    logToolExecution("printr_claim_fees", ({ token_id, chain }) =>
+      toToolResponseAsync(
+        getTreasuryContext(chain).asyncAndThen(({ treasuryKey, treasuryAddress }) =>
+          resolveClaimContext(token_id, chain, treasuryKey, treasuryAddress).andThen((ctx) =>
+            executeClaim(ctx, chain),
+          ),
         ),
-      );
-    }),
+      ),
+    ),
   );
 }
