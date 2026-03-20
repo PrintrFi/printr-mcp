@@ -25,6 +25,14 @@ export type BuildTokenInput = {
  * Used by both `printr_create_token` and `printr_launch_token`.
  */
 export function buildToken({ image, image_path, ...rest }: BuildTokenInput, client: PrintrClient) {
+  if (!rest.creator_accounts) {
+    return errAsync({
+      message:
+        "creator_accounts is required. Provide at least one CAIP-10 address per chain, " +
+        "or use an active deployment wallet so the SDK can infer them.",
+    });
+  }
+
   const imageAsync = image
     ? okAsync(image)
     : image_path

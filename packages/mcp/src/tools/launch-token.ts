@@ -186,18 +186,23 @@ async function autoDrainSvmWallet(
   activeWallet: Omit<ResolvedWallet, "walletId">,
   chainType: ChainType,
   chain: string,
+  rpcUrl?: string,
 ) {
   if (chainType !== "svm") return;
+  // Only drain wallets that are tracked deployment wallets (not user-supplied keys)
+  const walletId = getActiveWalletId(chainType);
+  if (!walletId) return;
   const meta = getChainMeta(chain);
   const treasuryResult = getTreasuryKeyOrError(chainType);
   if (!meta || "error" in treasuryResult) return;
-  const walletId = getActiveWalletId(chainType) ?? "unknown";
-  await drainSvm({ ...activeWallet, walletId }, treasuryResult.key, 0, meta).catch((e: unknown) => {
-    logger.warn(
-      { error: e instanceof Error ? e.message : String(e) },
-      "Auto-drain after launch failed",
-    );
-  });
+  await drainSvm({ ...activeWallet, walletId }, treasuryResult.key, 0, meta, rpcUrl).catch(
+    (e: unknown) => {
+      logger.warn(
+        { error: e instanceof Error ? e.message : String(e) },
+        "Auto-drain after launch failed",
+      );
+    },
+  );
 }
 
 export function registerLaunchTokenTool(server: McpServer, client: PrintrClient): void {
@@ -221,12 +226,14 @@ export function registerLaunchTokenTool(server: McpServer, client: PrintrClient)
       const activeWallet = activeWallets.get(chainType);
       const effectivePrivateKey = private_key ?? activeWallet?.privateKey;
 
-      // Derive creator_accounts from active wallet if not provided
+      // Derive creator_accounts from active wallet if not provided (one entry per chain)
       const effectiveParams = {
         ...tokenParams,
         creator_accounts:
           tokenParams.creator_accounts ??
-          (activeWallet ? [`${tokenParams.chains[0]}:${activeWallet.address}`] : undefined),
+          (activeWallet
+            ? tokenParams.chains.map((chain) => `${chain}:${activeWallet.address}`)
+            : undefined),
       };
 
       const response = await toToolResponseAsync(
@@ -243,7 +250,7 @@ export function registerLaunchTokenTool(server: McpServer, client: PrintrClient)
       // caused by the LLM issuing both calls in the same parallel step.
       const chain = tokenParams.chains[0];
       if (activeWallet && chain) {
-        await autoDrainSvmWallet(activeWallet, chainType, chain);
+        await autoDrainSvmWallet(activeWallet, chainType, chain, rpc_url);
       }
 
       if ("structuredContent" in response) {

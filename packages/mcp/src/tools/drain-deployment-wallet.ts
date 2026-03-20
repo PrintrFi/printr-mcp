@@ -192,8 +192,9 @@ export async function drainSvm(
   treasuryKey: string,
   keepMinimum: number,
   meta: ChainMeta,
+  rpcUrl?: string,
 ) {
-  const rpc = getSvmRpcUrl();
+  const rpc = rpcUrl ?? getSvmRpcUrl();
   const connection = new Connection(rpc, "confirmed");
   const deploymentKeypair = Keypair.fromSecretKey(bs58.decode(wallet.privateKey));
   const treasuryKeypair = Keypair.fromSecretKey(bs58.decode(treasuryKey));
