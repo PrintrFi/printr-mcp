@@ -53,23 +53,25 @@ async function checkBalance(
   };
   if (type === "evm" && ctx.type === "evm") {
     const { chainId } = parseEvmCaip10(ctx.caip10To);
-    const r = await checkEvmBalance(address, chainId, ctx.gasLimit, ctx.rpcUrl);
-    if (r.isErr()) return fallback;
-    return {
-      sufficient: r.value.sufficient,
-      balance: r.value.balanceFormatted,
-      required: r.value.requiredFormatted,
-      symbol: r.value.symbol,
-    };
+    return (await checkEvmBalance(address, chainId, ctx.gasLimit, ctx.rpcUrl)).match(
+      (r) => ({
+        sufficient: r.sufficient,
+        balance: r.balanceFormatted,
+        required: r.requiredFormatted,
+        symbol: r.symbol,
+      }),
+      () => fallback,
+    );
   }
-  const r = await checkSvmBalance(address, ctx.type === "svm" ? ctx.rpcUrl : undefined);
-  if (r.isErr()) return fallback;
-  return {
-    sufficient: r.value.sufficient,
-    balance: r.value.balanceFormatted,
-    required: r.value.requiredFormatted,
-    symbol: r.value.symbol,
-  };
+  return (await checkSvmBalance(address, ctx.type === "svm" ? ctx.rpcUrl : undefined)).match(
+    (r) => ({
+      sufficient: r.sufficient,
+      balance: r.balanceFormatted,
+      required: r.requiredFormatted,
+      symbol: r.symbol,
+    }),
+    () => fallback,
+  );
 }
 
 async function resolveAgentMode(
@@ -114,17 +116,17 @@ export async function resolveWallet(
   caip2: string,
   ctx: TxContext,
 ): Promise<WalletResolution> {
-  const type = chainTypeFromCaip2(caip2);
+  const chainType = chainTypeFromCaip2(caip2);
   const meta = getChainMeta(caip2);
   const chainName = meta?.name ?? caip2;
 
   if (env.AGENT_MODE === "1" || env.AGENT_MODE === "true") {
-    return resolveAgentMode(type, chainName, ctx);
+    return resolveAgentMode(chainType, chainName, ctx);
   }
 
-  const active = activeWallets.get(type);
+  const active = activeWallets.get(chainType);
   if (active) {
-    const bal = await checkBalance(active.address, type, ctx);
+    const bal = await checkBalance(active.address, chainType, ctx);
     return bal.sufficient
       ? { kind: "ready", privateKey: active.privateKey, address: active.address }
       : { kind: "insufficient_funds", address: active.address, chain: chainName, ...bal };
@@ -133,7 +135,7 @@ export async function resolveWallet(
   return {
     kind: "error",
     message:
-      `No active ${type.toUpperCase()} wallet. ` +
+      `No active ${chainType.toUpperCase()} wallet. ` +
       `Call \`printr_wallet_unlock\` to unlock a stored wallet, or ` +
       `\`printr_wallet_new\` / \`printr_wallet_import\` to add one.`,
   };
