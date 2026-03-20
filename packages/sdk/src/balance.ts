@@ -35,7 +35,9 @@ export function checkEvmBalance(
   const caip2 = toCaip2("eip155", chainId);
   const meta = getChainMeta(caip2);
   const rpc = getRpcUrl(caip2, rpcUrl);
-  if (!rpc) return errAsync("no_rpc" as BalanceError);
+  if (!rpc) {
+    return errAsync("no_rpc" as BalanceError);
+  }
 
   const chain = defineChain({
     id: chainId,
@@ -104,9 +106,13 @@ export const resolveRpcUrl = (
   caip2: string,
   rpcOverride?: string,
 ): Result<string, BalanceError> => {
-  if (caip2.startsWith("solana:")) return ok(getSvmRpcUrl(rpcOverride));
+  if (caip2.startsWith("solana:")) {
+    return ok(getSvmRpcUrl(rpcOverride));
+  }
   const resolved = getRpcUrl(caip2, rpcOverride);
-  if (resolved) return ok(resolved);
+  if (resolved) {
+    return ok(resolved);
+  }
   return err("no_rpc");
 };
 
@@ -212,7 +218,9 @@ export const fetchNativeBalance = (
 ): ResultAsync<SimpleBalanceResult, BalanceError> => {
   const caip2 = toCaip2(namespace as "eip155" | "solana", chainRef);
   const rpcResult = resolveRpcUrl(caip2, rpcOverride);
-  if (rpcResult.isErr()) return errAsync(rpcResult.error);
+  if (rpcResult.isErr()) {
+    return errAsync(rpcResult.error);
+  }
   const rpcUrl = rpcResult.value;
   return namespace === "solana"
     ? getSvmNativeBalance(address, rpcUrl)
@@ -229,7 +237,9 @@ export const fetchTokenBalance = (
 ): ResultAsync<SimpleBalanceResult, BalanceError> => {
   const caip2 = toCaip2(namespace as "eip155" | "solana", chainRef);
   const rpcResult = resolveRpcUrl(caip2, rpcOverride);
-  if (rpcResult.isErr()) return errAsync(rpcResult.error);
+  if (rpcResult.isErr()) {
+    return errAsync(rpcResult.error);
+  }
   const rpcUrl = rpcResult.value;
   return namespace === "solana"
     ? getSplTokenBalance(tokenAddress, walletAddress, rpcUrl)

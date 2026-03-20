@@ -20,13 +20,18 @@ export function SelectionScreen({
     } else if (key.downArrow) {
       setCursor((c) => (c + 1) % clients.length);
     } else if (input === " ") {
-      const id = clients[cursor]!.id;
-      setSelected((prev) => {
-        const next = new Set(prev);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        return next;
-      });
+      const id = clients[cursor]?.id;
+      if (id !== undefined) {
+        setSelected((prev) => {
+          const next = new Set(prev);
+          if (next.has(id)) {
+            next.delete(id);
+          } else {
+            next.add(id);
+          }
+          return next;
+        });
+      }
     } else if (key.return) {
       onConfirm([...selected]);
     }
@@ -42,11 +47,11 @@ export function SelectionScreen({
           const isCursor = i === cursor;
           return (
             <Box key={c.id}>
-              <Text color={isCursor ? "cyan" : undefined}>
+              <Text {...(isCursor ? { color: "cyan" } : {})}>
                 {isCursor ? "›" : " "}
                 {"  "}
               </Text>
-              <Text color={isSelected ? "green" : undefined}>
+              <Text {...(isSelected ? { color: "green" } : {})}>
                 {isSelected ? "◉" : "○"}
                 {"  "}
               </Text>

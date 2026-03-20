@@ -23,7 +23,9 @@ import { logToolExecution } from "~/lib/logging.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
 function deriveAddress(privateKey: string, type: ChainType): string {
-  if (type === "evm") return privateKeyToAccount(normalisePrivateKey(privateKey)).address;
+  if (type === "evm") {
+    return privateKeyToAccount(normalisePrivateKey(privateKey)).address;
+  }
   return Keypair.fromSecretKey(bs58.decode(privateKey)).publicKey.toBase58();
 }
 
@@ -191,7 +193,9 @@ export function registerWalletTools(server: McpServer): void {
     },
     logToolExecution("printr_wallet_unlock", ({ wallet_id, password }) => {
       const entry = getWallet(wallet_id);
-      if (!entry) return toolError(`Wallet ${wallet_id} not found in keystore.`);
+      if (!entry) {
+        return toolError(`Wallet ${wallet_id} not found in keystore.`);
+      }
       return decryptKey(entry, password).match(
         (privateKey) => {
           const chainType = chainTypeFromCaip2(entry.chain);
@@ -218,7 +222,9 @@ export function registerWalletTools(server: McpServer): void {
     },
     logToolExecution("printr_wallet_remove", ({ wallet_id }) => {
       const removed = removeWallet(wallet_id);
-      if (!removed) return toolError(`Wallet ${wallet_id} not found in keystore.`);
+      if (!removed) {
+        return toolError(`Wallet ${wallet_id} not found in keystore.`);
+      }
       return toolOk({ ok: true });
     }),
   );

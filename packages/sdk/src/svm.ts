@@ -28,8 +28,12 @@ type ConfirmationResult = { slot: number; confirmationStatus: ConfirmationStatus
 
 /** Check if the actual confirmation status meets the required commitment level */
 function hasReachedCommitment(actual: ConfirmationStatus, required: Commitment): boolean {
-  if (required === "finalized") return actual === "finalized";
-  if (required === "confirmed") return actual === "finalized" || actual === "confirmed";
+  if (required === "finalized") {
+    return actual === "finalized";
+  }
+  if (required === "confirmed") {
+    return actual === "finalized" || actual === "confirmed";
+  }
   return true; // "processed" is always reached if we have any status
 }
 
@@ -93,7 +97,9 @@ async function confirmTransactionWebSocket(
 
 /** Check if an error indicates WebSocket is not supported */
 function isWebSocketError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
+  if (!(error instanceof Error)) {
+    return false;
+  }
   const msg = error.message.toLowerCase();
   return (
     msg.includes("websocket") ||
@@ -156,7 +162,7 @@ export type SvmInstruction = {
 
 export type SvmPayload = {
   ixs: SvmInstruction[];
-  lookup_table?: string;
+  lookup_table?: string | undefined;
   mint_address: string;
 };
 

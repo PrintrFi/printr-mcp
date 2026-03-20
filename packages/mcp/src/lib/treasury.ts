@@ -10,7 +10,9 @@ import { treasuryWallets } from "~/server/wallet-sessions.js";
  */
 export function getTreasuryKey(type: ChainType): string | undefined {
   const sessionTreasury = treasuryWallets.get(type);
-  if (sessionTreasury) return sessionTreasury.privateKey;
+  if (sessionTreasury) {
+    return sessionTreasury.privateKey;
+  }
   return type === "svm" ? env.SVM_WALLET_PRIVATE_KEY : env.EVM_WALLET_PRIVATE_KEY;
 }
 
@@ -27,7 +29,9 @@ export function getTreasuryErrorMsg(type: ChainType): string {
  */
 export function getTreasuryKeyOrError(type: ChainType): { error: string } | { key: string } {
   const key = getTreasuryKey(type);
-  if (!key) return { error: getTreasuryErrorMsg(type) };
+  if (!key) {
+    return { error: getTreasuryErrorMsg(type) };
+  }
   return { key };
 }
 
@@ -36,7 +40,9 @@ export function getTreasuryKeyOrError(type: ChainType): { error: string } | { ke
  */
 export function getTreasuryAddress(type: ChainType): string | undefined {
   const key = getTreasuryKey(type);
-  if (!key) return undefined;
+  if (!key) {
+    return undefined;
+  }
 
   if (type === "svm") {
     const keypair = Keypair.fromSecretKey(bs58.decode(key));

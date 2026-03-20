@@ -10,6 +10,7 @@ import {
 } from "@printr/sdk";
 import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
+import { match } from "ts-pattern";
 import { privateKeyToAccount } from "viem/accounts";
 import { env } from "~/lib/env.js";
 import { type ActiveWallet, activeWallets } from "~/server/wallet-sessions.js";
@@ -18,8 +19,8 @@ export type { ActiveWallet, ChainType };
 
 /** Thin descriptor of the tx payload needed for balance checks */
 export type TxContext =
-  | { type: "evm"; caip10To: string; gasLimit: number; rpcUrl?: string }
-  | { type: "svm"; rpcUrl?: string };
+  | { type: "evm"; caip10To: string; gasLimit: number; rpcUrl?: string | undefined }
+  | { type: "svm"; rpcUrl?: string | undefined };
 
 export type WalletResolution =
   | { kind: "ready"; privateKey: string; address: string }
@@ -34,8 +35,10 @@ export type WalletResolution =
   | { kind: "error"; message: string };
 
 function deriveAddress(privateKey: string, type: ChainType): string {
-  if (type === "evm") return privateKeyToAccount(normalisePrivateKey(privateKey)).address;
-  return Keypair.fromSecretKey(bs58.decode(privateKey)).publicKey.toBase58();
+  return match(type)
+    .with("evm", () => privateKeyToAccount(normalisePrivateKey(privateKey)).address)
+    .with("svm", () => Keypair.fromSecretKey(bs58.decode(privateKey)).publicKey.toBase58())
+    .exhaustive();
 }
 
 type BalanceSummary = { sufficient: boolean; balance: string; required: string; symbol: string };
@@ -49,7 +52,10 @@ async function checkBalance(
     sufficient: true,
     balance: "?",
     required: "?",
-    symbol: type === "evm" ? "ETH" : "SOL",
+    symbol: match(type)
+      .with("evm", () => "ETH")
+      .with("svm", () => "SOL")
+      .exhaustive(),
   };
   if (type === "evm" && ctx.type === "evm") {
     const { chainId } = parseEvmCaip10(ctx.caip10To);

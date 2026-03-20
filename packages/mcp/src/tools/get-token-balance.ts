@@ -64,9 +64,13 @@ export function registerGetTokenBalanceTool(server: McpServer): void {
     },
     logToolExecution("printr_get_token_balance", ({ token, wallet, rpc_url }) => {
       const tokenParsed = parseCaip10(token);
-      if (!tokenParsed) return toolError(`Invalid CAIP-10 token address: ${token}`);
+      if (!tokenParsed) {
+        return toolError(`Invalid CAIP-10 token address: ${token}`);
+      }
       const walletParsed = parseCaip10(wallet);
-      if (!walletParsed) return toolError(`Invalid CAIP-10 wallet address: ${wallet}`);
+      if (!walletParsed) {
+        return toolError(`Invalid CAIP-10 wallet address: ${wallet}`);
+      }
 
       const tokenChain = toCaip2(tokenParsed);
       const walletChain = toCaip2(walletParsed);

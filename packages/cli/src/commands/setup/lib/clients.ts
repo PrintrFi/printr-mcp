@@ -9,7 +9,9 @@ export function commandExists(cmd: string): boolean {
 }
 
 export function detectRuntime(): Runtime {
-  if ((process.versions as Record<string, string | undefined>).bun) return "bun";
+  if ((process.versions as Record<string, string | undefined>)["bun"]) {
+    return "bun";
+  }
   return spawnSync("bun", ["--version"], { stdio: "ignore", timeout: 3_000 }).status === 0
     ? "bun"
     : "node";
@@ -20,7 +22,9 @@ export function makeEntry(runtime: Runtime, openrouterApiKey: string): McpEntry 
     runtime === "bun"
       ? { command: "bunx", args: ["@printr/mcp@latest"] }
       : { command: "npx", args: ["-y", "@printr/mcp@latest"] };
-  if (openrouterApiKey) entry.env = { OPENROUTER_API_KEY: openrouterApiKey };
+  if (openrouterApiKey) {
+    entry.env = { OPENROUTER_API_KEY: openrouterApiKey };
+  }
   return entry;
 }
 
@@ -37,9 +41,11 @@ export function mergeJsonConfig(
       cfg = {};
     }
   }
-  const servers = (cfg.mcpServers as Record<string, unknown> | undefined) ?? {};
-  if (servers.printr) return "already_configured";
-  cfg.mcpServers = { ...servers, printr: entry };
+  const servers = (cfg["mcpServers"] as Record<string, unknown> | undefined) ?? {};
+  if (servers["printr"]) {
+    return "already_configured";
+  }
+  cfg["mcpServers"] = { ...servers, printr: entry };
   mkdirSync(dirname(cfgPath), { recursive: true });
   writeFileSync(cfgPath, `${JSON.stringify(cfg, null, 2)}\n`);
   return "configured";
@@ -49,7 +55,7 @@ function claudeDesktopPath(): string {
   return process.platform === "darwin"
     ? join(homedir(), "Library", "Application Support", "Claude", "claude_desktop_config.json")
     : join(
-        process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"),
+        process.env["XDG_CONFIG_HOME"] ?? join(homedir(), ".config"),
         "Claude",
         "claude_desktop_config.json",
       );
@@ -94,7 +100,9 @@ export const CLIENTS: ClientDef[] = [
     detect: () => commandExists("claude"),
     configure(_, runtime) {
       const list = spawnSync("claude", ["mcp", "list"], { encoding: "utf8" });
-      if (list.stdout?.toLowerCase().includes("printr")) return "already_configured";
+      if (list.stdout?.toLowerCase().includes("printr")) {
+        return "already_configured";
+      }
 
       const runner = runtime === "bun" ? "bunx" : "npx";
       const runnerArgs = runtime === "bun" ? ["@printr/mcp@latest"] : ["-y", "@printr/mcp@latest"];

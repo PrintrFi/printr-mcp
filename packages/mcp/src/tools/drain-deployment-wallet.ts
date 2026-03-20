@@ -177,19 +177,22 @@ export function registerDrainDeploymentWalletTool(server: McpServer): void {
       return resolveWallet(chainType, wallet_id)
         .asyncAndThen((wallet) => {
           const treasuryResult = getTreasuryKeyOrError(chainType);
-          if ("error" in treasuryResult)
+          if ("error" in treasuryResult) {
             return errAsync<DrainResult, DrainError>({ message: treasuryResult.error });
+          }
 
           const meta = getChainMeta(chain);
-          if (!meta)
+          if (!meta) {
             return errAsync<DrainResult, DrainError>({ message: `Unsupported chain: ${chain}` });
+          }
 
           return match(chainType)
             .with("svm", () => drainSvm(wallet, treasuryResult.key, parseFloat(keepMin), meta))
             .with("evm", () => {
               const evmConfig = getEvmConfig(chain);
-              if ("error" in evmConfig)
+              if ("error" in evmConfig) {
                 return errAsync<DrainResult, DrainError>({ message: evmConfig.error });
+              }
               return drainEvm(
                 wallet,
                 treasuryResult.key,

@@ -8,12 +8,16 @@ export const rpcUrlsSchema = z
   .string()
   .optional()
   .transform((val) => {
-    if (!val) return {} as Record<string, string>;
+    if (!val) {
+      return {} as Record<string, string>;
+    }
     try {
       // Convert single quotes to double quotes for JSON.parse compatibility
       const normalized = val.replace(/'/g, '"');
       const parsed = JSON.parse(normalized);
-      if (typeof parsed !== "object" || parsed === null) return {};
+      if (typeof parsed !== "object" || parsed === null) {
+        return {};
+      }
       return parsed as Record<string, string>;
     } catch {
       return {};

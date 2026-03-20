@@ -60,7 +60,9 @@ export function registerGetBalanceTool(server: McpServer): void {
     },
     logToolExecution("printr_get_balance", ({ account, rpc_url }) => {
       const parsed = parseCaip10(account);
-      if (!parsed) return toolError(`Invalid CAIP-10 address: ${account}`);
+      if (!parsed) {
+        return toolError(`Invalid CAIP-10 address: ${account}`);
+      }
 
       const caip2 = toCaip2(parsed);
       const meta = getChainMeta(caip2);

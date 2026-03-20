@@ -16,7 +16,9 @@ import { logToolExecution } from "~/lib/logging.js";
 import { treasuryWallets } from "~/server/wallet-sessions.js";
 
 function deriveAddress(privateKey: string, type: ChainType): string {
-  if (type === "evm") return privateKeyToAccount(normalisePrivateKey(privateKey)).address;
+  if (type === "evm") {
+    return privateKeyToAccount(normalisePrivateKey(privateKey)).address;
+  }
   return Keypair.fromSecretKey(bs58.decode(privateKey)).publicKey.toBase58();
 }
 
@@ -46,10 +48,14 @@ export function registerSetTreasuryWalletTool(server: McpServer): void {
     logToolExecution("printr_set_treasury_wallet", ({ wallet_id, password }) => {
       try {
         const entry = getWallet(wallet_id);
-        if (!entry) return toolError(`Wallet ${wallet_id} not found in keystore.`);
+        if (!entry) {
+          return toolError(`Wallet ${wallet_id} not found in keystore.`);
+        }
 
         const decrypted = decryptKey(entry, password);
-        if (decrypted.isErr()) return toolError("Incorrect password.");
+        if (decrypted.isErr()) {
+          return toolError("Incorrect password.");
+        }
         const privateKey = decrypted.value;
 
         const chainType = chainTypeFromCaip2(entry.chain);

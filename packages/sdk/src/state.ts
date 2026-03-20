@@ -80,7 +80,7 @@ export function setActiveWalletId(
 
 export function clearActiveWalletId(chainType: ChainTypeKey): Result<void, StateError> {
   return updateState((state) => {
-    state.activeWalletIds[chainType] = undefined;
+    delete state.activeWalletIds[chainType];
   });
 }
 
@@ -109,7 +109,8 @@ export function setLastDeploymentWalletId(walletId: string): Result<void, StateE
 
 export function clearLastDeploymentWalletId(): Result<void, StateError> {
   return updateState((state) => {
-    state.lastDeploymentWalletId = undefined;
+    // biome-ignore lint/performance/noDelete: only way to remove optional property with exactOptionalPropertyTypes
+    delete state.lastDeploymentWalletId;
   });
 }
 

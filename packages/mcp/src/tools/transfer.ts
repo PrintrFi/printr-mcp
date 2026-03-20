@@ -18,7 +18,9 @@ import { activeWallets } from "~/server/wallet-sessions.js";
 type TransferToolError = { message: string };
 
 const getPrivateKey = (namespace: string, providedKey?: string): string | null => {
-  if (providedKey) return providedKey;
+  if (providedKey) {
+    return providedKey;
+  }
   return activeWallets.get(namespaceToChainType(namespace))?.privateKey ?? null;
 };
 
@@ -36,7 +38,9 @@ function validateInputs(
   privateKey: string | undefined,
 ): Result<ParsedInput, TransferToolError> {
   const parsed = parseCaip10(to);
-  if (!parsed) return err({ message: `Invalid CAIP-10 address: ${to}` });
+  if (!parsed) {
+    return err({ message: `Invalid CAIP-10 address: ${to}` });
+  }
 
   const caip2 = toCaip2(parsed);
   const meta = getChainMeta(caip2);

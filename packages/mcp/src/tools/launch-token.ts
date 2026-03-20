@@ -225,7 +225,9 @@ async function mergeResponse(
   response: Awaited<ReturnType<typeof toToolResponseAsync>>,
   outcome: DrainOutcome,
 ) {
-  if (!("structuredContent" in response)) return response;
+  if (!("structuredContent" in response)) {
+    return response;
+  }
   const sc = response.structuredContent as { status?: string; url?: string };
   const merged = { ...sc, ...drainFields(outcome) };
   if (sc.status === "awaiting_signature" && sc.url) {
@@ -243,11 +245,15 @@ async function autoDrain(
 ): Promise<DrainOutcome> {
   // Only drain wallets tracked as deployment wallets — not user-supplied keys
   const walletId = getActiveWalletId(chainType);
-  if (!walletId) return { status: "skipped" };
+  if (!walletId) {
+    return { status: "skipped" };
+  }
 
   const meta = getChainMeta(chain);
   const treasuryResult = getTreasuryKeyOrError(chainType);
-  if (!meta || "error" in treasuryResult) return { status: "skipped" };
+  if (!meta || "error" in treasuryResult) {
+    return { status: "skipped" };
+  }
 
   const wallet = { ...activeWallet, walletId };
 
@@ -262,7 +268,9 @@ async function autoDrain(
   }
 
   const evmConfig = getEvmConfig(chain);
-  if ("error" in evmConfig) return { status: "skipped" };
+  if ("error" in evmConfig) {
+    return { status: "skipped" };
+  }
   return (
     await drainEvm(
       wallet,

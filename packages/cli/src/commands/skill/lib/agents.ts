@@ -53,7 +53,9 @@ export const ALL_AGENT_IDS = AGENTS.map((a) => a.id);
 export function installSkill(agent: AgentDef, content: string): InstallResult {
   try {
     const path = agent.skillPath();
-    if (existsSync(path)) return "already_exists";
+    if (existsSync(path)) {
+      return "already_exists";
+    }
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, content);
     return "installed";

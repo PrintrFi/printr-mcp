@@ -48,7 +48,7 @@ function buildTokenImagePrompt(name: string, symbol: string, description: string
 export interface GenerateImageOptions {
   openrouterApiKey: string;
   /** OpenRouter model ID. Defaults to env.OPENROUTER_IMAGE_MODEL. */
-  model?: string;
+  model?: string | undefined;
 }
 
 /**

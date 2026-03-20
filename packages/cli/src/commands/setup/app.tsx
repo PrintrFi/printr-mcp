@@ -31,7 +31,9 @@ export function SetupApp({
   const [configured, setConfigured] = useState<number | null>(null);
 
   useEffect(() => {
-    if (phase !== "running") return;
+    if (phase !== "running") {
+      return;
+    }
     runSetupLogic(selectedIds, openrouterApiKey, (step) => {
       if (step.status === "running") {
         setCurrentStep(step);
@@ -47,7 +49,9 @@ export function SetupApp({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: exit is stable
   useEffect(() => {
-    if (configured !== null) exit();
+    if (configured !== null) {
+      exit();
+    }
   }, [configured]);
 
   function handleConfirm(ids: string[]) {
