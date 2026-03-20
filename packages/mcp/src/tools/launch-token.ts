@@ -328,12 +328,14 @@ export function registerLaunchTokenTool(server: McpServer, client: PrintrClient)
         ),
       );
 
-      // Auto-drain the deployment wallet after launch (success or failure).
-      // Runs inside the tool to eliminate race conditions from parallel LLM calls.
-      // Result is surfaced in drain_status so the consumer can trigger recovery if needed.
+      // Auto-drain the deployment wallet only on success.
+      // On failure, keep the active wallet state intact so the agent can retry
+      // without re-funding. Failed deployments are drained by the orchestrator
+      // via printr_drain_deployment_wallet using the walletId from Step 1.
       const chain = tokenParams.chains[0];
+      const launched = !("isError" in response);
       const drainOutcome: DrainOutcome =
-        activeWallet && chain
+        launched && activeWallet && chain
           ? await autoDrain(activeWallet, chainType, chain, rpc_url)
           : { status: "skipped" };
 
