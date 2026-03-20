@@ -204,10 +204,19 @@ export function getEvmConfig(chain: string, rpcOverride?: string): EvmConfigResu
     return { error: `Invalid CAIP-2 chain format: ${chain}. Expected 'namespace:chainRef'.` };
   }
 
+  if (parsed.namespace !== "eip155") {
+    return { error: `Chain ${chain} is not an EVM chain (expected eip155 namespace).` };
+  }
+
+  const chainId = Number(parsed.chainRef);
+  if (!Number.isSafeInteger(chainId) || chainId <= 0) {
+    return { error: `Invalid EVM chain ID in ${chain}.` };
+  }
+
   const rpc = getRpcUrl(chain, rpcOverride);
   if (!rpc) {
     return { error: `No RPC URL for chain ${chain}. Set RPC_URLS or ALCHEMY_API_KEY.` };
   }
 
-  return { chainId: Number(parsed.chainRef), rpc };
+  return { chainId, rpc };
 }

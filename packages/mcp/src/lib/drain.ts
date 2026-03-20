@@ -112,14 +112,16 @@ export function drainSvm(
       ]);
       const finalBalance = await connection.getBalance(deploymentKeypair.publicKey);
 
-      // Clear state after successful drain (best effort)
-      activeWallets.delete("svm");
-      clearActiveWalletId("svm").mapErr((e) =>
-        logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
-      );
-      clearLastDeploymentWalletId().mapErr((e) =>
-        logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
-      );
+      // Clear state after successful drain — only if this wallet is the tracked active one
+      if (activeWallets.get("svm")?.address === wallet.address) {
+        activeWallets.delete("svm");
+        clearActiveWalletId("svm").mapErr((e) =>
+          logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
+        );
+        clearLastDeploymentWalletId().mapErr((e) =>
+          logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
+        );
+      }
 
       return buildDrainResult(
         drainAmount,
@@ -190,14 +192,16 @@ export function drainEvm(
         publicClient.getBalance({ address: deploymentAccount.address }),
         toErr,
       ).map((finalBalance) => {
-        // Clear state after successful drain (best effort)
-        activeWallets.delete("evm");
-        clearActiveWalletId("evm").mapErr((e) =>
-          logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
-        );
-        clearLastDeploymentWalletId().mapErr((e) =>
-          logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
-        );
+        // Clear state after successful drain — only if this wallet is the tracked active one
+        if (activeWallets.get("evm")?.address === wallet.address) {
+          activeWallets.delete("evm");
+          clearActiveWalletId("evm").mapErr((e) =>
+            logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
+          );
+          clearLastDeploymentWalletId().mapErr((e) =>
+            logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
+          );
+        }
         return buildDrainResult(
           drainAmount,
           meta,

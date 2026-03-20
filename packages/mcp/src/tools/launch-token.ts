@@ -267,7 +267,7 @@ async function autoDrain(
     );
   }
 
-  const evmConfig = getEvmConfig(chain);
+  const evmConfig = getEvmConfig(chain, rpcUrl);
   if ("error" in evmConfig) {
     return { status: "skipped" };
   }
@@ -334,8 +334,11 @@ export function registerLaunchTokenTool(server: McpServer, client: PrintrClient)
       // via printr_drain_deployment_wallet using the walletId from Step 1.
       const chain = tokenParams.chains[0];
       const launched = !("isError" in response);
+      // Only auto-drain when the signing key came from the tracked deployment wallet.
+      // If the caller supplied an explicit private_key, skip drain to avoid touching
+      // an unrelated active wallet that may be in memory.
       const drainOutcome: DrainOutcome =
-        launched && activeWallet && chain
+        launched && !private_key && activeWallet && chain
           ? await autoDrain(activeWallet, chainType, chain, rpc_url)
           : { status: "skipped" };
 
