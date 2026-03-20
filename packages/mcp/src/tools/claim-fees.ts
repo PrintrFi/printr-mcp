@@ -184,7 +184,12 @@ function resolveClaimContext(
               walletId: deploymentKey.walletId,
             },
           }
-          : { treasuryKey, signingKey: treasuryKey, chainFees, telecoinId },
+          : {
+            treasuryKey,
+            chainFees,
+            telecoinId,
+            signingKey: treasuryKey,
+          },
     );
   });
 }
