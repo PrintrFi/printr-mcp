@@ -54,19 +54,20 @@ if (result.isOk()) {
 
 ```typescript
 import { signAndSubmitEvm } from '@printr/sdk/evm';
+import { ResultAsync } from 'neverthrow';
 
-// result is the value from buildToken (result.value.payload is the EVM payload)
-if (result.isOk()) {
-  try {
-    const txResult = await signAndSubmitEvm(
-      result.value.payload,
-      process.env.EVM_WALLET_PRIVATE_KEY!,
-    );
-    console.log('Transaction hash:', txResult.tx_hash);
-  } catch (error) {
-    console.error('Transaction failed:', error);
-  }
-}
+// Chain buildToken directly into signing
+buildToken(input, client)
+  .andThen(({ token_id, payload }) =>
+    ResultAsync.fromPromise(
+      signAndSubmitEvm(payload, process.env.EVM_WALLET_PRIVATE_KEY!),
+      (e) => ({ message: e instanceof Error ? e.message : String(e) }),
+    ).map((tx) => ({ token_id, tx }))
+  )
+  .match(
+    ({ token_id, tx }) => console.log('Token:', token_id, 'TX:', tx.tx_hash),
+    (err) => console.error('Failed:', err.message),
+  );
 ```
 
 ### Check token balances
@@ -74,16 +75,18 @@ if (result.isOk()) {
 ```typescript
 import { checkEvmBalance } from '@printr/sdk/balance';
 
-const result = await checkEvmBalance(
+// checkEvmBalance returns ResultAsync — chain directly or await
+const balance = await checkEvmBalance(
   '0xYourWalletAddress',
   8453, // Base chain ID
   21000, // gas limit estimate
 );
 
-if (result.isOk()) {
-  const { balanceFormatted, symbol, sufficient } = result.value;
-  console.log(`Balance: ${balanceFormatted} ${symbol} (sufficient: ${sufficient})`);
-}
+balance.match(
+  ({ balanceFormatted, symbol, sufficient }) =>
+    console.log(`Balance: ${balanceFormatted} ${symbol} (sufficient: ${sufficient})`),
+  (err) => console.error('Balance fetch failed:', err), // 'no_rpc' | 'fetch_failed'
+);
 ```
 
 ### Transfer tokens
@@ -139,7 +142,7 @@ import { addWallet, decryptKey, encryptKey, listWallets } from '@printr/sdk/keys
 // Image generation
 import { generateImageFromPrompt, generateTokenImage } from '@printr/sdk/image';
 
-// CAIP utilities
+// CAIP utilities — both return null for invalid input (never throw)
 import { parseCaip2, parseCaip10, chainTypeFromCaip2 } from '@printr/sdk/caip';
 ```
 
@@ -212,25 +215,20 @@ createPrintrClient(options?: {
 ### Token Operations
 
 ```typescript
-buildToken(input: BuildTokenInput, client: PrintrClient): Promise<Result<BuildTokenOutput>>
-getToken(tokenId: string, client: PrintrClient): Promise<Result<TokenDetails>>
-quoteToken(input: QuoteInput, client: PrintrClient): Promise<Result<QuoteOutput>>
+buildToken(input: BuildTokenInput, client: PrintrClient): ResultAsync<BuildTokenOutput, PrintrApiError>
+getToken(tokenId: string, client: PrintrClient): ResultAsync<TokenDetails, PrintrApiError>
+quoteToken(input: QuoteInput, client: PrintrClient): ResultAsync<QuoteOutput, PrintrApiError>
 ```
 
 ### Transaction Signing
 
 ```typescript
-signAndSubmitEvm(
-  payload: EvmPayload,
-  privateKey: string,
-  rpcUrl?: string,
-): Promise<EvmSubmitResult>  // throws on error
+// Low-level: throws on error — wrap in ResultAsync.fromPromise or try/catch
+signAndSubmitEvm(payload: EvmPayload, privateKey: string, rpcUrl?: string): Promise<EvmSubmitResult>
+signAndSubmitSvm(payload: SvmPayload, privateKey: string, rpcUrl?: string): Promise<SvmSubmitResult>
 
-signAndSubmitSvm(
-  payload: SvmPayload,
-  privateKey: string,
-  rpcUrl?: string,
-): Promise<SvmSubmitResult>  // throws on error
+// High-level transfer (Result-safe):
+executeTransfer(namespace, chainRef, toAddress, amount, privateKey, meta): ResultAsync<TransferResult, TransferError>
 ```
 
 ## Examples
@@ -266,22 +264,33 @@ console.log(base?.name); // "Base"
 
 ## Error Handling
 
-All operations return `Result<T, E>` types from [neverthrow](https://github.com/supermacro/neverthrow):
+Most operations return [`ResultAsync<T, E>`](https://github.com/supermacro/neverthrow) from neverthrow — a typed, chainable async result that never throws.
 
 ```typescript
-const result = await buildToken(input, client);
-
-if (result.isOk()) {
-  console.log('Success:', result.value);
-} else {
-  console.error('Error:', result.error);
-}
-
-// Or use match
-result.match(
-  (value) => console.log('Success:', value),
-  (error) => console.error('Error:', error),
+// Preferred: .match() for expression-style dispatch
+buildToken(input, client).match(
+  (value) => console.log('Token ID:', value.token_id),
+  (error) => console.error('Failed:', error.message),
 );
+
+// Chain operations without awaiting
+buildToken(input, client)
+  .andThen(({ token_id, payload }) =>
+    ResultAsync.fromPromise(signAndSubmitEvm(payload, privateKey), (e) => e as Error)
+      .map((tx) => ({ token_id, tx }))
+  )
+  .match(
+    ({ token_id, tx }) => console.log(token_id, tx.tx_hash),
+    (err) => console.error(err),
+  );
+
+// Await to get Result<T, E> for imperative control flow
+const result = await buildToken(input, client);
+if (result.isErr()) {
+  console.error('Error:', result.error.message);
+  return;
+}
+console.log('Token ID:', result.value.token_id);
 ```
 
 ## TypeScript
