@@ -1,5 +1,6 @@
 /** Minimal CAIP-2 chain metadata derived from printr/web/app/stores/chains/defs.ts */
 
+import { parseCaip2 } from "./caip.js";
 import { ALCHEMY_RPC_TEMPLATES, env } from "./env.js";
 
 export type ChainMeta = {
@@ -171,4 +172,21 @@ export function getRpcUrl(caip2: string, rpcOverride?: string): string | undefin
   const alchemyRpc = getAlchemyRpc(caip2);
   if (alchemyRpc) return alchemyRpc;
   return CHAIN_META[caip2]?.defaultRpc;
+}
+
+export type EvmConfigResult = { error: string } | { chainId: number; rpc: string };
+
+/**
+ * Resolve a CAIP-2 chain string to EVM connection params.
+ * Returns an error discriminant if the chain is invalid or has no RPC configured.
+ */
+export function getEvmConfig(chain: string, rpcOverride?: string): EvmConfigResult {
+  const parsed = parseCaip2(chain);
+  if (!parsed)
+    return { error: `Invalid CAIP-2 chain format: ${chain}. Expected 'namespace:chainRef'.` };
+
+  const rpc = getRpcUrl(chain, rpcOverride);
+  if (!rpc) return { error: `No RPC URL for chain ${chain}. Set RPC_URLS or ALCHEMY_API_KEY.` };
+
+  return { chainId: Number(parsed.chainRef), rpc };
 }

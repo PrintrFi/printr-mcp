@@ -58,7 +58,9 @@ export {
   CHAIN_META,
   type ChainMeta,
   caip10ToChainId,
+  type EvmConfigResult,
   getChainMeta,
+  getEvmConfig,
   getRpcUrl,
   toCaip2 as toCaip2FromParts,
 } from "./chains.js";
