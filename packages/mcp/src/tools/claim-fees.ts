@@ -2,17 +2,26 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   type ChainProtocolFeesSimple,
   chainTypeFromCaip2,
+  decryptKey,
   type EvmPayload,
+  getChainMeta,
   getProtocolFees,
+  getSvmRpcUrl,
+  listWallets,
+  logger,
   type PayloadEVM,
   type PayloadSolana,
   type SvmPayload,
   signAndSubmitEvm,
   signAndSubmitSvm,
-  toolError,
-  toolOk,
+  toToolResponseAsync,
+  transferSvm,
 } from "@printr/sdk";
+import { errAsync, okAsync, ResultAsync } from "neverthrow";
+import { match } from "ts-pattern";
 import { z } from "zod";
+import { drainSvm } from "~/lib/drain.js";
+import { env } from "~/lib/env.js";
 import { logToolExecution } from "~/lib/logging.js";
 import { getTreasuryAddress, getTreasuryKey } from "~/lib/treasury.js";
 
@@ -33,9 +42,27 @@ const outputSchema = z.object({
   tx_signature: z.string().optional().describe("Solana transaction signature"),
 });
 
-/**
- * Convert backend PayloadEVM to our EvmPayload format
- */
+type ClaimOutput = z.infer<typeof outputSchema>;
+type ClaimError = { message: string };
+
+function claimErr(message: string): ClaimError {
+  return { message };
+}
+
+function mapErr(e: unknown): ClaimError {
+  return claimErr(e instanceof Error ? e.message : String(e));
+}
+
+type DeploymentWallet = { privateKey: string; address: string; walletId: string };
+
+type ClaimContext = {
+  treasuryKey: string;
+  signingKey: string;
+  chainFees: ChainProtocolFeesSimple;
+  telecoinId: string;
+  deploymentWallet?: DeploymentWallet | undefined;
+};
+
 function toEvmPayload(payload: PayloadEVM, chainId: string): EvmPayload {
   return {
     to: `${chainId}:${payload.txTo}`,
@@ -45,9 +72,6 @@ function toEvmPayload(payload: PayloadEVM, chainId: string): EvmPayload {
   };
 }
 
-/**
- * Convert backend PayloadSolana to our SvmPayload format
- */
 function toSvmPayload(payload: PayloadSolana): SvmPayload {
   return {
     ixs: payload.ixs.map((ix) => ({
@@ -64,6 +88,156 @@ function toSvmPayload(payload: PayloadSolana): SvmPayload {
   };
 }
 
+function fetchChainFees(
+  tokenId: string,
+  chain: string,
+  payerAddress: string,
+): ResultAsync<{ chainFees: ChainProtocolFeesSimple; telecoinId: string }, ClaimError> {
+  return ResultAsync.fromPromise(
+    getProtocolFees({
+      telecoinId: tokenId,
+      chainIds: [chain],
+      payers: [{ chainId: chain, address: payerAddress }],
+    }),
+    mapErr,
+  ).andThen((response) => {
+    const chainFees = response.perChain[chain];
+    if (!chainFees) {
+      return errAsync(claimErr(`No fee data returned for chain ${chain}.`));
+    }
+    return okAsync({ chainFees, telecoinId: response.telecoinId || tokenId });
+  });
+}
+
+// If the creator address differs from treasury, fees belong to a deployment wallet.
+// Re-fetch with that wallet as payer to get the correct collection payload.
+function resolveClaimContext(
+  tokenId: string,
+  chain: string,
+  treasuryKey: string,
+  treasuryAddress: string,
+): ResultAsync<ClaimContext, ClaimError> {
+  return fetchChainFees(tokenId, chain, treasuryAddress).andThen(({ chainFees, telecoinId }) => {
+    const creatorAddress = chainFees.dev?.address;
+    const creatorIsNotTreasury = creatorAddress && creatorAddress !== treasuryAddress;
+
+    if (creatorIsNotTreasury) {
+      const entry = listWallets(chain).find((w) => w.address === creatorAddress);
+      const password = env.PRINTR_DEPLOYMENT_PASSWORD;
+      if (entry && password) {
+        const keyResult = decryptKey(entry, password);
+        if (keyResult.isOk()) {
+          return fetchChainFees(tokenId, chain, creatorAddress).map(
+            ({ chainFees: creatorFees, telecoinId: creatorTelecoinId }) =>
+              creatorFees.canCollect
+                ? {
+                    treasuryKey,
+                    signingKey: keyResult.value,
+                    chainFees: creatorFees,
+                    telecoinId: creatorTelecoinId,
+                    deploymentWallet: {
+                      privateKey: keyResult.value,
+                      address: creatorAddress,
+                      walletId: entry.id,
+                    },
+                  }
+                : { treasuryKey, signingKey: treasuryKey, chainFees, telecoinId },
+          );
+        }
+      }
+    }
+
+    return okAsync({ treasuryKey, signingKey: treasuryKey, chainFees, telecoinId });
+  });
+}
+
+// If the signer is a drained deployment wallet, pre-fund it from treasury,
+// claim with the deployment key, then drain it back.
+function claimSvm(
+  svmPayload: SvmPayload,
+  ctx: ClaimContext,
+  chain: string,
+): ResultAsync<string, ClaimError> {
+  const { signingKey, treasuryKey, deploymentWallet } = ctx;
+  const rpc = getSvmRpcUrl();
+  const GAS_RESERVE = 10_000_000n; // 0.01 SOL — covers rent for new token accounts + gas
+
+  const fundStep: ResultAsync<undefined, ClaimError> = deploymentWallet
+    ? ResultAsync.fromPromise(
+        transferSvm(deploymentWallet.address, GAS_RESERVE, treasuryKey, rpc).then(() => undefined),
+        mapErr,
+      )
+    : okAsync(undefined);
+
+  return fundStep
+    .andThen(() =>
+      ResultAsync.fromPromise<{ signature: string }, ClaimError>(
+        signAndSubmitSvm(svmPayload, signingKey, rpc),
+        mapErr,
+      ),
+    )
+    .map(({ signature }) => {
+      if (deploymentWallet) {
+        const meta = getChainMeta(chain);
+        if (meta) {
+          drainSvm(deploymentWallet, treasuryKey, 0, meta, rpc).mapErr((e) =>
+            logger.warn(`Failed to drain deployment wallet after fee claim: ${e.message}`),
+          );
+        }
+      }
+      return signature;
+    });
+}
+
+function executeClaim(ctx: ClaimContext, chain: string): ResultAsync<ClaimOutput, ClaimError> {
+  const { chainFees, telecoinId, signingKey } = ctx;
+
+  if (!chainFees.canCollect) {
+    return errAsync(
+      claimErr(
+        `No fees available to claim on ${chain}. ` +
+          `Creator fees: $${chainFees.devFees?.amountUsd?.toFixed(2) ?? "0.00"}`,
+      ),
+    );
+  }
+
+  const payload = chainFees.collectionPayload;
+  if (!payload || payload.payload.case === undefined) {
+    return errAsync(
+      claimErr("No collection payload returned from API. Fees may not be claimable yet."),
+    );
+  }
+
+  const base = {
+    token_id: telecoinId,
+    chain,
+    claimed_amount_usd: chainFees.devFees?.amountUsd ?? 0,
+    claimed_amount_native: chainFees.devFees?.amountAtomic ?? "0",
+    native_symbol: chainTypeFromCaip2(chain) === "svm" ? "SOL" : "ETH",
+  };
+
+  return match(payload.payload)
+    .with({ case: "evm" }, ({ value }) =>
+      ResultAsync.fromPromise(signAndSubmitEvm(toEvmPayload(value, chain), signingKey), mapErr).map(
+        ({ tx_hash }) => ({ ...base, tx_hash }),
+      ),
+    )
+    .with({ case: "svm" }, ({ value }) =>
+      claimSvm(toSvmPayload(value), ctx, chain).map((tx_signature) => ({
+        ...base,
+        tx_signature,
+      })),
+    )
+    .with({ case: "svmRaw" }, () =>
+      errAsync(
+        claimErr(
+          "Raw SVM payload not yet supported. Please use the web UI to claim fees on this chain.",
+        ),
+      ),
+    )
+    .otherwise(() => errAsync(claimErr(`Unknown payload type: ${String(payload.payload.case)}`)));
+}
+
 export function registerClaimFeesTool(server: McpServer): void {
   server.registerTool(
     "printr_claim_fees",
@@ -76,99 +250,38 @@ export function registerClaimFeesTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Multi-chain claim logic
-    logToolExecution("printr_claim_fees", async ({ token_id, chain }) => {
-      try {
-        const chainType = chainTypeFromCaip2(chain);
+    logToolExecution("printr_claim_fees", ({ token_id, chain }) => {
+      const chainType = chainTypeFromCaip2(chain);
+      const treasuryKey = getTreasuryKey(chainType);
 
-        // Get treasury key for signing
-        const treasuryKey = getTreasuryKey(chainType);
-        if (!treasuryKey) {
-          return toolError(
-            `Treasury wallet not configured for ${chainType.toUpperCase()}. ` +
-              `Use printr_set_treasury_wallet or set ${chainType === "svm" ? "SVM" : "EVM"}_WALLET_PRIVATE_KEY.`,
-          );
-        }
-
-        // Get treasury address for API request
-        const treasuryAddress = getTreasuryAddress(chainType);
-        if (!treasuryAddress) {
-          return toolError("Failed to derive treasury address.");
-        }
-
-        // Fetch protocol fees with collection payload
-        const response = await getProtocolFees({
-          telecoinId: token_id,
-          chainIds: [chain],
-          payers: [{ chainId: chain, address: treasuryAddress }],
+      if (!treasuryKey) {
+        const envVar = chainType === "svm" ? "SVM" : "EVM";
+        return Promise.resolve({
+          content: [
+            {
+              type: "text" as const,
+              text:
+                `Treasury wallet not configured for ${chainType.toUpperCase()}. ` +
+                `Use printr_set_treasury_wallet or set ${envVar}_WALLET_PRIVATE_KEY.`,
+            },
+          ],
+          isError: true as const,
         });
-
-        const chainFees: ChainProtocolFeesSimple | undefined = response.perChain[chain];
-        if (!chainFees) {
-          return toolError(`No fee data returned for chain ${chain}.`);
-        }
-
-        if (!chainFees.canCollect) {
-          return toolError(
-            `No fees available to claim on ${chain}. ` +
-              `Creator fees: $${chainFees.devFees?.amountUsd?.toFixed(2) ?? "0.00"}`,
-          );
-        }
-
-        const payload = chainFees.collectionPayload;
-        if (!payload || payload.payload.case === undefined) {
-          return toolError(
-            "No collection payload returned from API. Fees may not be claimable yet.",
-          );
-        }
-
-        const claimedAmountUsd = chainFees.devFees?.amountUsd ?? 0;
-        const claimedAmountNative = chainFees.devFees?.amountAtomic ?? "0";
-        const nativeSymbol = chainType === "svm" ? "SOL" : "ETH";
-
-        // Execute claim based on chain type
-        if (payload.payload.case === "evm") {
-          const evmPayload = toEvmPayload(payload.payload.value, chain);
-          const result = await signAndSubmitEvm(evmPayload, treasuryKey);
-
-          return toolOk({
-            token_id: response.telecoinId || token_id,
-            chain,
-            claimed_amount_usd: claimedAmountUsd,
-            claimed_amount_native: claimedAmountNative,
-            native_symbol: nativeSymbol,
-            tx_hash: result.tx_hash,
-          });
-        }
-
-        if (payload.payload.case === "svm") {
-          const svmPayload = toSvmPayload(payload.payload.value);
-          const result = await signAndSubmitSvm(svmPayload, treasuryKey);
-
-          return toolOk({
-            token_id: response.telecoinId || token_id,
-            chain,
-            claimed_amount_usd: claimedAmountUsd,
-            claimed_amount_native: claimedAmountNative,
-            native_symbol: nativeSymbol,
-            tx_signature: result.signature,
-          });
-        }
-
-        if (payload.payload.case === "svmRaw") {
-          // Raw SVM payload - hex-encoded versioned transaction
-          // We'd need to deserialize and sign this differently
-          return toolError(
-            "Raw SVM payload not yet supported. Please use the web UI to claim fees on this chain.",
-          );
-        }
-
-        return toolError(
-          `Unknown payload type: ${String((payload.payload as { case?: string }).case)}`,
-        );
-      } catch (error) {
-        return toolError(error instanceof Error ? error.message : String(error));
       }
+
+      const treasuryAddress = getTreasuryAddress(chainType);
+      if (!treasuryAddress) {
+        return Promise.resolve({
+          content: [{ type: "text" as const, text: "Failed to derive treasury address." }],
+          isError: true as const,
+        });
+      }
+
+      return toToolResponseAsync(
+        resolveClaimContext(token_id, chain, treasuryKey, treasuryAddress).andThen((ctx) =>
+          executeClaim(ctx, chain),
+        ),
+      );
     }),
   );
 }
