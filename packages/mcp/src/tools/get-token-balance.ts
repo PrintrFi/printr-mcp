@@ -62,46 +62,54 @@ export function registerGetTokenBalanceTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_get_token_balance", async ({ token, wallet, rpc_url }) => {
-      try {
-        const tokenParsed = parseCaip10(token);
-        const walletParsed = parseCaip10(wallet);
-
-        const tokenChain = toCaip2(tokenParsed);
-        const walletChain = toCaip2(walletParsed);
-
-        if (tokenChain !== walletChain) {
-          return toolError(
-            `Token and wallet must be on the same chain. Token: ${tokenChain}, Wallet: ${walletChain}`,
-          );
-        }
-
-        const meta = getChainMeta(tokenChain);
-        if (!meta) {
-          return toolError(
-            `Unsupported chain: ${tokenChain}. Supported: ${Object.keys(CHAIN_META).join(", ")}`,
-          );
-        }
-
-        if (!isSupportedNamespace(tokenParsed.namespace)) {
-          return toolError(
-            `Unsupported namespace: ${tokenParsed.namespace}. Supported: eip155, solana`,
-          );
-        }
-
-        const result = await fetchTokenBalance(
-          tokenParsed.namespace,
-          tokenParsed.chainRef,
-          tokenParsed.address,
-          walletParsed.address,
-          meta,
-          rpc_url,
-        );
-
-        return toolOk(buildOutput(token, wallet, tokenChain, meta.name, result));
-      } catch (error) {
-        return toolError(error instanceof Error ? error.message : String(error));
+    logToolExecution("printr_get_token_balance", ({ token, wallet, rpc_url }) => {
+      const tokenParsed = parseCaip10(token);
+      if (!tokenParsed) {
+        return toolError(`Invalid CAIP-10 token address: ${token}`);
       }
+      const walletParsed = parseCaip10(wallet);
+      if (!walletParsed) {
+        return toolError(`Invalid CAIP-10 wallet address: ${wallet}`);
+      }
+
+      const tokenChain = toCaip2(tokenParsed);
+      const walletChain = toCaip2(walletParsed);
+
+      if (tokenChain !== walletChain) {
+        return toolError(
+          `Token and wallet must be on the same chain. Token: ${tokenChain}, Wallet: ${walletChain}`,
+        );
+      }
+
+      const meta = getChainMeta(tokenChain);
+      if (!meta) {
+        return toolError(
+          `Unsupported chain: ${tokenChain}. Supported: ${Object.keys(CHAIN_META).join(", ")}`,
+        );
+      }
+
+      if (!isSupportedNamespace(tokenParsed.namespace)) {
+        return toolError(
+          `Unsupported namespace: ${tokenParsed.namespace}. Supported: eip155, solana`,
+        );
+      }
+
+      return fetchTokenBalance(
+        tokenParsed.namespace,
+        tokenParsed.chainRef,
+        tokenParsed.address,
+        walletParsed.address,
+        meta,
+        rpc_url,
+      ).match(
+        (result) => toolOk(buildOutput(token, wallet, tokenChain, meta.name, result)),
+        (e) =>
+          toolError(
+            e === "no_rpc"
+              ? `No RPC URL available for ${tokenChain}. Pass rpc_url explicitly or set RPC_URLS.`
+              : "Failed to fetch token balance",
+          ),
+      );
     }),
   );
 }

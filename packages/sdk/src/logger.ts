@@ -17,17 +17,18 @@ import { env } from "./env.js";
  */
 export const logger = pino({
   level: env.LOG_LEVEL,
-  transport:
-    env.LOG_FORMAT === "pretty"
-      ? {
+  ...(env.LOG_FORMAT === "pretty"
+    ? {
+        transport: {
           target: "pino-pretty",
           options: {
             colorize: true,
             translateTime: "SYS:standard",
             ignore: "pid,hostname",
           },
-        }
-      : undefined,
+        },
+      }
+    : {}),
   // Redact sensitive fields
   redact: {
     paths: [

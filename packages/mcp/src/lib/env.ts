@@ -39,12 +39,12 @@ export type Env = z.infer<typeof mcpSchema>;
 // Combine SDK env with MCP-specific env vars
 export const env: Env = {
   ...sdkEnv,
-  EVM_WALLET_PRIVATE_KEY: process.env.EVM_WALLET_PRIVATE_KEY,
-  SVM_WALLET_PRIVATE_KEY: process.env.SVM_WALLET_PRIVATE_KEY,
-  AGENT_MODE: process.env.AGENT_MODE,
-  PRINTR_DEPLOYMENT_PASSWORD: process.env.PRINTR_DEPLOYMENT_PASSWORD,
-  PRINTR_APP_URL: process.env.PRINTR_APP_URL ?? "https://app.printr.money",
-  PRINTR_CDN_URL: process.env.PRINTR_CDN_URL ?? "https://cdn.printr.money",
-  VERBOSE: process.env.VERBOSE,
-  PRINTR_TEST_TOKEN_ID: process.env.PRINTR_TEST_TOKEN_ID,
+  EVM_WALLET_PRIVATE_KEY: process.env["EVM_WALLET_PRIVATE_KEY"],
+  SVM_WALLET_PRIVATE_KEY: process.env["SVM_WALLET_PRIVATE_KEY"],
+  AGENT_MODE: process.env["AGENT_MODE"],
+  PRINTR_DEPLOYMENT_PASSWORD: process.env["PRINTR_DEPLOYMENT_PASSWORD"],
+  PRINTR_APP_URL: process.env["PRINTR_APP_URL"] ?? "https://app.printr.money",
+  PRINTR_CDN_URL: process.env["PRINTR_CDN_URL"] ?? "https://cdn.printr.money",
+  VERBOSE: process.env["VERBOSE"],
+  PRINTR_TEST_TOKEN_ID: process.env["PRINTR_TEST_TOKEN_ID"],
 };

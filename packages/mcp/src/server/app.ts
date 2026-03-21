@@ -67,7 +67,9 @@ export function buildApp() {
   app.get("/sessions/:token", (c) => {
     const token = c.req.param("token");
     const stored = sessions.get(token);
-    if (!stored) return c.json({ error: "Session not found" }, 404);
+    if (!stored) {
+      return c.json({ error: "Session not found" }, 404);
+    }
     if (Date.now() > stored.expires_at) {
       sessions.delete(token);
       return c.json({ error: "Session expired" }, 410);

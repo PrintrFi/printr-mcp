@@ -21,7 +21,9 @@ export async function runSkillInstall(
 
   for (const id of agentIds) {
     const agent = AGENTS.find((a) => a.id === id);
-    if (!agent) continue;
+    if (!agent) {
+      continue;
+    }
 
     onStep({ id, label: agent.label, status: "running" });
 
@@ -37,7 +39,9 @@ export async function runSkillInstall(
 
     onStep({ id, label: agent.label, status, detail });
 
-    if (result === "installed") installed++;
+    if (result === "installed") {
+      installed++;
+    }
   }
 
   return installed;

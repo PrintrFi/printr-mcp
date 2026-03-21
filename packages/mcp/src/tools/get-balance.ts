@@ -58,34 +58,40 @@ export function registerGetBalanceTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_get_balance", async ({ account, rpc_url }) => {
-      try {
-        const parsed = parseCaip10(account);
-        const caip2 = toCaip2(parsed);
-        const meta = getChainMeta(caip2);
-
-        if (!meta) {
-          return toolError(
-            `Unsupported chain: ${caip2}. Supported chains: ${Object.keys(CHAIN_META).join(", ")}`,
-          );
-        }
-
-        if (!isSupportedNamespace(parsed.namespace)) {
-          return toolError(`Unsupported namespace: ${parsed.namespace}. Supported: eip155, solana`);
-        }
-
-        const result = await fetchNativeBalance(
-          parsed.namespace,
-          parsed.chainRef,
-          parsed.address,
-          meta,
-          rpc_url,
-        );
-
-        return toolOk(buildOutput(account, caip2, meta.name, result));
-      } catch (error) {
-        return toolError(error instanceof Error ? error.message : String(error));
+    logToolExecution("printr_get_balance", ({ account, rpc_url }) => {
+      const parsed = parseCaip10(account);
+      if (!parsed) {
+        return toolError(`Invalid CAIP-10 address: ${account}`);
       }
+
+      const caip2 = toCaip2(parsed);
+      const meta = getChainMeta(caip2);
+
+      if (!meta) {
+        return toolError(
+          `Unsupported chain: ${caip2}. Supported chains: ${Object.keys(CHAIN_META).join(", ")}`,
+        );
+      }
+
+      if (!isSupportedNamespace(parsed.namespace)) {
+        return toolError(`Unsupported namespace: ${parsed.namespace}. Supported: eip155, solana`);
+      }
+
+      return fetchNativeBalance(
+        parsed.namespace,
+        parsed.chainRef,
+        parsed.address,
+        meta,
+        rpc_url,
+      ).match(
+        (result) => toolOk(buildOutput(account, caip2, meta.name, result)),
+        (e) =>
+          toolError(
+            e === "no_rpc"
+              ? `No RPC URL available for ${caip2}. Pass rpc_url explicitly or set RPC_URLS.`
+              : "Failed to fetch balance",
+          ),
+      );
     }),
   );
 }

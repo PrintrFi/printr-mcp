@@ -19,6 +19,7 @@ const COLORS: Record<StepStatus, string | undefined> = {
 };
 
 export function StepRow({ step }: { step: StepResult }) {
+  const statusColor = COLORS[step.status];
   if (step.status === "running") {
     return (
       <Box>
@@ -35,7 +36,11 @@ export function StepRow({ step }: { step: StepResult }) {
 
   return (
     <Box>
-      <Text color={COLORS[step.status]}>{ICONS[step.status]}</Text>
+      {statusColor ? (
+        <Text color={statusColor}>{ICONS[step.status]}</Text>
+      ) : (
+        <Text>{ICONS[step.status]}</Text>
+      )}
       <Text dimColor={step.status === "skip"}>
         {"  "}
         {step.label}

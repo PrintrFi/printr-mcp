@@ -1,8 +1,10 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getProtocolFees, toolError, toolOk } from "@printr/sdk";
+import { chainTypeFromCaip2, getProtocolFees, toToolResponseAsync } from "@printr/sdk";
+import { ResultAsync } from "neverthrow";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
 import { logToolExecution } from "~/lib/logging.js";
+import { getTreasuryAddress } from "~/lib/treasury.js";
 
 const inputSchema = z.object({
   token_id: z.string().describe("Telecoin ID (hex) or CAIP-10 token address"),
@@ -31,16 +33,14 @@ const outputSchema = z.object({
   message: z.string().describe("Status message"),
 });
 
-function deriveCreatorFeesMessage(totalFeesUsd: number, claimableChainsCount: number): string {
+function feesMessage(totalFeesUsd: number, claimableCount: number): string {
   if (totalFeesUsd === 0) {
     return "No creator fees have accumulated yet.";
   }
-
-  if (claimableChainsCount === 0) {
+  if (claimableCount === 0) {
     return `$${totalFeesUsd.toFixed(2)} in fees accumulated, but none are claimable yet (minimum threshold not reached).`;
   }
-
-  return `$${totalFeesUsd.toFixed(2)} in creator fees available across ${claimableChainsCount} chain(s).`;
+  return `$${totalFeesUsd.toFixed(2)} in creator fees available across ${claimableCount} chain(s).`;
 }
 
 export function registerGetCreatorFeesTool(server: McpServer): void {
@@ -54,41 +54,44 @@ export function registerGetCreatorFeesTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_get_creator_fees", async ({ token_id, chains }) => {
-      try {
-        const response = await getProtocolFees({
-          telecoinId: token_id,
-          chainIds: chains,
-        });
+    logToolExecution("printr_get_creator_fees", ({ token_id, chains }) => {
+      // Derive treasury payer addresses so the backend can identify the creator
+      // and return their fee balances.
+      const payers = (chains ?? []).flatMap((chainId) => {
+        const address = getTreasuryAddress(chainTypeFromCaip2(chainId));
+        return address ? [{ chainId, address }] : [];
+      });
 
-        const chainFees = Object.entries(response.perChain).map(([chainId, fees]) => {
-          const isEvm = chainId.startsWith("eip155:");
-          return {
+      return toToolResponseAsync(
+        ResultAsync.fromPromise(
+          getProtocolFees({
+            telecoinId: token_id,
+            chainIds: chains,
+            payers: payers.length > 0 ? payers : undefined,
+          }),
+          (e) => new Error(e instanceof Error ? e.message : String(e)),
+        ).map((response) => {
+          const chainFees = Object.entries(response.perChain).map(([chainId, fees]) => ({
             chain_id: chainId,
             creator_address: fees.dev ? `${fees.dev.chainId}:${fees.dev.address}` : undefined,
             creator_fees_usd: fees.devFees?.amountUsd ?? 0,
             creator_fees_native: fees.devFees?.amountAtomic ?? "0",
             can_claim: fees.canCollect,
-            native_symbol: isEvm ? "ETH" : "SOL",
+            native_symbol: chainId.startsWith("eip155:") ? "ETH" : "SOL",
+          }));
+
+          const totalFeesUsd = chainFees.reduce((sum, cf) => sum + cf.creator_fees_usd, 0);
+          const claimableCount = chainFees.filter((cf) => cf.can_claim).length;
+
+          return {
+            token_id: response.telecoinId || token_id,
+            total_fees_usd: totalFeesUsd,
+            chains: chainFees,
+            claim_url: `${env.PRINTR_APP_URL}/profile?section=claim-fees`,
+            message: feesMessage(totalFeesUsd, claimableCount),
           };
-        });
-
-        const totalFeesUsd = chainFees.reduce((sum, cf) => sum + cf.creator_fees_usd, 0);
-        const claimableChains = chainFees.filter((cf) => cf.can_claim);
-
-        const appUrl = env.PRINTR_APP_URL ?? "https://app.printr.money";
-        const claimUrl = `${appUrl}/profile?section=claim-fees`;
-
-        return toolOk({
-          token_id: response.telecoinId || token_id,
-          total_fees_usd: totalFeesUsd,
-          chains: chainFees,
-          claim_url: claimUrl,
-          message: deriveCreatorFeesMessage(totalFeesUsd, claimableChains.length),
-        });
-      } catch (error) {
-        return toolError(error instanceof Error ? error.message : String(error));
-      }
+        }),
+      );
     }),
   );
 }

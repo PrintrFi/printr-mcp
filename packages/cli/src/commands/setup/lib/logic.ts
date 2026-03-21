@@ -6,7 +6,9 @@ export function processClient(
   entry: McpEntry,
   runtime: Runtime,
 ): Omit<StepResult, "id" | "label"> {
-  if (!client.detect()) return { status: "skip" };
+  if (!client.detect()) {
+    return { status: "skip" };
+  }
   let result: ConfigureResult;
   try {
     result = client.configure(entry, runtime);
@@ -30,7 +32,9 @@ export async function runSetupLogic(
     onStep({ id: client.id, label: client.label, status: "running" });
     const { status, detail } = processClient(client, entry, runtime);
     onStep({ id: client.id, label: client.label, status, detail });
-    if (status === "ok") configured++;
+    if (status === "ok") {
+      configured++;
+    }
   }
 
   return configured;

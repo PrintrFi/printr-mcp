@@ -1,5 +1,6 @@
 /** Minimal CAIP-2 chain metadata derived from printr/web/app/stores/chains/defs.ts */
 
+import { parseCaip2 } from "./caip.js";
 import { ALCHEMY_RPC_TEMPLATES, env } from "./env.js";
 
 export type ChainMeta = {
@@ -117,8 +118,12 @@ export function toCaip2(namespace: "eip155" | "solana", chainRef: string | numbe
  */
 export function caip10ToChainId(caip10: string): string {
   const parts = caip10.split(":");
-  if (parts[0] === "eip155") return `eip155:${parts[1]}`;
-  if (parts[0] === "solana") return `solana:${parts[1]}`;
+  if (parts[0] === "eip155") {
+    return `eip155:${parts[1]}`;
+  }
+  if (parts[0] === "solana") {
+    return `solana:${parts[1]}`;
+  }
   return parts.slice(0, 2).join(":");
 }
 
@@ -128,7 +133,9 @@ export function caip10ToChainId(caip10: string): string {
  */
 function getUserRpc(caip2: string): string | undefined {
   // Direct CAIP-2 lookup
-  if (env.RPC_URLS[caip2]) return env.RPC_URLS[caip2];
+  if (env.RPC_URLS[caip2]) {
+    return env.RPC_URLS[caip2];
+  }
 
   // Find all names/aliases that map to this caip2
   for (const [name, chainCaip2] of Object.entries(CHAIN_NAME_TO_CAIP2)) {
@@ -144,13 +151,19 @@ function getUserRpc(caip2: string): string | undefined {
  * Get Alchemy RPC URL for a chain if ALCHEMY_API_KEY is set.
  */
 function getAlchemyRpc(caip2: string): string | undefined {
-  if (!env.ALCHEMY_API_KEY) return undefined;
+  if (!env.ALCHEMY_API_KEY) {
+    return undefined;
+  }
 
   const meta = CHAIN_META[caip2];
-  if (!meta) return undefined;
+  if (!meta) {
+    return undefined;
+  }
 
   const template = ALCHEMY_RPC_TEMPLATES[meta.name.toLowerCase()];
-  if (!template) return undefined;
+  if (!template) {
+    return undefined;
+  }
 
   return template.replace("{key}", env.ALCHEMY_API_KEY);
 }
@@ -165,10 +178,45 @@ function getAlchemyRpc(caip2: string): string | undefined {
  * Returns undefined if no RPC is available.
  */
 export function getRpcUrl(caip2: string, rpcOverride?: string): string | undefined {
-  if (rpcOverride) return rpcOverride;
+  if (rpcOverride) {
+    return rpcOverride;
+  }
   const userConfigured = getUserRpc(caip2);
-  if (userConfigured) return userConfigured;
+  if (userConfigured) {
+    return userConfigured;
+  }
   const alchemyRpc = getAlchemyRpc(caip2);
-  if (alchemyRpc) return alchemyRpc;
+  if (alchemyRpc) {
+    return alchemyRpc;
+  }
   return CHAIN_META[caip2]?.defaultRpc;
+}
+
+export type EvmConfigResult = { error: string } | { chainId: number; rpc: string };
+
+/**
+ * Resolve a CAIP-2 chain string to EVM connection params.
+ * Returns an error discriminant if the chain is invalid or has no RPC configured.
+ */
+export function getEvmConfig(chain: string, rpcOverride?: string): EvmConfigResult {
+  const parsed = parseCaip2(chain);
+  if (!parsed) {
+    return { error: `Invalid CAIP-2 chain format: ${chain}. Expected 'namespace:chainRef'.` };
+  }
+
+  if (parsed.namespace !== "eip155") {
+    return { error: `Chain ${chain} is not an EVM chain (expected eip155 namespace).` };
+  }
+
+  const chainId = Number(parsed.chainRef);
+  if (!Number.isSafeInteger(chainId) || chainId <= 0) {
+    return { error: `Invalid EVM chain ID in ${chain}.` };
+  }
+
+  const rpc = getRpcUrl(chain, rpcOverride);
+  if (!rpc) {
+    return { error: `No RPC URL for chain ${chain}. Set RPC_URLS or ALCHEMY_API_KEY.` };
+  }
+
+  return { chainId, rpc };
 }

@@ -1,12 +1,18 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   buildToken,
+  type ChainType,
   caip2ChainId,
   caip10Address,
+  chainTypeFromCaip2,
   type EvmPayload,
   externalLinks,
+  getActiveWalletId,
+  getChainMeta,
+  getEvmConfig,
   graduationThreshold,
   initialBuy,
+  logger,
   PrintrApiError,
   type PrintrClient,
   quoteOutput,
@@ -16,17 +22,26 @@ import {
   toToolResponseAsync,
 } from "@printr/sdk";
 import { ResultAsync } from "neverthrow";
+import { match } from "ts-pattern";
 import { z } from "zod";
+import { drainEvm, drainSvm, type ResolvedWallet } from "~/lib/drain.js";
 import { env } from "~/lib/env.js";
 import { logToolExecution } from "~/lib/logging.js";
 import { appendQr } from "~/lib/qr.js";
+import { getTreasuryKeyOrError } from "~/lib/treasury.js";
 import { createSession, LOCAL_SESSION_ORIGIN, startSessionServer } from "~/server";
+import { activeWallets } from "~/server/wallet-sessions.js";
+
+const normStr = (v?: string) => (!v || v === "null" || v === "undefined" ? undefined : v);
 
 const inputSchema = z.object({
   creator_accounts: z
     .array(caip10Address)
     .min(1)
-    .describe("One creator address per chain being deployed to"),
+    .optional()
+    .describe(
+      "One creator address per chain being deployed to. Omit to infer from the signing wallet.",
+    ),
   name: z.string().min(1).max(32).describe("Token name"),
   symbol: z.string().min(1).max(10).describe("Token ticker symbol"),
   description: z.string().max(500).describe("Token description"),
@@ -51,6 +66,7 @@ const inputSchema = z.object({
   private_key: z
     .string()
     .optional()
+    .transform(normStr)
     .describe(
       "Private key to sign immediately after token creation. " +
         "EVM: hex (with or without 0x prefix). SVM: base58 64-byte keypair. " +
@@ -58,8 +74,10 @@ const inputSchema = z.object({
         "If omitted, a browser signing session is started instead.",
     ),
   rpc_url: z
-    .url()
+    .string()
     .optional()
+    .transform(normStr)
+    .pipe(z.string().url().optional())
     .describe("RPC endpoint override. Falls back to RPC_URLS config or chain defaults."),
 });
 
@@ -87,6 +105,23 @@ const outputSchema = z.object({
     .enum(["finalized", "confirmed", "processed"])
     .optional()
     .describe("Solana confirmation level"),
+  // Deployment wallet drain outcome
+  drain_status: z
+    .enum(["ok", "failed", "skipped"])
+    .optional()
+    .describe(
+      "ok: funds returned to treasury. " +
+        "failed: drain attempted but failed — use drain_wallet_id to recover manually. " +
+        "skipped: no tracked deployment wallet was active (key supplied directly).",
+    ),
+  drain_wallet_id: z
+    .string()
+    .optional()
+    .describe("Keystore wallet ID that was drained. Present when drain_status is ok or failed."),
+  drain_error: z
+    .string()
+    .optional()
+    .describe("Drain failure reason. Present when drain_status is failed."),
 });
 
 function mapErr(e: unknown): PrintrApiError {
@@ -95,6 +130,163 @@ function mapErr(e: unknown): PrintrApiError {
 
 function isEvmPayload(payload: unknown): payload is EvmPayload {
   return typeof payload === "object" && payload !== null && "calldata" in payload;
+}
+
+function signWithKey(
+  token_id: string,
+  payload: unknown,
+  quote: unknown,
+  privateKey: string,
+  rpc_url: string | undefined,
+) {
+  if (isEvmPayload(payload)) {
+    return ResultAsync.fromPromise(signAndSubmitEvm(payload, privateKey, rpc_url), mapErr).map(
+      ({ tx_hash, block_number, status: tx_status }) => ({
+        status: "submitted" as const,
+        token_id,
+        quote,
+        tx_hash,
+        block_number,
+        tx_status,
+      }),
+    );
+  }
+  return ResultAsync.fromPromise(
+    signAndSubmitSvm(payload as SvmPayload, privateKey, rpc_url),
+    mapErr,
+  ).map(({ signature, slot, confirmation_status }) => ({
+    status: "submitted" as const,
+    token_id,
+    quote,
+    signature,
+    slot,
+    confirmation_status,
+  }));
+}
+
+function openWebSigner(
+  token_id: string,
+  payload: unknown,
+  quote: unknown,
+  tokenParams: { name: string; symbol: string; description: string },
+) {
+  const chain_type = isEvmPayload(payload) ? ("evm" as const) : ("svm" as const);
+  const image_url = `${env.PRINTR_CDN_URL}/t/${token_id}/media/image`;
+  return ResultAsync.fromPromise(
+    startSessionServer().then((port) => {
+      const session = createSession({
+        chain_type,
+        payload,
+        token_id,
+        token_meta: {
+          name: tokenParams.name,
+          symbol: tokenParams.symbol,
+          description: tokenParams.description,
+          image_url,
+        },
+      });
+      const apiUrl = `${LOCAL_SESSION_ORIGIN}:${port}`;
+      const url = `${env.PRINTR_APP_URL}/sign?session=${session.token}&api=${encodeURIComponent(apiUrl)}`;
+      return {
+        status: "awaiting_signature" as const,
+        token_id,
+        quote,
+        url,
+        session_token: session.token,
+        api_port: port,
+        expires_at: session.expires_at,
+      };
+    }),
+    mapErr,
+  );
+}
+
+type DrainOutcome =
+  | { status: "ok"; walletId: string }
+  | { status: "failed"; walletId: string; error: string }
+  | { status: "skipped" };
+
+function drainFields(outcome: DrainOutcome) {
+  return match(outcome)
+    .with({ status: "ok" }, ({ walletId }) => ({
+      drain_status: "ok" as const,
+      drain_wallet_id: walletId,
+    }))
+    .with({ status: "failed" }, ({ walletId, error }) => ({
+      drain_status: "failed" as const,
+      drain_wallet_id: walletId,
+      drain_error: error,
+    }))
+    .with({ status: "skipped" }, () => ({ drain_status: "skipped" as const }))
+    .exhaustive();
+}
+
+async function mergeResponse(
+  response: Awaited<ReturnType<typeof toToolResponseAsync>>,
+  outcome: DrainOutcome,
+) {
+  if (!("structuredContent" in response)) {
+    return response;
+  }
+  const sc = response.structuredContent as { status?: string; url?: string };
+  const merged = { ...sc, ...drainFields(outcome) };
+  if (sc.status === "awaiting_signature" && sc.url) {
+    const text = await appendQr(response.content[0]?.text ?? "", sc.url);
+    return { ...response, structuredContent: merged, content: [{ type: "text" as const, text }] };
+  }
+  return { ...response, structuredContent: merged };
+}
+
+async function autoDrain(
+  activeWallet: Omit<ResolvedWallet, "walletId">,
+  chainType: ChainType,
+  chain: string,
+  rpcUrl?: string,
+): Promise<DrainOutcome> {
+  // Only drain wallets tracked as deployment wallets — not user-supplied keys
+  const walletId = getActiveWalletId(chainType);
+  if (!walletId) {
+    return { status: "skipped" };
+  }
+
+  const meta = getChainMeta(chain);
+  const treasuryResult = getTreasuryKeyOrError(chainType);
+  if (!meta || "error" in treasuryResult) {
+    return { status: "skipped" };
+  }
+
+  const wallet = { ...activeWallet, walletId };
+
+  if (chainType === "svm") {
+    return (await drainSvm(wallet, treasuryResult.key, 0, meta, rpcUrl)).match(
+      () => ({ status: "ok" as const, walletId }),
+      (e) => {
+        logger.warn({ error: e.message }, "Auto-drain after launch failed");
+        return { status: "failed" as const, walletId, error: e.message };
+      },
+    );
+  }
+
+  const evmConfig = getEvmConfig(chain, rpcUrl);
+  if ("error" in evmConfig) {
+    return { status: "skipped" };
+  }
+  return (
+    await drainEvm(
+      wallet,
+      treasuryResult.key,
+      "0",
+      meta,
+      evmConfig.chainId,
+      rpcUrl ?? evmConfig.rpc,
+    )
+  ).match(
+    () => ({ status: "ok" as const, walletId }),
+    (e) => {
+      logger.warn({ error: e.message }, "Auto-drain after launch failed");
+      return { status: "failed" as const, walletId, error: e.message };
+    },
+  );
 }
 
 export function registerLaunchTokenTool(server: McpServer, client: PrintrClient): void {
@@ -113,75 +305,44 @@ export function registerLaunchTokenTool(server: McpServer, client: PrintrClient)
       outputSchema,
     },
     logToolExecution("printr_launch_token", async ({ private_key, rpc_url, ...tokenParams }) => {
-      const response = await toToolResponseAsync(
-        buildToken(tokenParams, client).andThen(({ token_id, payload, quote }) => {
-          if (private_key) {
-            if (isEvmPayload(payload)) {
-              return ResultAsync.fromPromise(
-                signAndSubmitEvm(payload, private_key, rpc_url),
-                mapErr,
-              ).map(({ tx_hash, block_number, status: tx_status }) => ({
-                status: "submitted" as const,
-                token_id,
-                quote,
-                tx_hash,
-                block_number,
-                tx_status,
-              }));
-            }
-            return ResultAsync.fromPromise(
-              signAndSubmitSvm(payload as SvmPayload, private_key, rpc_url),
-              mapErr,
-            ).map(({ signature, slot, confirmation_status }) => ({
-              status: "submitted" as const,
-              token_id,
-              quote,
-              signature,
-              slot,
-              confirmation_status,
-            }));
-          }
+      // Use active wallet (set by printr_fund_deployment_wallet) when no explicit key provided
+      const chainType = chainTypeFromCaip2(tokenParams.chains[0] ?? "");
+      const activeWallet = activeWallets.get(chainType);
+      const effectivePrivateKey = private_key ?? activeWallet?.privateKey;
 
-          const chain_type = isEvmPayload(payload) ? ("evm" as const) : ("svm" as const);
-          const image_url = `${env.PRINTR_CDN_URL}/t/${token_id}/media/image`;
-          return ResultAsync.fromPromise(
-            startSessionServer().then((port) => {
-              const session = createSession({
-                chain_type,
-                payload,
-                token_id,
-                token_meta: {
-                  name: tokenParams.name,
-                  symbol: tokenParams.symbol,
-                  description: tokenParams.description,
-                  image_url,
-                },
-              });
-              const apiUrl = `${LOCAL_SESSION_ORIGIN}:${port}`;
-              const url = `${env.PRINTR_APP_URL}/sign?session=${session.token}&api=${encodeURIComponent(apiUrl)}`;
-              return {
-                status: "awaiting_signature" as const,
-                token_id,
-                quote,
-                url,
-                session_token: session.token,
-                api_port: port,
-                expires_at: session.expires_at,
-              };
-            }),
-            mapErr,
-          );
-        }),
+      // Derive creator_accounts from active wallet if not provided (one entry per chain)
+      const effectiveParams = {
+        ...tokenParams,
+        creator_accounts:
+          tokenParams.creator_accounts ??
+          (activeWallet
+            ? tokenParams.chains.map((chain) => `${chain}:${activeWallet.address}`)
+            : undefined),
+      };
+
+      const response = await toToolResponseAsync(
+        buildToken(effectiveParams, client).andThen(({ token_id, payload, quote }) =>
+          effectivePrivateKey
+            ? signWithKey(token_id, payload, quote, effectivePrivateKey, rpc_url)
+            : openWebSigner(token_id, payload, quote, tokenParams),
+        ),
       );
 
-      if ("structuredContent" in response) {
-        const data = response.structuredContent as { status?: string; url?: string };
-        if (data.status === "awaiting_signature" && data.url) {
-          const text = await appendQr(response.content[0]?.text ?? "", data.url);
-          return { ...response, content: [{ type: "text" as const, text }] };
-        }
-      }
-      return response;
+      // Auto-drain the deployment wallet only on success.
+      // On failure, keep the active wallet state intact so the agent can retry
+      // without re-funding. Failed deployments are drained by the orchestrator
+      // via printr_drain_deployment_wallet using the walletId from Step 1.
+      const chain = tokenParams.chains[0];
+      const launched = !("isError" in response);
+      // Only auto-drain when the signing key came from the tracked deployment wallet.
+      // If the caller supplied an explicit private_key, skip drain to avoid touching
+      // an unrelated active wallet that may be in memory.
+      const drainOutcome: DrainOutcome =
+        launched && !private_key && activeWallet && chain
+          ? await autoDrain(activeWallet, chainType, chain, rpc_url)
+          : { status: "skipped" };
+
+      return mergeResponse(response, drainOutcome);
     }),
   );
 }

@@ -118,7 +118,9 @@ export function addWallet(entry: WalletEntry): void {
 export function removeWallet(id: string): boolean {
   const ks = loadKeystore();
   const idx = ks.wallets.findIndex((w) => w.id === id);
-  if (idx === -1) return false;
+  if (idx === -1) {
+    return false;
+  }
   ks.wallets.splice(idx, 1);
   saveKeystore(ks);
   return true;

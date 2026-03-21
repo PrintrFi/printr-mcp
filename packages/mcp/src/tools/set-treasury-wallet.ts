@@ -16,7 +16,9 @@ import { logToolExecution } from "~/lib/logging.js";
 import { treasuryWallets } from "~/server/wallet-sessions.js";
 
 function deriveAddress(privateKey: string, type: ChainType): string {
-  if (type === "evm") return privateKeyToAccount(normalisePrivateKey(privateKey)).address;
+  if (type === "evm") {
+    return privateKeyToAccount(normalisePrivateKey(privateKey)).address;
+  }
   return Keypair.fromSecretKey(bs58.decode(privateKey)).publicKey.toBase58();
 }
 
@@ -46,34 +48,30 @@ export function registerSetTreasuryWalletTool(server: McpServer): void {
     logToolExecution("printr_set_treasury_wallet", ({ wallet_id, password }) => {
       try {
         const entry = getWallet(wallet_id);
-        if (!entry) return toolError(`Wallet ${wallet_id} not found in keystore.`);
+        if (!entry) {
+          return toolError(`Wallet ${wallet_id} not found in keystore.`);
+        }
 
-        const result = decryptKey(entry, password);
-        if (result.isErr()) return toolError("Incorrect password.");
+        const decrypted = decryptKey(entry, password);
+        if (decrypted.isErr()) {
+          return toolError("Incorrect password.");
+        }
+        const privateKey = decrypted.value;
 
-        const type = chainTypeFromCaip2(entry.chain);
-        const privateKey = result.value;
-
-        // Verify the key is valid by deriving address
+        const chainType = chainTypeFromCaip2(entry.chain);
         let address: string;
         try {
-          address = deriveAddress(privateKey, type);
+          address = deriveAddress(privateKey, chainType);
         } catch {
           return toolError("Failed to derive address from decrypted key.");
         }
 
-        // Verify it matches the stored address
         if (address.toLowerCase() !== entry.address.toLowerCase()) {
           return toolError("Decrypted key does not match stored address.");
         }
 
-        treasuryWallets.set(type, { privateKey, address });
-
-        return toolOk({
-          address: entry.address,
-          chain: entry.chain,
-          chain_type: type,
-        });
+        treasuryWallets.set(chainType, { privateKey, address });
+        return toolOk({ address: entry.address, chain: entry.chain, chain_type: chainType });
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
       }

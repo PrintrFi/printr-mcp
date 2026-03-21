@@ -5,7 +5,7 @@ export interface StepResult {
   id: string;
   label: string;
   status: StepStatus;
-  detail?: string;
+  detail?: string | undefined;
 }
 
 export interface McpEntry {

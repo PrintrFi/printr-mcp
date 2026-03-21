@@ -95,8 +95,8 @@ export type ProtocolFeesResponse = {
 
 export type ProtocolFeesRequest = {
   telecoinId: string;
-  chainIds?: string[];
-  payers?: CaipAccount[];
+  chainIds?: string[] | undefined;
+  payers?: CaipAccount[] | undefined;
 };
 
 // Singleton client
@@ -116,7 +116,9 @@ function getBackendClient(): Client<typeof Backend> {
  * Convert proto Account to CaipAccount
  */
 function toSimpleAccount(account: Account | undefined): CaipAccount | undefined {
-  if (!account) return undefined;
+  if (!account) {
+    return undefined;
+  }
   return {
     chainId: account.chainId,
     address: account.address,
@@ -127,10 +129,14 @@ function toSimpleAccount(account: Account | undefined): CaipAccount | undefined 
  * Convert proto AssetAmountV0 to simple AssetAmount
  */
 function toSimpleAssetAmount(amount: AssetAmountV0 | undefined): AssetAmount | undefined {
-  if (!amount) return undefined;
+  if (!amount) {
+    return undefined;
+  }
+  const asset = toSimpleAccount(amount.asset);
+  const amountAtomic = amount.amountAtomic?.base10;
   return {
-    asset: toSimpleAccount(amount.asset),
-    amountAtomic: amount.amountAtomic?.base10,
+    ...(asset !== undefined ? { asset } : {}),
+    ...(amountAtomic !== undefined ? { amountAtomic } : {}),
     decimals: amount.decimals || 0,
     priceUsd: amount.priceUsd || 0,
     amountUsd: amount.amountUsd || 0,
@@ -141,17 +147,22 @@ function toSimpleAssetAmount(amount: AssetAmountV0 | undefined): AssetAmount | u
  * Convert proto SolanaIx to simple SolanaIx
  */
 function toSimpleSolanaIx(ix: ProtoSolanaIx, targetChain: string): SolanaIx {
+  // wingman.SolanaIx uses Base58Pubkey which has a `value` field
+  const programId = ix.programId?.value
+    ? { chainId: targetChain, address: ix.programId.value }
+    : undefined;
   return {
-    // wingman.SolanaIx uses Base58Pubkey which has a `value` field
-    programId: ix.programId?.value
-      ? { chainId: targetChain, address: ix.programId.value }
-      : undefined,
-    accounts: (ix.accounts || []).map((acc: ProtoAccountMeta) => ({
-      // wingman.AccountMeta uses Base58Pubkey for pubkey
-      pubkey: acc.pubkey?.value ? { chainId: targetChain, address: acc.pubkey.value } : undefined,
-      isSigner: acc.isSigner || false,
-      isWritable: acc.isWritable || false,
-    })),
+    ...(programId !== undefined ? { programId } : {}),
+    accounts: (ix.accounts || []).map((acc: ProtoAccountMeta) => {
+      const pubkey = acc.pubkey?.value
+        ? { chainId: targetChain, address: acc.pubkey.value }
+        : undefined;
+      return {
+        ...(pubkey !== undefined ? { pubkey } : {}),
+        isSigner: acc.isSigner || false,
+        isWritable: acc.isWritable || false,
+      };
+    }),
     // wingman.SolanaIx uses `data` field (base64 encoded)
     dataBase64: ix.data || "",
   };
@@ -174,15 +185,17 @@ function toSimplePayloadEVM(evm: ProtoPayloadEVM, targetChain: string): PayloadE
  * Convert proto PayloadSolana to simple PayloadSolana
  */
 function toSimplePayloadSolana(svm: ProtoPayloadSolana, targetChain: string): PayloadSolana {
+  const lookupTable = svm.lookupTable?.value;
+  const telecoinMintAddress = svm.telecoinMintAddress
+    ? {
+        chainId: svm.telecoinMintAddress.chainId || "",
+        address: svm.telecoinMintAddress.address || "",
+      }
+    : undefined;
   return {
     ixs: (svm.calldata || []).map((ix) => toSimpleSolanaIx(ix, targetChain)),
-    lookupTable: svm.lookupTable?.value,
-    telecoinMintAddress: svm.telecoinMintAddress
-      ? {
-          chainId: svm.telecoinMintAddress.chainId || "",
-          address: svm.telecoinMintAddress.address || "",
-        }
-      : undefined,
+    ...(lookupTable !== undefined ? { lookupTable } : {}),
+    ...(telecoinMintAddress !== undefined ? { telecoinMintAddress } : {}),
   };
 }
 
@@ -190,7 +203,9 @@ function toSimplePayloadSolana(svm: ProtoPayloadSolana, targetChain: string): Pa
  * Convert proto Payload to simple Payload
  */
 function toSimplePayload(payload: ProtoPayload | undefined): Payload | undefined {
-  if (!payload) return undefined;
+  if (!payload) {
+    return undefined;
+  }
 
   const targetChain = payload.targetChain || "";
   const p = payload.payload;
@@ -223,12 +238,16 @@ function toSimplePayload(payload: ProtoPayload | undefined): Payload | undefined
  * Convert proto ChainProtocolFees to simple format
  */
 function toSimpleChainFees(fees: ProtoChainProtocolFees): ChainProtocolFeesSimple {
+  const dev = toSimpleAccount(fees.dev);
+  const protocolFees = toSimpleAssetAmount(fees.protocolFees);
+  const devFees = toSimpleAssetAmount(fees.devFees);
+  const collectionPayload = toSimplePayload(fees.collectionPayload);
   return {
     chainId: fees.chainId || "",
-    dev: toSimpleAccount(fees.dev),
-    protocolFees: toSimpleAssetAmount(fees.protocolFees),
-    devFees: toSimpleAssetAmount(fees.devFees),
-    collectionPayload: toSimplePayload(fees.collectionPayload),
+    ...(dev !== undefined ? { dev } : {}),
+    ...(protocolFees !== undefined ? { protocolFees } : {}),
+    ...(devFees !== undefined ? { devFees } : {}),
+    ...(collectionPayload !== undefined ? { collectionPayload } : {}),
     canCollect: fees.canCollect || false,
   };
 }
@@ -256,11 +275,13 @@ export async function getProtocolFees(request: ProtocolFeesRequest): Promise<Pro
     perChain[chainId] = toSimpleChainFees(fees);
   }
 
+  const totalProtocol = toSimpleAssetAmount(response.totalProtocol);
+  const totalDev = toSimpleAssetAmount(response.totalDev);
   return {
     telecoinId: response.telecoinId,
     perChain,
-    totalProtocol: toSimpleAssetAmount(response.totalProtocol),
-    totalDev: toSimpleAssetAmount(response.totalDev),
+    ...(totalProtocol !== undefined ? { totalProtocol } : {}),
+    ...(totalDev !== undefined ? { totalDev } : {}),
   };
 }
 

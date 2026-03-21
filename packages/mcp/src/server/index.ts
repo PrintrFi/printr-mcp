@@ -45,7 +45,9 @@ function isPortFree(port: number): Promise<boolean> {
 
 async function findFreePort(start: number, end: number): Promise<number> {
   for (let port = start; port <= end; port++) {
-    if (await isPortFree(port)) return port;
+    if (await isPortFree(port)) {
+      return port;
+    }
   }
   throw new Error(`No free port found in range ${start}–${end}`);
 }
@@ -62,7 +64,9 @@ let serverPort: number | null = null;
  * @returns The port the server is listening on.
  */
 export async function startSessionServer(): Promise<number> {
-  if (serverPort !== null) return serverPort;
+  if (serverPort !== null) {
+    return serverPort;
+  }
 
   const port = await findFreePort(5174, 5200);
 

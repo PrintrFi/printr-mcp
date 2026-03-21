@@ -10,20 +10,17 @@ import {
   toCaip2,
   toToolResponseAsync,
 } from "@printr/sdk";
-import { err, fromThrowable, ok, type Result } from "neverthrow";
+import { err, ok, type Result } from "neverthrow";
 import { z } from "zod";
 import { logToolExecution } from "~/lib/logging.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
 type TransferToolError = { message: string };
 
-const safeParseCaip10 = fromThrowable(
-  parseCaip10,
-  (e): TransferToolError => ({ message: e instanceof Error ? e.message : String(e) }),
-);
-
 const getPrivateKey = (namespace: string, providedKey?: string): string | null => {
-  if (providedKey) return providedKey;
+  if (providedKey) {
+    return providedKey;
+  }
   return activeWallets.get(namespaceToChainType(namespace))?.privateKey ?? null;
 };
 
@@ -40,40 +37,43 @@ function validateInputs(
   to: string,
   privateKey: string | undefined,
 ): Result<ParsedInput, TransferToolError> {
-  return safeParseCaip10(to).andThen((parsed) => {
-    const caip2 = toCaip2(parsed);
-    const meta = getChainMeta(caip2);
+  const parsed = parseCaip10(to);
+  if (!parsed) {
+    return err({ message: `Invalid CAIP-10 address: ${to}` });
+  }
 
-    if (!meta) {
-      return err({
-        message: `Unsupported chain: ${caip2}. Supported: ${Object.keys(CHAIN_META).join(", ")}`,
-      });
-    }
+  const caip2 = toCaip2(parsed);
+  const meta = getChainMeta(caip2);
 
-    if (!isSupportedNamespace(parsed.namespace)) {
-      return err({
-        message: `Unsupported namespace: ${parsed.namespace}. Supported: eip155, solana`,
-      });
-    }
-
-    const key = getPrivateKey(parsed.namespace, privateKey);
-    if (!key) {
-      const chainType = namespaceToChainType(parsed.namespace).toUpperCase();
-      return err({
-        message:
-          `No private key provided and no active ${chainType} wallet. ` +
-          "Use printr_wallet_unlock first or provide private_key.",
-      });
-    }
-
-    return ok({
-      namespace: parsed.namespace,
-      chainRef: parsed.chainRef,
-      address: parsed.address,
-      caip2,
-      meta,
-      key,
+  if (!meta) {
+    return err({
+      message: `Unsupported chain: ${caip2}. Supported: ${Object.keys(CHAIN_META).join(", ")}`,
     });
+  }
+
+  if (!isSupportedNamespace(parsed.namespace)) {
+    return err({
+      message: `Unsupported namespace: ${parsed.namespace}. Supported: eip155, solana`,
+    });
+  }
+
+  const key = getPrivateKey(parsed.namespace, privateKey);
+  if (!key) {
+    const chainType = namespaceToChainType(parsed.namespace).toUpperCase();
+    return err({
+      message:
+        `No private key provided and no active ${chainType} wallet. ` +
+        "Use printr_wallet_unlock first or provide private_key.",
+    });
+  }
+
+  return ok({
+    namespace: parsed.namespace,
+    chainRef: parsed.chainRef,
+    address: parsed.address,
+    caip2,
+    meta,
+    key,
   });
 }
 

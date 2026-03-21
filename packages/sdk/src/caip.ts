@@ -13,16 +13,18 @@ export type SupportedNamespace = "eip155" | "solana";
 
 export function parseCaip2(caip2: string): ParsedCaip2 | null {
   const parts = caip2.split(":");
-  if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    return null;
+  }
   return { namespace: parts[0], chainRef: parts[1] };
 }
 
-export function parseCaip10(caip10: string): ParsedCaip10 {
+export function parseCaip10(caip10: string): ParsedCaip10 | null {
   const parts = caip10.split(":");
   const namespace = parts[0];
   const chainRef = parts[1];
   if (!namespace || !chainRef || parts.length < 3) {
-    throw new Error(`Invalid CAIP-10 address: ${caip10}`);
+    return null;
   }
   return { namespace, chainRef, address: parts.slice(2).join(":") };
 }

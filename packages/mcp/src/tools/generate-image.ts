@@ -68,18 +68,16 @@ export function registerGenerateImageTool(server: McpServer, openrouterApiKey: s
           );
         });
 
-      if (result.isErr()) {
-        return {
-          content: [{ type: "text" as const, text: result.error.message }],
+      return result.match(
+        (data) => ({
+          structuredContent: data,
+          content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+        }),
+        (e) => ({
+          content: [{ type: "text" as const, text: e.message }],
           isError: true as const,
-        };
-      }
-
-      const data = result.value;
-      return {
-        structuredContent: data,
-        content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
-      };
+        }),
+      );
     }),
   );
 }

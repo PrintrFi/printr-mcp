@@ -18,9 +18,14 @@ const STATUS_COLORS: Record<StepStatus, string | undefined> = {
 };
 
 export function StepRow({ step }: { step: StepResult }) {
+  const statusColor = STATUS_COLORS[step.status];
   return (
     <Box>
-      <Text color={STATUS_COLORS[step.status]}>{STATUS_SYMBOLS[step.status]} </Text>
+      {statusColor ? (
+        <Text color={statusColor}>{STATUS_SYMBOLS[step.status]} </Text>
+      ) : (
+        <Text>{STATUS_SYMBOLS[step.status]} </Text>
+      )}
       <Text>{step.label}</Text>
       {step.detail && <Text dimColor> — {step.detail}</Text>}
     </Box>

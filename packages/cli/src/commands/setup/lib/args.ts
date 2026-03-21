@@ -39,11 +39,13 @@ function handleApiKeyArg(
 
 export function parseSetupArgs(args: string[]): SetupArgs {
   const targetIds: string[] = [];
-  let openrouterApiKey = process.env.OPENROUTER_API_KEY ?? "";
+  let openrouterApiKey = process.env["OPENROUTER_API_KEY"] ?? "";
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (!arg) continue;
+    if (!arg) {
+      continue;
+    }
 
     const newClientIndex = handleClientArg(arg, args, i, targetIds);
     if (newClientIndex !== i) {

@@ -18,10 +18,11 @@ export type ImageError = { message: string };
  * the output is a suitable token avatar.
  */
 const TOKEN_AVATAR_REQUIREMENTS =
-  "Style: perfectly square 1:1 aspect ratio, bold vibrant cartoon or illustrative art, " +
-  "solid or minimally styled background, absolutely no text, letters, numbers, or words " +
-  "anywhere in the image, clean icon design that stays recognisable at small sizes, " +
-  "high contrast with vivid colours.";
+  "Style: perfectly square 1:1 aspect ratio full-bleed composition, subject fills the entire " +
+  "frame edge-to-edge with no white space, no padding, no borders, no margins, no letterboxing, " +
+  "bold vibrant cartoon or illustrative art, solid or gradient background that extends to every " +
+  "corner, absolutely no text, letters, numbers, or words anywhere in the image, " +
+  "clean icon design that stays recognisable at small sizes, high contrast with vivid colours.";
 
 /**
  * Wraps a raw user prompt with token-avatar style requirements.
@@ -47,7 +48,7 @@ function buildTokenImagePrompt(name: string, symbol: string, description: string
 export interface GenerateImageOptions {
   openrouterApiKey: string;
   /** OpenRouter model ID. Defaults to env.OPENROUTER_IMAGE_MODEL. */
-  model?: string;
+  model?: string | undefined;
 }
 
 /**
@@ -92,7 +93,7 @@ function callOpenRouterForImage(
       // file size regardless of what the model returned.
       ResultAsync.fromPromise(
         sharp(Buffer.from(base64, "base64"))
-          .resize(TARGET_SIZE, TARGET_SIZE, { fit: "inside", withoutEnlargement: true })
+          .resize(TARGET_SIZE, TARGET_SIZE, { fit: "cover" })
           .jpeg({ quality: JPEG_QUALITY })
           .toBuffer(),
         (e) => ({ message: `Image optimisation failed: ${String(e)}` }),
@@ -147,7 +148,7 @@ export function compressImageBuffer(buffer: Buffer): ResultAsync<Buffer, ImageEr
   }
   return ResultAsync.fromPromise(
     sharp(buffer)
-      .resize(TARGET_SIZE, TARGET_SIZE, { fit: "inside", withoutEnlargement: true })
+      .resize(TARGET_SIZE, TARGET_SIZE, { fit: "cover" })
       .jpeg({ quality: JPEG_QUALITY })
       .toBuffer(),
     (e) => ({ message: `Image compression failed: ${String(e)}` }),

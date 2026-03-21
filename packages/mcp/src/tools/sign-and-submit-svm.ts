@@ -68,8 +68,9 @@ export function registerSignAndSubmitSvmTool(server: McpServer): void {
         if (resolution.kind === "ready") {
           return toolOk(await signAndSubmitSvm(payload, resolution.privateKey, rpc_url));
         }
-        if (resolution.kind === "insufficient_funds")
+        if (resolution.kind === "insufficient_funds") {
           return toolError(insufficientFundsMessage(resolution));
+        }
         return toolError(resolution.message);
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));

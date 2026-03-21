@@ -24,7 +24,9 @@ export function SkillApp({ preselectedIds }: { preselectedIds: string[] | null }
   const [installed, setInstalled] = useState<number | null>(null);
 
   useEffect(() => {
-    if (phase !== "running") return;
+    if (phase !== "running") {
+      return;
+    }
     runSkillInstall(selectedIds, (step) => {
       if (step.status === "running") {
         setCurrentStep(step);
@@ -40,7 +42,9 @@ export function SkillApp({ preselectedIds }: { preselectedIds: string[] | null }
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: exit is stable
   useEffect(() => {
-    if (installed !== null) exit();
+    if (installed !== null) {
+      exit();
+    }
   }, [installed]);
 
   function handleConfirm(ids: string[]) {

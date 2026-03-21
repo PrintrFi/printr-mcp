@@ -8,16 +8,27 @@ import { generateTokenImage, processImagePath } from "./image.js";
 type CreateTokenRequestBody = paths["/print"]["post"]["requestBody"]["content"]["application/json"];
 
 export type BuildTokenInput = {
-  creator_accounts: string[];
+  creator_accounts?: string[] | undefined;
   name: string;
   symbol: string;
   description: string;
-  image?: string;
-  image_path?: string;
+  image?: string | undefined;
+  image_path?: string | undefined;
   chains: string[];
-  initial_buy: { supply_percent?: number; spend_usd?: number; spend_native?: string };
-  graduation_threshold_per_chain_usd?: 69000 | 250000;
-  external_links?: { website?: string; x?: string; telegram?: string; github?: string };
+  initial_buy: {
+    supply_percent?: number | undefined;
+    spend_usd?: number | undefined;
+    spend_native?: string | undefined;
+  };
+  graduation_threshold_per_chain_usd?: 69000 | 250000 | undefined;
+  external_links?:
+    | {
+        website?: string | undefined;
+        x?: string | undefined;
+        telegram?: string | undefined;
+        github?: string | undefined;
+      }
+    | undefined;
 };
 
 /**
@@ -25,6 +36,12 @@ export type BuildTokenInput = {
  * Used by both `printr_create_token` and `printr_launch_token`.
  */
 export function buildToken({ image, image_path, ...rest }: BuildTokenInput, client: PrintrClient) {
+  if (!rest.creator_accounts) {
+    return errAsync({
+      message: "creator_accounts is required. Provide at least one CAIP-10 address per chain.",
+    });
+  }
+
   const imageAsync = image
     ? okAsync(image)
     : image_path

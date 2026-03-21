@@ -28,6 +28,7 @@
     "format:check": "biome format .",
     "check": "bun typecheck && bun lint && bun test",
     "examples:test": "bun run --cwd examples/sdk-basic test && bun run --cwd examples/mcp-client test",
+    "generate:api": "bash scripts/generate-api.sh",
     "prepare": "husky"
   },
   "devDependencies": {

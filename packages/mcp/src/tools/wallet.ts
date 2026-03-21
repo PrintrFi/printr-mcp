@@ -16,13 +16,16 @@ import {
 } from "@printr/sdk";
 import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
+import { match } from "ts-pattern";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
 import { logToolExecution } from "~/lib/logging.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
 function deriveAddress(privateKey: string, type: ChainType): string {
-  if (type === "evm") return privateKeyToAccount(normalisePrivateKey(privateKey)).address;
+  if (type === "evm") {
+    return privateKeyToAccount(normalisePrivateKey(privateKey)).address;
+  }
   return Keypair.fromSecretKey(bs58.decode(privateKey)).publicKey.toBase58();
 }
 
@@ -53,17 +56,20 @@ export function registerWalletTools(server: McpServer): void {
     },
     logToolExecution("printr_wallet_new", ({ chain, label, password }) => {
       try {
-        const type = chainTypeFromCaip2(chain);
-        let privateKey: string;
-        let address: string;
-        if (type === "svm") {
-          const kp = Keypair.generate();
-          privateKey = bs58.encode(kp.secretKey);
-          address = kp.publicKey.toBase58();
-        } else {
-          privateKey = generatePrivateKey();
-          address = privateKeyToAccount(normalisePrivateKey(privateKey)).address;
-        }
+        const chainType = chainTypeFromCaip2(chain);
+        const { privateKey, address } = match(chainType)
+          .with("svm", () => {
+            const kp = Keypair.generate();
+            return { privateKey: bs58.encode(kp.secretKey), address: kp.publicKey.toBase58() };
+          })
+          .with("evm", () => {
+            const privateKey = generatePrivateKey();
+            return {
+              privateKey,
+              address: privateKeyToAccount(normalisePrivateKey(privateKey)).address,
+            };
+          })
+          .exhaustive();
         const id = randomUUID();
         addWallet({
           id,
@@ -73,7 +79,7 @@ export function registerWalletTools(server: McpServer): void {
           createdAt: Date.now(),
           ...encryptKey(privateKey, password),
         });
-        activeWallets.set(type, { privateKey, address });
+        activeWallets.set(chainType, { privateKey, address });
         return toolOk({ address, chain, wallet_id: id });
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
@@ -107,10 +113,10 @@ export function registerWalletTools(server: McpServer): void {
     },
     logToolExecution("printr_wallet_import", ({ chain, private_key, label, password }) => {
       try {
-        const type = chainTypeFromCaip2(chain);
+        const chainType = chainTypeFromCaip2(chain);
         let address: string;
         try {
-          address = deriveAddress(private_key, type);
+          address = deriveAddress(private_key, chainType);
         } catch {
           return toolError("Invalid private key format.");
         }
@@ -128,7 +134,7 @@ export function registerWalletTools(server: McpServer): void {
           });
           saved = true;
         }
-        activeWallets.set(type, { privateKey: private_key, address });
+        activeWallets.set(chainType, { privateKey: private_key, address });
         return toolOk({ address, saved, ...(wallet_id ? { wallet_id } : {}) });
       } catch (error) {
         return toolError(error instanceof Error ? error.message : String(error));
@@ -187,12 +193,17 @@ export function registerWalletTools(server: McpServer): void {
     },
     logToolExecution("printr_wallet_unlock", ({ wallet_id, password }) => {
       const entry = getWallet(wallet_id);
-      if (!entry) return toolError(`Wallet ${wallet_id} not found in keystore.`);
-      const result = decryptKey(entry, password);
-      if (result.isErr()) return toolError("Incorrect password.");
-      const type = chainTypeFromCaip2(entry.chain);
-      activeWallets.set(type, { privateKey: result.value, address: entry.address });
-      return toolOk({ address: entry.address, chain: entry.chain });
+      if (!entry) {
+        return toolError(`Wallet ${wallet_id} not found in keystore.`);
+      }
+      return decryptKey(entry, password).match(
+        (privateKey) => {
+          const chainType = chainTypeFromCaip2(entry.chain);
+          activeWallets.set(chainType, { privateKey, address: entry.address });
+          return toolOk({ address: entry.address, chain: entry.chain });
+        },
+        () => toolError("Incorrect password."),
+      );
     }),
   );
 
@@ -211,7 +222,9 @@ export function registerWalletTools(server: McpServer): void {
     },
     logToolExecution("printr_wallet_remove", ({ wallet_id }) => {
       const removed = removeWallet(wallet_id);
-      if (!removed) return toolError(`Wallet ${wallet_id} not found in keystore.`);
+      if (!removed) {
+        return toolError(`Wallet ${wallet_id} not found in keystore.`);
+      }
       return toolOk({ ok: true });
     }),
   );

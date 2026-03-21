@@ -22,34 +22,36 @@
     "lineWidth": 100,
     "lineEnding": "lf"
   },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
       "recommended": true,
       "complexity": {
         "noExcessiveCognitiveComplexity": "warn",
+        "noBannedTypes": "error",
         "noForEach": "off",
-        "noUselessLoneBlockStatements": "error"
+        "noUselessLoneBlockStatements": "error",
+        "useLiteralKeys": "off"
       },
       "correctness": {
-        "noUnusedVariables": {
-          "level": "warn",
-          "fix": "safe"
-        },
-        "noUnusedImports": {
-          "level": "warn",
-          "fix": "safe"
-        },
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
         "useExhaustiveDependencies": "warn"
       },
       "style": {
-        "noNonNullAssertion": "off",
+        "noNonNullAssertion": "warn",
         "useConst": "error",
+        "useImportType": "error",
+        "useBlockStatements": "error",
+        "noInferrableTypes": "error",
         "useTemplate": "warn",
         "noParameterAssign": "warn"
       },
       "suspicious": {
-        "noExplicitAny": "warn",
+        "noExplicitAny": "error",
+        "noConfusingVoidType": "error",
+        "noEmptyBlockStatements": "warn",
         "noArrayIndexKey": "warn"
       },
       "performance": {
@@ -84,6 +86,9 @@
         "rules": {
           "suspicious": {
             "noExplicitAny": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off"
           }
         }
       }

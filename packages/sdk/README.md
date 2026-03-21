@@ -54,47 +54,60 @@ if (result.isOk()) {
 
 ```typescript
 import { signAndSubmitEvm } from '@printr/sdk/evm';
+import { ResultAsync } from 'neverthrow';
 
-try {
-  const txResult = await signAndSubmitEvm(
-    result.value.deployments[0].payload,
-    process.env.EVM_WALLET_PRIVATE_KEY!,
-    'https://mainnet.base.org',
+// Chain buildToken directly into signing
+buildToken(input, client)
+  .andThen(({ token_id, payload }) =>
+    ResultAsync.fromPromise(
+      signAndSubmitEvm(payload, process.env.EVM_WALLET_PRIVATE_KEY!),
+      (e) => ({ message: e instanceof Error ? e.message : String(e) }),
+    ).map((tx) => ({ token_id, tx }))
+  )
+  .match(
+    ({ token_id, tx }) => console.log('Token:', token_id, 'TX:', tx.tx_hash),
+    (err) => console.error('Failed:', err.message),
   );
-  console.log('Transaction hash:', txResult.tx_hash);
-} catch (error) {
-  console.error('Transaction failed:', error);
-}
 ```
 
 ### Check token balances
 
 ```typescript
-import { getEvmTokenBalance } from '@printr/sdk/balance';
+import { checkEvmBalance } from '@printr/sdk/balance';
 
-const balance = await getEvmTokenBalance(
-  'eip155:8453',
-  '0xTokenAddress',
-  '0xWalletAddress',
-  'https://mainnet.base.org',
+// checkEvmBalance returns ResultAsync — chain directly or await
+const balance = await checkEvmBalance(
+  '0xYourWalletAddress',
+  8453, // Base chain ID
+  21000, // gas limit estimate
 );
 
-console.log(`Balance: ${balance.formatted} ${balance.symbol}`);
+balance.match(
+  ({ balanceFormatted, symbol, sufficient }) =>
+    console.log(`Balance: ${balanceFormatted} ${symbol} (sufficient: ${sufficient})`),
+  (err) => console.error('Balance fetch failed:', err), // 'no_rpc' | 'fetch_failed'
+);
 ```
 
 ### Transfer tokens
 
 ```typescript
-import { transferToken } from '@printr/sdk/transfer';
+import { executeTransfer } from '@printr/sdk/transfer';
+import { getChainMeta } from '@printr/sdk/chains';
 
-const transfer = await transferToken({
-  chain: 'eip155:8453',
-  tokenAddress: '0x...',
-  to: '0xRecipientAddress',
-  amount: '1.5',
-  privateKey: process.env.EVM_WALLET_PRIVATE_KEY!,
-  rpcUrl: 'https://mainnet.base.org',
-});
+const meta = getChainMeta('eip155:8453')!;
+const result = await executeTransfer(
+  'eip155',    // namespace
+  '8453',      // chainRef (Base)
+  '0xRecipientAddress',
+  '1.5',       // amount in native token units
+  process.env.EVM_WALLET_PRIVATE_KEY!,
+  meta,
+);
+
+if (result.isOk()) {
+  console.log('tx_hash' in result.value ? result.value.tx_hash : result.value.signature);
+}
 ```
 
 ## Exports
@@ -109,31 +122,28 @@ import { createPrintrClient, buildToken } from '@printr/sdk';
 import { createPrintrClient } from '@printr/sdk/client';
 
 // Chain information
-import { chains, getChainByCAIP } from '@printr/sdk/chains';
+import { CHAIN_META, getChainMeta } from '@printr/sdk/chains';
 
 // EVM operations
-import { signAndSubmitEvm, deriveEVMAddress } from '@printr/sdk/evm';
+import { signAndSubmitEvm, normalisePrivateKey } from '@printr/sdk/evm';
 
 // Solana operations
-import { signAndSubmitSvm, deriveSOLAddress } from '@printr/sdk/svm';
+import { signAndSubmitSvm, getSvmRpcUrl } from '@printr/sdk/svm';
 
 // Balance queries
-import { getBalance } from '@printr/sdk/balance';
+import { checkEvmBalance, checkSvmBalance, getEvmNativeBalance } from '@printr/sdk/balance';
 
 // Token transfers
-import { transferToken } from '@printr/sdk/transfer';
+import { executeTransfer, transferEvm, transferSvm } from '@printr/sdk/transfer';
 
-// Encrypted keystore
-import { createKeystore, saveKeystore, loadKeystore } from '@printr/sdk/keystore';
+// Wallet keystore
+import { addWallet, decryptKey, encryptKey, listWallets } from '@printr/sdk/keystore';
 
 // Image generation
-import { generateImage } from '@printr/sdk/image';
+import { generateImageFromPrompt, generateTokenImage } from '@printr/sdk/image';
 
-// Type schemas
-import { BuildTokenInput, QuoteInput } from '@printr/sdk/schemas';
-
-// CAIP utilities
-import { parseCAIP, formatCAIP } from '@printr/sdk/caip';
+// CAIP utilities — both return null for invalid input (never throw)
+import { parseCaip2, parseCaip10, chainTypeFromCaip2 } from '@printr/sdk/caip';
 ```
 
 ## Configuration
@@ -155,28 +165,26 @@ import { parseCAIP, formatCAIP } from '@printr/sdk/caip';
 The SDK uses AES-256-GCM encryption with scrypt key derivation to securely store wallet private keys:
 
 ```typescript
-import { createKeystore, saveKeystore, addWallet } from '@printr/sdk/keystore';
+import { encryptKey, addWallet, listWallets, type WalletEntry } from '@printr/sdk/keystore';
+import { randomUUID } from 'node:crypto';
 
-// Create encrypted keystore (stored at ~/.printr/wallets.json)
-const keystore = createKeystore(password);
-
-// Add wallets
-const evmWallet = addWallet(keystore, {
+// Encrypt a private key and build a WalletEntry
+const encrypted = encryptKey('0x...', password);
+const entry: WalletEntry = {
+  id: randomUUID(),
   label: 'my-evm-wallet',
-  chainType: 'evm',
-  privateKey: '0x...',
-  password,
-});
+  chain: 'eip155:8453',
+  address: '0xYourAddress',
+  ...encrypted,
+  createdAt: Date.now(),
+};
 
-const svmWallet = addWallet(keystore, {
-  label: 'my-sol-wallet',
-  chainType: 'svm',
-  privateKey: 'base58-secret',
-  password,
-});
+// Persist to ~/.printr/wallets.json
+addWallet(entry);
 
-// Save to disk
-saveKeystore(keystore);
+// List all stored wallets (keys are encrypted — address is safe to read)
+const wallets = listWallets();
+console.log(wallets.map((w) => `${w.label}: ${w.address}`));
 ```
 
 ## Supported Chains
@@ -207,27 +215,20 @@ createPrintrClient(options?: {
 ### Token Operations
 
 ```typescript
-buildToken(input: BuildTokenInput, client: PrintrClient): Promise<Result<BuildTokenOutput>>
-getToken(tokenId: string, client: PrintrClient): Promise<Result<TokenDetails>>
-quoteToken(input: QuoteInput, client: PrintrClient): Promise<Result<QuoteOutput>>
+buildToken(input: BuildTokenInput, client: PrintrClient): ResultAsync<BuildTokenOutput, PrintrApiError>
+getToken(tokenId: string, client: PrintrClient): ResultAsync<TokenDetails, PrintrApiError>
+quoteToken(input: QuoteInput, client: PrintrClient): ResultAsync<QuoteOutput, PrintrApiError>
 ```
 
 ### Transaction Signing
 
 ```typescript
-signAndSubmitEvm(params: {
-  chain: string;
-  payload: object;
-  privateKey: string;
-  rpcUrl: string;
-}): Promise<Result<{ tx_hash: string }>>
+// Low-level: throws on error — wrap in ResultAsync.fromPromise or try/catch
+signAndSubmitEvm(payload: EvmPayload, privateKey: string, rpcUrl?: string): Promise<EvmSubmitResult>
+signAndSubmitSvm(payload: SvmPayload, privateKey: string, rpcUrl?: string): Promise<SvmSubmitResult>
 
-signAndSubmitSvm(params: {
-  chain: string;
-  payload: object;
-  privateKey: string;
-  rpcUrl?: string;
-}): Promise<Result<{ tx_hash: string }>>
+// High-level transfer (Result-safe):
+executeTransfer(namespace, chainRef, toAddress, amount, privateKey, meta): ResultAsync<TransferResult, TransferError>
 ```
 
 ## Examples
@@ -235,49 +236,61 @@ signAndSubmitSvm(params: {
 ### Generate a token image
 
 ```typescript
-import { generateImage } from '@printr/sdk/image';
+import { generateImageFromPrompt } from '@printr/sdk/image';
 
-const result = await generateImage({
-  prompt: 'A futuristic digital coin with purple glow',
-  apiKey: process.env.OPENROUTER_API_KEY!,
-});
+const result = await generateImageFromPrompt(
+  'A futuristic digital coin with purple glow',
+  { openrouterApiKey: process.env.OPENROUTER_API_KEY! },
+);
 
-if (result.ok) {
-  console.log('Image URL:', result.value.url);
+if (result.isOk()) {
+  // result.value is a raw base64 string (no data-URI prefix)
+  console.log('Image base64 length:', result.value.length);
 }
 ```
 
 ### Query chain information
 
 ```typescript
-import { chains, getChainByCAIP } from '@printr/sdk/chains';
+import { CHAIN_META, getChainMeta } from '@printr/sdk/chains';
 
 // List all supported chains
-console.log(chains);
+console.log(CHAIN_META);
 
 // Get specific chain info
-const base = getChainByCAIP('eip155:8453');
+const base = getChainMeta('eip155:8453');
 console.log(base?.name); // "Base"
 ```
 
 ## Error Handling
 
-All operations return `Result<T, E>` types from [neverthrow](https://github.com/supermacro/neverthrow):
+Most operations return [`ResultAsync<T, E>`](https://github.com/supermacro/neverthrow) from neverthrow — a typed, chainable async result that never throws.
 
 ```typescript
-const result = await buildToken(input, client);
-
-if (result.isOk()) {
-  console.log('Success:', result.value);
-} else {
-  console.error('Error:', result.error);
-}
-
-// Or use match
-result.match(
-  (value) => console.log('Success:', value),
-  (error) => console.error('Error:', error),
+// Preferred: .match() for expression-style dispatch
+buildToken(input, client).match(
+  (value) => console.log('Token ID:', value.token_id),
+  (error) => console.error('Failed:', error.message),
 );
+
+// Chain operations without awaiting
+buildToken(input, client)
+  .andThen(({ token_id, payload }) =>
+    ResultAsync.fromPromise(signAndSubmitEvm(payload, privateKey), (e) => e as Error)
+      .map((tx) => ({ token_id, tx }))
+  )
+  .match(
+    ({ token_id, tx }) => console.log(token_id, tx.tx_hash),
+    (err) => console.error(err),
+  );
+
+// Await to get Result<T, E> for imperative control flow
+const result = await buildToken(input, client);
+if (result.isErr()) {
+  console.error('Error:', result.error.message);
+  return;
+}
+console.log('Token ID:', result.value.token_id);
 ```
 
 ## TypeScript

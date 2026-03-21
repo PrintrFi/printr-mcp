@@ -1,45 +1,30 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
-  type ChainMeta,
   type ChainType,
   chainTypeFromCaip2,
-  clearActiveWalletId,
-  clearLastDeploymentWalletId,
   decryptKey,
   getActiveWalletId,
   getChainMeta,
+  getEvmConfig,
   getLastDeploymentWalletId,
-  getRpcUrl,
-  getSvmRpcUrl,
   getWallet,
-  logger,
-  normalisePrivateKey,
-  parseCaip2,
-  sendAndConfirmSvmTransaction,
   toolError,
   toolOk,
 } from "@printr/sdk";
-import {
-  Connection,
-  Keypair,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from "@solana/web3.js";
-import bs58 from "bs58";
-import { err, ok, type Result } from "neverthrow";
-import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import { err, errAsync, ok, type Result } from "neverthrow";
+import { match } from "ts-pattern";
 import { z } from "zod";
+import {
+  type DrainError,
+  type DrainResult,
+  drainEvm,
+  drainSvm,
+  type ResolvedWallet,
+} from "~/lib/drain.js";
 import { env } from "~/lib/env.js";
 import { logToolExecution } from "~/lib/logging.js";
 import { getTreasuryKeyOrError } from "~/lib/treasury.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
-
-type DrainError = { message: string };
-
-type ResolvedWallet = { privateKey: string; address: string; walletId: string };
 
 function getDeploymentPassword(): Result<string, DrainError> {
   const password = env.PRINTR_DEPLOYMENT_PASSWORD;
@@ -140,194 +125,6 @@ function resolveWallet(type: ChainType, walletId?: string): Result<ResolvedWalle
   });
 }
 
-type EvmConfigResult = { error: string } | { chainId: number; rpc: string };
-
-function getEvmConfigOrError(chain: string): EvmConfigResult {
-  const parsed = parseCaip2(chain);
-  if (!parsed)
-    return { error: `Invalid CAIP-2 chain format: ${chain}. Expected 'namespace:chainRef'.` };
-
-  const rpc = getRpcUrl(chain);
-  if (!rpc) return { error: `No RPC URL for chain ${chain}. Set RPC_URLS or ALCHEMY_API_KEY.` };
-
-  return { chainId: Number(parsed.chainRef), rpc };
-}
-
-function formatError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-function formatAmount(atomic: bigint, decimals: number): string {
-  return (Number(atomic) / 10 ** decimals).toString();
-}
-
-function buildDrainResult(
-  drainedAtomic: bigint,
-  meta: ChainMeta,
-  fromAddress: string,
-  toAddress: string,
-  remainingAtomic: bigint,
-  walletId: string,
-  tx?: { type: "svm"; signature: string } | { type: "evm"; hash: string },
-) {
-  return {
-    drained_amount: formatAmount(drainedAtomic, meta.decimals),
-    drained_atomic: drainedAtomic.toString(),
-    symbol: meta.symbol,
-    from_address: fromAddress,
-    to_address: toAddress,
-    ...(tx?.type === "svm" ? { tx_signature: tx.signature } : {}),
-    ...(tx?.type === "evm" ? { tx_hash: tx.hash } : {}),
-    remaining_balance: formatAmount(remainingAtomic, meta.decimals),
-    wallet_id: walletId,
-  };
-}
-
-// Minimum rent-exempt balance for a basic account (0 data bytes)
-// This is approximately 890,880 lamports (~0.00089 SOL)
-const RENT_EXEMPT_MINIMUM = 890_880n;
-
-async function drainSvm(
-  wallet: ResolvedWallet,
-  treasuryKey: string,
-  keepMinimum: number,
-  meta: ChainMeta,
-) {
-  const rpc = getSvmRpcUrl();
-  const connection = new Connection(rpc, "confirmed");
-  const deploymentKeypair = Keypair.fromSecretKey(bs58.decode(wallet.privateKey));
-  const treasuryKeypair = Keypair.fromSecretKey(bs58.decode(treasuryKey));
-  const treasuryAddress = treasuryKeypair.publicKey.toBase58();
-
-  const balance = await connection.getBalance(deploymentKeypair.publicKey);
-  const balanceLamports = BigInt(balance);
-
-  // Use 5000 lamports as base fee estimate with safety buffer
-  const estimatedFee = 10000n;
-  const keepMinimumLamports = BigInt(Math.floor(keepMinimum * LAMPORTS_PER_SOL));
-
-  // Must keep rent-exempt minimum to avoid "insufficient funds for rent" error
-  // The account needs to either stay rent-exempt or be closed entirely
-  const mustKeep = estimatedFee + keepMinimumLamports + RENT_EXEMPT_MINIMUM;
-  const drainAmount = balanceLamports > mustKeep ? balanceLamports - mustKeep : 0n;
-
-  if (drainAmount <= 0n) {
-    return {
-      result: buildDrainResult(
-        0n,
-        meta,
-        wallet.address,
-        treasuryAddress,
-        balanceLamports,
-        wallet.walletId,
-      ),
-    };
-  }
-
-  const transaction = new Transaction().add(
-    SystemProgram.transfer({
-      fromPubkey: deploymentKeypair.publicKey,
-      toPubkey: new PublicKey(treasuryAddress),
-      lamports: drainAmount,
-    }),
-  );
-
-  const signature = await sendAndConfirmSvmTransaction(connection, transaction, [
-    deploymentKeypair,
-  ]);
-  const finalBalance = await connection.getBalance(deploymentKeypair.publicKey);
-
-  // Clear state after successful drain (best effort)
-  activeWallets.delete("svm");
-  clearActiveWalletId("svm").mapErr((e) =>
-    logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
-  );
-  clearLastDeploymentWalletId().mapErr((e) =>
-    logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
-  );
-
-  return {
-    result: buildDrainResult(
-      drainAmount,
-      meta,
-      wallet.address,
-      treasuryAddress,
-      BigInt(finalBalance),
-      wallet.walletId,
-      { type: "svm", signature },
-    ),
-  };
-}
-
-async function drainEvm(
-  wallet: ResolvedWallet,
-  treasuryKey: string,
-  keepMinimum: string,
-  meta: ChainMeta,
-  chainId: number,
-  rpc: string,
-) {
-  const deploymentAccount = privateKeyToAccount(normalisePrivateKey(wallet.privateKey));
-  const treasuryAccount = privateKeyToAccount(normalisePrivateKey(treasuryKey));
-
-  const publicClient = createPublicClient({ transport: http(rpc) });
-  const walletClient = createWalletClient({ account: deploymentAccount, transport: http(rpc) });
-
-  const balance = await publicClient.getBalance({ address: deploymentAccount.address });
-  const gasPrice = await publicClient.getGasPrice();
-  const gasLimit = 21000n;
-  const gasCost = gasPrice * gasLimit;
-  const keepMinimumWei = parseUnits(keepMinimum, meta.decimals);
-  const drainAmount = balance - gasCost - keepMinimumWei;
-
-  if (drainAmount <= 0n) {
-    return {
-      result: buildDrainResult(
-        0n,
-        meta,
-        wallet.address,
-        treasuryAccount.address,
-        balance,
-        wallet.walletId,
-      ),
-    };
-  }
-
-  const hash = await walletClient.sendTransaction({
-    to: treasuryAccount.address,
-    value: drainAmount,
-    chain: {
-      id: chainId,
-      name: meta.name,
-      nativeCurrency: { name: meta.name, symbol: meta.symbol, decimals: meta.decimals },
-      rpcUrls: { default: { http: [rpc] } },
-    },
-  });
-
-  const finalBalance = await publicClient.getBalance({ address: deploymentAccount.address });
-
-  // Clear state after successful drain (best effort)
-  activeWallets.delete("evm");
-  clearActiveWalletId("evm").mapErr((e) =>
-    logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
-  );
-  clearLastDeploymentWalletId().mapErr((e) =>
-    logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
-  );
-
-  return {
-    result: buildDrainResult(
-      drainAmount,
-      meta,
-      wallet.address,
-      treasuryAccount.address,
-      finalBalance,
-      wallet.walletId,
-      { type: "evm", hash },
-    ),
-  };
-}
-
 const inputSchema = z.object({
   chain: z
     .string()
@@ -366,56 +163,51 @@ export function registerDrainDeploymentWalletTool(server: McpServer): void {
     {
       description:
         "Drain remaining funds from a deployment wallet back to the treasury. " +
-        "Use this after printr_launch_token to recover unused gas funds. " +
+        "NOTE: drain runs automatically inside printr_launch_token — only call this tool manually " +
+        "to recover a stuck wallet (e.g. after a crash or if printr_launch_token was not called). " +
         "Automatically calculates gas fees and drains the maximum possible amount. " +
         "Can recover wallets after MCP restart using persisted state and PRINTR_DEPLOYMENT_PASSWORD.",
       inputSchema,
       outputSchema,
     },
-    logToolExecution(
-      "printr_drain_deployment_wallet",
-      async ({ chain, keep_minimum, wallet_id }) => {
-        try {
-          const type = chainTypeFromCaip2(chain);
+    logToolExecution("printr_drain_deployment_wallet", ({ chain, keep_minimum, wallet_id }) => {
+      const chainType = chainTypeFromCaip2(chain);
+      const keepMin = keep_minimum ?? "0";
 
-          const walletResult = resolveWallet(type, wallet_id);
-          if (walletResult.isErr()) return toolError(walletResult.error.message);
-          const wallet = walletResult.value;
-
-          const treasuryResult = getTreasuryKeyOrError(type);
-          if ("error" in treasuryResult) return toolError(treasuryResult.error);
-
-          const meta = getChainMeta(chain);
-          if (!meta) return toolError(`Unsupported chain: ${chain}`);
-
-          const keepMin = keep_minimum ?? "0";
-
-          if (type === "svm") {
-            const { result } = await drainSvm(
-              wallet,
-              treasuryResult.key,
-              parseFloat(keepMin),
-              meta,
-            );
-            return toolOk(result);
+      return resolveWallet(chainType, wallet_id)
+        .asyncAndThen((wallet) => {
+          const treasuryResult = getTreasuryKeyOrError(chainType);
+          if ("error" in treasuryResult) {
+            return errAsync<DrainResult, DrainError>({ message: treasuryResult.error });
           }
 
-          const evmConfig = getEvmConfigOrError(chain);
-          if ("error" in evmConfig) return toolError(evmConfig.error);
+          const meta = getChainMeta(chain);
+          if (!meta) {
+            return errAsync<DrainResult, DrainError>({ message: `Unsupported chain: ${chain}` });
+          }
 
-          const { result } = await drainEvm(
-            wallet,
-            treasuryResult.key,
-            keepMin,
-            meta,
-            evmConfig.chainId,
-            evmConfig.rpc,
-          );
-          return toolOk(result);
-        } catch (error) {
-          return toolError(formatError(error));
-        }
-      },
-    ),
+          return match(chainType)
+            .with("svm", () => drainSvm(wallet, treasuryResult.key, parseFloat(keepMin), meta))
+            .with("evm", () => {
+              const evmConfig = getEvmConfig(chain);
+              if ("error" in evmConfig) {
+                return errAsync<DrainResult, DrainError>({ message: evmConfig.error });
+              }
+              return drainEvm(
+                wallet,
+                treasuryResult.key,
+                keepMin,
+                meta,
+                evmConfig.chainId,
+                evmConfig.rpc,
+              );
+            })
+            .exhaustive();
+        })
+        .match(
+          (result: DrainResult) => toolOk(result),
+          (e: DrainError) => toolError(e.message),
+        );
+    }),
   );
 }

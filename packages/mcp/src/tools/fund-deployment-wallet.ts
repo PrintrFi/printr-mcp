@@ -20,6 +20,7 @@ import {
 import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
 import { err, errAsync, ok, okAsync, type Result, type ResultAsync } from "neverthrow";
+import { match } from "ts-pattern";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
@@ -68,12 +69,16 @@ function verifyKeystoreWritable(): ResultAsync<void, FundError> {
 }
 
 function generateWallet(type: ChainType): { privateKey: string; address: string } {
-  if (type === "svm") {
-    const kp = Keypair.generate();
-    return { privateKey: bs58.encode(kp.secretKey), address: kp.publicKey.toBase58() };
-  }
-  const privateKey = generatePrivateKey();
-  return { privateKey, address: privateKeyToAccount(normalisePrivateKey(privateKey)).address };
+  return match(type)
+    .with("svm", () => {
+      const kp = Keypair.generate();
+      return { privateKey: bs58.encode(kp.secretKey), address: kp.publicKey.toBase58() };
+    })
+    .with("evm", () => {
+      const privateKey = generatePrivateKey();
+      return { privateKey, address: privateKeyToAccount(normalisePrivateKey(privateKey)).address };
+    })
+    .exhaustive();
 }
 
 function saveToKeystore(
@@ -159,11 +164,11 @@ function validateInputs(chain: string): Result<
   FundError
 > {
   return getDeploymentPassword().andThen((masterPassword) => {
-    const type = chainTypeFromCaip2(chain);
+    const chainType = chainTypeFromCaip2(chain);
 
-    const treasuryKey = getTreasuryKey(type);
+    const treasuryKey = getTreasuryKey(chainType);
     if (!treasuryKey) {
-      return err({ message: getTreasuryErrorMsg(type) });
+      return err({ message: getTreasuryErrorMsg(chainType) });
     }
 
     const meta = getChainMeta(chain);
@@ -178,7 +183,7 @@ function validateInputs(chain: string): Result<
       });
     }
 
-    return ok({ type, treasuryKey, meta, parsed, masterPassword });
+    return ok({ type: chainType, treasuryKey, meta, parsed, masterPassword });
   });
 }
 

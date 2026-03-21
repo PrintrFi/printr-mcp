@@ -32,6 +32,16 @@ Or with `bunx`:
 }
 ```
 
+### Skills
+
+If your agent runtime supports skills, you can install Printr directly:
+
+```sh
+npx skills add PrintrFi/printr-mcp
+```
+
+See the [skill definition](packages/cli/skills/printr/SKILL.md) for details.
+
 ## Optional capabilities
 
 ### Auto-generate token images
