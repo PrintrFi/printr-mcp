@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.3.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.2.1...sdk-v0.3.0) (2026-03-21)
+
+
+### Features
+
+* **mcp:** active wallet integration, strict TS/lint uplift, and fee tools refactor ([425f981](https://github.com/PrintrFi/printr-mcp/commit/425f981edef5c2bcc6066c816c0e4584626e43d7))
+* **sdk:** add getEvmConfig chain resolver to chains module ([daab17a](https://github.com/PrintrFi/printr-mcp/commit/daab17a242a94901b76403d6a6327c4ec67323bf))
+* **sdk:** make creator_accounts optional in BuildTokenInput ([af08b89](https://github.com/PrintrFi/printr-mcp/commit/af08b89ae91ab9f8db1072cc7dd4dfd2a6a7db64))
+
+
+### Bug Fixes
+
+* address PR review issues in drain, launch-token, and sdk ([21afd38](https://github.com/PrintrFi/printr-mcp/commit/21afd3809c6ced8498e57b280ab9db71a22f09ee))
+* **mcp:** address Copilot review issues in launch-token ([146989d](https://github.com/PrintrFi/printr-mcp/commit/146989dd7a8b24aa48212b690287677dbdf82da9))
+* resolve strict TS and biome violations across all packages ([f394977](https://github.com/PrintrFi/printr-mcp/commit/f3949775746a91b51c82d84d4482b42cd251020a))
+* **sdk:** parseCaip10 returns null instead of throwing ([329d9c1](https://github.com/PrintrFi/printr-mcp/commit/329d9c1dbc768518ed57933b94d93c4d0ea452fb))
+* **sdk:** use cover fit and improve prompt requirements for token avatars ([34f0b6f](https://github.com/PrintrFi/printr-mcp/commit/34f0b6f26ea7bffef40a86c9f931b7fc8fef2366))
+
 ## [0.2.1](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.2.0...sdk-v0.2.1) (2026-03-18)
 
 
