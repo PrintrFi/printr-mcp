@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.13.0](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.12.2...mcp-v0.13.0) (2026-03-21)
+
+
+### Features
+
+* **mcp:** active wallet integration, strict TS/lint uplift, and fee tools refactor ([425f981](https://github.com/PrintrFi/printr-mcp/commit/425f981edef5c2bcc6066c816c0e4584626e43d7))
+* **mcp:** integrate active wallet and auto-drain into printr_launch_token ([ac7c052](https://github.com/PrintrFi/printr-mcp/commit/ac7c0527ebe9f61847e0f95733ddd3eae4c59e15))
+
+
+### Bug Fixes
+
+* address PR review issues in drain, launch-token, and sdk ([21afd38](https://github.com/PrintrFi/printr-mcp/commit/21afd3809c6ced8498e57b280ab9db71a22f09ee))
+* **mcp:** address Copilot review issues in launch-token ([146989d](https://github.com/PrintrFi/printr-mcp/commit/146989dd7a8b24aa48212b690287677dbdf82da9))
+* resolve strict TS and biome violations across all packages ([f394977](https://github.com/PrintrFi/printr-mcp/commit/f3949775746a91b51c82d84d4482b42cd251020a))
+* token deploy success logic ([a6bbf4e](https://github.com/PrintrFi/printr-mcp/commit/a6bbf4e374938a25addbab08327a7784a8a9f5a9))
+
 ## [0.12.2](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.12.1...mcp-v0.12.2) (2026-03-18)
 
 

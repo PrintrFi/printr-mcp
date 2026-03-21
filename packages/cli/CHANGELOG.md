@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/PrintrFi/printr-mcp/compare/cli-v0.2.1...cli-v0.3.0) (2026-03-21)
+
+
+### Features
+
+* **mcp:** active wallet integration, strict TS/lint uplift, and fee tools refactor ([425f981](https://github.com/PrintrFi/printr-mcp/commit/425f981edef5c2bcc6066c816c0e4584626e43d7))
+
+
+### Bug Fixes
+
+* resolve strict TS and biome violations across all packages ([f394977](https://github.com/PrintrFi/printr-mcp/commit/f3949775746a91b51c82d84d4482b42cd251020a))
+
 ## [0.2.1](https://github.com/PrintrFi/printr-mcp/compare/cli-v0.2.0...cli-v0.2.1) (2026-03-18)
 
 
