@@ -5,7 +5,9 @@
     "jsxImportSource": "react",
     "outDir": "./dist",
     "rootDir": "./src",
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
+    "types": ["bun"],
     "paths": {
       "~/*": ["./src/*"]
     }

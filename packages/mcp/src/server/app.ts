@@ -45,7 +45,7 @@ export function buildApp() {
       origin: [
         "https://app.printr.money",
         "https://local.printr.dev",
-        ...(process.env.NODE_ENV === "development" ? ["http://localhost:3000"] : []),
+        ...(process.env["NODE_ENV"] === "development" ? ["http://localhost:3000"] : []),
       ],
       credentials: true,
     }),
