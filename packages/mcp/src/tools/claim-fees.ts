@@ -98,7 +98,7 @@ function getTreasuryContext(
     return err(
       claimErr(
         `Treasury wallet not configured for ${chainType.toUpperCase()}. ` +
-        `Use printr_set_treasury_wallet or set ${envVar}_WALLET_PRIVATE_KEY.`,
+          `Use printr_set_treasury_wallet or set ${envVar}_WALLET_PRIVATE_KEY.`,
       ),
     );
   }
@@ -174,22 +174,22 @@ function resolveClaimContext(
       ({ chainFees: creatorFees, telecoinId: creatorTelecoinId }) =>
         creatorFees.canCollect
           ? {
-            treasuryKey,
-            signingKey: deploymentKey.key,
-            chainFees: creatorFees,
-            telecoinId: creatorTelecoinId,
-            deploymentWallet: {
-              privateKey: deploymentKey.key,
-              address: creatorAddress,
-              walletId: deploymentKey.walletId,
-            },
-          }
+              treasuryKey,
+              signingKey: deploymentKey.key,
+              chainFees: creatorFees,
+              telecoinId: creatorTelecoinId,
+              deploymentWallet: {
+                privateKey: deploymentKey.key,
+                address: creatorAddress,
+                walletId: deploymentKey.walletId,
+              },
+            }
           : {
-            treasuryKey,
-            chainFees,
-            telecoinId,
-            signingKey: treasuryKey,
-          },
+              treasuryKey,
+              chainFees,
+              telecoinId,
+              signingKey: treasuryKey,
+            },
     );
   });
 }
@@ -207,9 +207,9 @@ function claimSvm(
 
   const fundStep: ResultAsync<undefined, ClaimError> = deploymentWallet
     ? ResultAsync.fromPromise(
-      transferSvm(deploymentWallet.address, GAS_RESERVE, treasuryKey, rpc).then(() => undefined),
-      mapErr,
-    )
+        transferSvm(deploymentWallet.address, GAS_RESERVE, treasuryKey, rpc).then(() => undefined),
+        mapErr,
+      )
     : okAsync(undefined);
 
   return fundStep
@@ -239,7 +239,7 @@ function executeClaim(ctx: ClaimContext, chain: string): ResultAsync<ClaimOutput
     return errAsync(
       claimErr(
         `No fees available to claim on ${chain}. ` +
-        `Creator fees: $${chainFees.devFees?.amountUsd?.toFixed(2) ?? "0.00"}`,
+          `Creator fees: $${chainFees.devFees?.amountUsd?.toFixed(2) ?? "0.00"}`,
       ),
     );
   }
