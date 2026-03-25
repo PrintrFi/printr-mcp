@@ -66,13 +66,13 @@ export function createMockClient(
   } as PrintrClient;
 }
 
-export const mockSuccessResponse = <T>(data: T) => ({
+export const mockSuccessResponse = <T>(data: T): MockResponse => ({
   data,
   error: undefined,
   response: new Response(),
 });
 
-export const mockErrorResponse = (status: number, error: unknown) => ({
+export const mockErrorResponse = (status: number, error: unknown): MockResponse => ({
   data: undefined,
   error,
   response: new Response(null, { status }),
