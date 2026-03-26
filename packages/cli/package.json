@@ -1,6 +1,6 @@
 {
   "name": "@printr/cli",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "CLI for Printr - configure MCP servers and install agent skills",
   "type": "module",
   "main": "./dist/index.js",
