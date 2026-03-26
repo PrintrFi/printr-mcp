@@ -51,24 +51,24 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.11",
-    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@modelcontextprotocol/sdk": "^1.28.0",
     "@printr/sdk": "workspace:*",
     "@solana/web3.js": "^1.98.4",
     "bs58": "^6.0.0",
-    "hono": "^4.12.8",
+    "hono": "^4.12.9",
     "neverthrow": "^8.2.0",
     "qrcode": "^1.5.4",
     "sharp": "^0.34.5",
     "ts-pattern": "^5.9.0",
-    "viem": "^2.47.5",
+    "viem": "^2.47.6",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/qrcode": "^1.5.6",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   },
   "peerDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.0"
   }
 }

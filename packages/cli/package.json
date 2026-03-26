@@ -54,10 +54,11 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/node": "latest",
     "@types/react": "^19.2.14",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   },
   "peerDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.0"
   }
 }
