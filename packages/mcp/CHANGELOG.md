@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.1](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.13.0...mcp-v0.13.1) (2026-03-26)
+
+
+### Bug Fixes
+
+* **mcp,cli:** silence baseUrl deprecation and fix env property access for TS 6.0 ([e8b2fd9](https://github.com/PrintrFi/printr-mcp/commit/e8b2fd96fd3edef3a450c8a1303325a78fe671db))
+* **mcp:** annotate mockSuccessResponse and mockErrorResponse return types for TS 6.0 ([42dab52](https://github.com/PrintrFi/printr-mcp/commit/42dab52b1cadb7fb7583ebb6b6fd783ac8bda378))
+
 ## [0.13.0](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.12.2...mcp-v0.13.0) (2026-03-21)
 
 

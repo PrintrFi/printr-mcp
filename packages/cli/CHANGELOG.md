@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.1](https://github.com/PrintrFi/printr-mcp/compare/cli-v0.3.0...cli-v0.3.1) (2026-03-26)
+
+
+### Bug Fixes
+
+* **cli:** add @types/node as direct devDep so types node resolves in CI ([2b37357](https://github.com/PrintrFi/printr-mcp/commit/2b37357092f18d26627d088b2366d2c5330df438))
+* **cli:** include both node and bun types ([d070680](https://github.com/PrintrFi/printr-mcp/commit/d0706800ba220eb7d64bf422f3d14a8b5cc5c6ce))
+* **cli:** use types node (cross-runtime Node/Bun compatible API surface) ([9106be2](https://github.com/PrintrFi/printr-mcp/commit/9106be2c551c5f6299a83636caa484aba646d277))
+* **cli:** use types node instead of bun to avoid masking Bun-only APIs ([3a6aa72](https://github.com/PrintrFi/printr-mcp/commit/3a6aa72a1f7c828b99db110b71437f57f5aaf467))
+* **mcp,cli:** silence baseUrl deprecation and fix env property access for TS 6.0 ([e8b2fd9](https://github.com/PrintrFi/printr-mcp/commit/e8b2fd96fd3edef3a450c8a1303325a78fe671db))
+
 ## [0.3.0](https://github.com/PrintrFi/printr-mcp/compare/cli-v0.2.1...cli-v0.3.0) (2026-03-21)
 
 
