@@ -55,6 +55,52 @@ describe("unwrapResult", () => {
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(PrintrApiError);
   });
+
+  it("sanitises Cloudflare HTML 403 into a concise error", () => {
+    const html =
+      '<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title></head></html>';
+    const result = unwrapResult({
+      data: undefined,
+      error: html,
+      response: new Response(null, { status: 403 }),
+    });
+    expect(result.isErr()).toBe(true);
+    const error = result._unsafeUnwrapErr();
+    expect(error.status).toBe(403);
+    expect(error.detail).toContain("blocked by CDN/WAF");
+    expect(error.detail).not.toContain("<!DOCTYPE");
+  });
+
+  it("sanitises HTML error objects from openapi-fetch", () => {
+    const result = unwrapResult({
+      data: undefined,
+      error: { body: "<!DOCTYPE html><html><body>Access denied</body></html>" },
+      response: new Response(null, { status: 403 }),
+    });
+    expect(result.isErr()).toBe(true);
+    expect(result._unsafeUnwrapErr().detail).toContain("blocked by CDN/WAF");
+  });
+
+  it("sanitises non-403 HTML responses", () => {
+    const result = unwrapResult({
+      data: undefined,
+      error: "<!DOCTYPE html><html><body>Bad Gateway</body></html>",
+      response: new Response(null, { status: 502 }),
+    });
+    expect(result.isErr()).toBe(true);
+    const error = result._unsafeUnwrapErr();
+    expect(error.detail).toContain("unexpected HTML response (502)");
+    expect(error.detail).not.toContain("<!DOCTYPE");
+  });
+
+  it("preserves normal JSON error details", () => {
+    const result = unwrapResult({
+      data: undefined,
+      error: { error: { code: "INVALID", message: "bad input" } },
+      response: new Response(null, { status: 400 }),
+    });
+    expect(result._unsafeUnwrapErr().detail).toContain("bad input");
+  });
 });
 
 describe("toToolResponse", () => {

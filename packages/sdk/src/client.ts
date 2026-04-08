@@ -59,16 +59,31 @@ export function unwrapResult<T>(result: {
   response: Response;
 }): Result<T, PrintrApiError> {
   if (result.error !== undefined || result.data === undefined) {
-    return err(
-      new PrintrApiError(
-        result.response.status,
-        typeof result.error === "object"
-          ? JSON.stringify(result.error)
-          : String(result.error ?? result.response.statusText),
-      ),
-    );
+    const detail = extractErrorDetail(result.error, result.response);
+    return err(new PrintrApiError(result.response.status, detail));
   }
   return ok(result.data);
+}
+
+/** Extract a concise error detail from an API response, sanitising HTML / non-JSON bodies. */
+function extractErrorDetail(error: unknown, response: Response): string {
+  if (error === undefined || error === null) {
+    return response.statusText || "unknown error";
+  }
+
+  const raw = typeof error === "object" ? JSON.stringify(error) : String(error);
+  const lower = raw.toLowerCase();
+
+  // Detect HTML responses (Cloudflare challenge pages, WAF blocks, etc.)
+  if (lower.includes("<!doctype") || lower.includes("<html")) {
+    const statusHint =
+      response.status === 403
+        ? "request blocked by CDN/WAF (Cloudflare)"
+        : `unexpected HTML response (${response.status})`;
+    return `${statusHint} — the API returned an HTML page instead of JSON. This is likely a transient infrastructure issue; retry after a short delay.`;
+  }
+
+  return raw;
 }
 
 /**
