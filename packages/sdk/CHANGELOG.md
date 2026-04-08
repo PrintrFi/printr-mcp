@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.3.0...sdk-v0.3.1) (2026-04-08)
+
+
+### Bug Fixes
+
+* **sdk:** sanitise HTML error responses from Printr API ([d41bbce](https://github.com/PrintrFi/printr-mcp/commit/d41bbceceb60755249ae45856134db74cc04b150))
+* **sdk:** sanitise HTML error responses from Printr API ([0724aac](https://github.com/PrintrFi/printr-mcp/commit/0724aac0444afb9607be4b0c61dbd7d09268abb7))
+
 ## [0.3.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.2.1...sdk-v0.3.0) (2026-03-21)
 
 
