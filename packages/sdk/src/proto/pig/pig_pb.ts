@@ -2,15 +2,8 @@
 // @generated from file pig/pig.proto (package printrfi.pig, syntax proto3)
 /* eslint-disable */
 // @ts-nocheck
-// biome-ignore-all lint/suspicious/noShadowRestrictedNames: Generated proto code
-import type {
-  BinaryReadOptions,
-  FieldList,
-  JsonReadOptions,
-  JsonValue,
-  PartialMessage,
-  PlainMessage,
-} from "@bufbuild/protobuf";
+
+import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
@@ -45,10 +38,8 @@ export class BigInt extends Message<BigInt> {
     return new BigInt().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: BigInt | PlainMessage<BigInt> | undefined,
-    b: BigInt | PlainMessage<BigInt> | undefined,
-  ): boolean {
+  static equals(a: BigInt | PlainMessage<BigInt> | undefined, b: BigInt | PlainMessage<BigInt> | undefined): boolean {
     return proto3.util.equals(BigInt, a, b);
   }
 }
+

@@ -3,14 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type {
-  BinaryReadOptions,
-  FieldList,
-  JsonReadOptions,
-  JsonValue,
-  PartialMessage,
-  PlainMessage,
-} from "@bufbuild/protobuf";
+import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
 import { Account } from "../caip/account_pb.js";
 
@@ -84,10 +77,7 @@ export class Base58Pubkey extends Message<Base58Pubkey> {
     return new Base58Pubkey().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: Base58Pubkey | PlainMessage<Base58Pubkey> | undefined,
-    b: Base58Pubkey | PlainMessage<Base58Pubkey> | undefined,
-  ): boolean {
+  static equals(a: Base58Pubkey | PlainMessage<Base58Pubkey> | undefined, b: Base58Pubkey | PlainMessage<Base58Pubkey> | undefined): boolean {
     return proto3.util.equals(Base58Pubkey, a, b);
   }
 }
@@ -144,10 +134,7 @@ export class AccountMeta extends Message<AccountMeta> {
     return new AccountMeta().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: AccountMeta | PlainMessage<AccountMeta> | undefined,
-    b: AccountMeta | PlainMessage<AccountMeta> | undefined,
-  ): boolean {
+  static equals(a: AccountMeta | PlainMessage<AccountMeta> | undefined, b: AccountMeta | PlainMessage<AccountMeta> | undefined): boolean {
     return proto3.util.equals(AccountMeta, a, b);
   }
 }
@@ -211,10 +198,7 @@ export class SolanaIx extends Message<SolanaIx> {
     return new SolanaIx().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: SolanaIx | PlainMessage<SolanaIx> | undefined,
-    b: SolanaIx | PlainMessage<SolanaIx> | undefined,
-  ): boolean {
+  static equals(a: SolanaIx | PlainMessage<SolanaIx> | undefined, b: SolanaIx | PlainMessage<SolanaIx> | undefined): boolean {
     return proto3.util.equals(SolanaIx, a, b);
   }
 }
@@ -279,10 +263,7 @@ export class EvmTx extends Message<EvmTx> {
     return new EvmTx().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: EvmTx | PlainMessage<EvmTx> | undefined,
-    b: EvmTx | PlainMessage<EvmTx> | undefined,
-  ): boolean {
+  static equals(a: EvmTx | PlainMessage<EvmTx> | undefined, b: EvmTx | PlainMessage<EvmTx> | undefined): boolean {
     return proto3.util.equals(EvmTx, a, b);
   }
 }
@@ -337,10 +318,7 @@ export class QuotedEvmTx extends Message<QuotedEvmTx> {
     return new QuotedEvmTx().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: QuotedEvmTx | PlainMessage<QuotedEvmTx> | undefined,
-    b: QuotedEvmTx | PlainMessage<QuotedEvmTx> | undefined,
-  ): boolean {
+  static equals(a: QuotedEvmTx | PlainMessage<QuotedEvmTx> | undefined, b: QuotedEvmTx | PlainMessage<QuotedEvmTx> | undefined): boolean {
     return proto3.util.equals(QuotedEvmTx, a, b);
   }
 }
@@ -437,10 +415,7 @@ export class TelecoinParams extends Message<TelecoinParams> {
     return new TelecoinParams().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: TelecoinParams | PlainMessage<TelecoinParams> | undefined,
-    b: TelecoinParams | PlainMessage<TelecoinParams> | undefined,
-  ): boolean {
+  static equals(a: TelecoinParams | PlainMessage<TelecoinParams> | undefined, b: TelecoinParams | PlainMessage<TelecoinParams> | undefined): boolean {
     return proto3.util.equals(TelecoinParams, a, b);
   }
 }
@@ -489,10 +464,7 @@ export class AssetAmount extends Message<AssetAmount> {
     return new AssetAmount().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: AssetAmount | PlainMessage<AssetAmount> | undefined,
-    b: AssetAmount | PlainMessage<AssetAmount> | undefined,
-  ): boolean {
+  static equals(a: AssetAmount | PlainMessage<AssetAmount> | undefined, b: AssetAmount | PlainMessage<AssetAmount> | undefined): boolean {
     return proto3.util.equals(AssetAmount, a, b);
   }
 }
@@ -551,10 +523,7 @@ export class TokenAmount extends Message<TokenAmount> {
     return new TokenAmount().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: TokenAmount | PlainMessage<TokenAmount> | undefined,
-    b: TokenAmount | PlainMessage<TokenAmount> | undefined,
-  ): boolean {
+  static equals(a: TokenAmount | PlainMessage<TokenAmount> | undefined, b: TokenAmount | PlainMessage<TokenAmount> | undefined): boolean {
     return proto3.util.equals(TokenAmount, a, b);
   }
 }
@@ -581,10 +550,7 @@ export class PrintrProtocolVersion extends Message<PrintrProtocolVersion> {
     { no: 1, name: "version", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
   ]);
 
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): PrintrProtocolVersion {
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PrintrProtocolVersion {
     return new PrintrProtocolVersion().fromBinary(bytes, options);
   }
 
@@ -592,17 +558,11 @@ export class PrintrProtocolVersion extends Message<PrintrProtocolVersion> {
     return new PrintrProtocolVersion().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): PrintrProtocolVersion {
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PrintrProtocolVersion {
     return new PrintrProtocolVersion().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: PrintrProtocolVersion | PlainMessage<PrintrProtocolVersion> | undefined,
-    b: PrintrProtocolVersion | PlainMessage<PrintrProtocolVersion> | undefined,
-  ): boolean {
+  static equals(a: PrintrProtocolVersion | PlainMessage<PrintrProtocolVersion> | undefined, b: PrintrProtocolVersion | PlainMessage<PrintrProtocolVersion> | undefined): boolean {
     return proto3.util.equals(PrintrProtocolVersion, a, b);
   }
 }
@@ -651,10 +611,7 @@ export class UsdPricedAsset extends Message<UsdPricedAsset> {
     return new UsdPricedAsset().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: UsdPricedAsset | PlainMessage<UsdPricedAsset> | undefined,
-    b: UsdPricedAsset | PlainMessage<UsdPricedAsset> | undefined,
-  ): boolean {
+  static equals(a: UsdPricedAsset | PlainMessage<UsdPricedAsset> | undefined, b: UsdPricedAsset | PlainMessage<UsdPricedAsset> | undefined): boolean {
     return proto3.util.equals(UsdPricedAsset, a, b);
   }
 }
@@ -715,10 +672,7 @@ export class PricedAsset extends Message<PricedAsset> {
     return new PricedAsset().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: PricedAsset | PlainMessage<PricedAsset> | undefined,
-    b: PricedAsset | PlainMessage<PricedAsset> | undefined,
-  ): boolean {
+  static equals(a: PricedAsset | PlainMessage<PricedAsset> | undefined, b: PricedAsset | PlainMessage<PricedAsset> | undefined): boolean {
     return proto3.util.equals(PricedAsset, a, b);
   }
 }
@@ -775,10 +729,7 @@ export class Price extends Message<Price> {
     return new Price().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: Price | PlainMessage<Price> | undefined,
-    b: Price | PlainMessage<Price> | undefined,
-  ): boolean {
+  static equals(a: Price | PlainMessage<Price> | undefined, b: Price | PlainMessage<Price> | undefined): boolean {
     return proto3.util.equals(Price, a, b);
   }
 }
@@ -829,11 +780,47 @@ export class SolanaTx extends Message<SolanaTx> {
     return new SolanaTx().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: SolanaTx | PlainMessage<SolanaTx> | undefined,
-    b: SolanaTx | PlainMessage<SolanaTx> | undefined,
-  ): boolean {
+  static equals(a: SolanaTx | PlainMessage<SolanaTx> | undefined, b: SolanaTx | PlainMessage<SolanaTx> | undefined): boolean {
     return proto3.util.equals(SolanaTx, a, b);
+  }
+}
+
+/**
+ * Staking accumulator value (u128 as string).
+ *
+ * @generated from message printrfi.wingman.Accumulator
+ */
+export class Accumulator extends Message<Accumulator> {
+  /**
+   * @generated from field: string value = 1;
+   */
+  value = "";
+
+  constructor(data?: PartialMessage<Accumulator>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "printrfi.wingman.Accumulator";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "value", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Accumulator {
+    return new Accumulator().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Accumulator {
+    return new Accumulator().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Accumulator {
+    return new Accumulator().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: Accumulator | PlainMessage<Accumulator> | undefined, b: Accumulator | PlainMessage<Accumulator> | undefined): boolean {
+    return proto3.util.equals(Accumulator, a, b);
   }
 }
 
@@ -844,22 +831,19 @@ export class PlatformPayload extends Message<PlatformPayload> {
   /**
    * @generated from oneof printrfi.wingman.PlatformPayload.payload
    */
-  payload:
-    | {
-        /**
-         * @generated from field: printrfi.wingman.EvmTx evm = 1;
-         */
-        value: EvmTx;
-        case: "evm";
-      }
-    | {
-        /**
-         * @generated from field: printrfi.wingman.SolanaTx solana = 2;
-         */
-        value: SolanaTx;
-        case: "solana";
-      }
-    | { case: undefined; value?: undefined } = { case: undefined };
+  payload: {
+    /**
+     * @generated from field: printrfi.wingman.EvmTx evm = 1;
+     */
+    value: EvmTx;
+    case: "evm";
+  } | {
+    /**
+     * @generated from field: printrfi.wingman.SolanaTx solana = 2;
+     */
+    value: SolanaTx;
+    case: "solana";
+  } | { case: undefined; value?: undefined } = { case: undefined };
 
   constructor(data?: PartialMessage<PlatformPayload>) {
     super();
@@ -885,10 +869,7 @@ export class PlatformPayload extends Message<PlatformPayload> {
     return new PlatformPayload().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: PlatformPayload | PlainMessage<PlatformPayload> | undefined,
-    b: PlatformPayload | PlainMessage<PlatformPayload> | undefined,
-  ): boolean {
+  static equals(a: PlatformPayload | PlainMessage<PlatformPayload> | undefined, b: PlatformPayload | PlainMessage<PlatformPayload> | undefined): boolean {
     return proto3.util.equals(PlatformPayload, a, b);
   }
 }
@@ -933,10 +914,7 @@ export class XchainIntent extends Message<XchainIntent> {
     return new XchainIntent().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: XchainIntent | PlainMessage<XchainIntent> | undefined,
-    b: XchainIntent | PlainMessage<XchainIntent> | undefined,
-  ): boolean {
+  static equals(a: XchainIntent | PlainMessage<XchainIntent> | undefined, b: XchainIntent | PlainMessage<XchainIntent> | undefined): boolean {
     return proto3.util.equals(XchainIntent, a, b);
   }
 }
@@ -984,10 +962,7 @@ export class XchainRoute extends Message<XchainRoute> {
     return new XchainRoute().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: XchainRoute | PlainMessage<XchainRoute> | undefined,
-    b: XchainRoute | PlainMessage<XchainRoute> | undefined,
-  ): boolean {
+  static equals(a: XchainRoute | PlainMessage<XchainRoute> | undefined, b: XchainRoute | PlainMessage<XchainRoute> | undefined): boolean {
     return proto3.util.equals(XchainRoute, a, b);
   }
 }
@@ -1062,10 +1037,7 @@ export class TelecoinInstance extends Message<TelecoinInstance> {
     return new TelecoinInstance().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: TelecoinInstance | PlainMessage<TelecoinInstance> | undefined,
-    b: TelecoinInstance | PlainMessage<TelecoinInstance> | undefined,
-  ): boolean {
+  static equals(a: TelecoinInstance | PlainMessage<TelecoinInstance> | undefined, b: TelecoinInstance | PlainMessage<TelecoinInstance> | undefined): boolean {
     return proto3.util.equals(TelecoinInstance, a, b);
   }
 }
@@ -1135,10 +1107,8 @@ export class TxInfo extends Message<TxInfo> {
     return new TxInfo().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: TxInfo | PlainMessage<TxInfo> | undefined,
-    b: TxInfo | PlainMessage<TxInfo> | undefined,
-  ): boolean {
+  static equals(a: TxInfo | PlainMessage<TxInfo> | undefined, b: TxInfo | PlainMessage<TxInfo> | undefined): boolean {
     return proto3.util.equals(TxInfo, a, b);
   }
 }
+

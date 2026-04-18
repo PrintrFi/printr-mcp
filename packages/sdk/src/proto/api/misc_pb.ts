@@ -2,16 +2,8 @@
 // @generated from file api/misc.proto (package printrfi.api, syntax proto3)
 /* eslint-disable */
 // @ts-nocheck
-// biome-ignore-all lint/suspicious/noShadowRestrictedNames: Generated proto code
 
-import type {
-  BinaryReadOptions,
-  FieldList,
-  JsonReadOptions,
-  JsonValue,
-  PartialMessage,
-  PlainMessage,
-} from "@bufbuild/protobuf";
+import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
 import { Account, Chain } from "../caip/account_pb.js";
 import { BigInt } from "../pig/pig_pb.js";
@@ -105,10 +97,7 @@ export class AssetAmountV0 extends Message<AssetAmountV0> {
     return new AssetAmountV0().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: AssetAmountV0 | PlainMessage<AssetAmountV0> | undefined,
-    b: AssetAmountV0 | PlainMessage<AssetAmountV0> | undefined,
-  ): boolean {
+  static equals(a: AssetAmountV0 | PlainMessage<AssetAmountV0> | undefined, b: AssetAmountV0 | PlainMessage<AssetAmountV0> | undefined): boolean {
     return proto3.util.equals(AssetAmountV0, a, b);
   }
 }
@@ -159,10 +148,7 @@ export class CreatorAddresses extends Message<CreatorAddresses> {
     return new CreatorAddresses().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: CreatorAddresses | PlainMessage<CreatorAddresses> | undefined,
-    b: CreatorAddresses | PlainMessage<CreatorAddresses> | undefined,
-  ): boolean {
+  static equals(a: CreatorAddresses | PlainMessage<CreatorAddresses> | undefined, b: CreatorAddresses | PlainMessage<CreatorAddresses> | undefined): boolean {
     return proto3.util.equals(CreatorAddresses, a, b);
   }
 }
@@ -281,58 +267,30 @@ export class ImmutableCurveCreationParamsV0 extends Message<ImmutableCurveCreati
     { no: 6, name: "symbol", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 7, name: "home_chain_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 8, name: "chain_ids", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
-    {
-      no: 9,
-      name: "base_pair_addresses",
-      kind: "scalar",
-      T: 9 /* ScalarType.STRING */,
-      repeated: true,
-    },
+    { no: 9, name: "base_pair_addresses", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
     { no: 10, name: "reference_asset_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 11, name: "max_supply_exponent", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    {
-      no: 12,
-      name: "graduation_threshold_ref_atomic",
-      kind: "scalar",
-      T: 9 /* ScalarType.STRING */,
-    },
-    {
-      no: 13,
-      name: "completion_threshold_basis_points",
-      kind: "scalar",
-      T: 5 /* ScalarType.INT32 */,
-    },
+    { no: 12, name: "graduation_threshold_ref_atomic", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 13, name: "completion_threshold_basis_points", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 14, name: "initial_price_ref_atomic", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 15, name: "initial_spend_ref_atomic", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 16, name: "storage_token_params", kind: "message", T: IPrintrStorageTokenParamsV0 },
     { no: 17, name: "payer", kind: "message", T: Account },
   ]);
 
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): ImmutableCurveCreationParamsV0 {
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ImmutableCurveCreationParamsV0 {
     return new ImmutableCurveCreationParamsV0().fromBinary(bytes, options);
   }
 
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): ImmutableCurveCreationParamsV0 {
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ImmutableCurveCreationParamsV0 {
     return new ImmutableCurveCreationParamsV0().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): ImmutableCurveCreationParamsV0 {
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ImmutableCurveCreationParamsV0 {
     return new ImmutableCurveCreationParamsV0().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: ImmutableCurveCreationParamsV0 | PlainMessage<ImmutableCurveCreationParamsV0> | undefined,
-    b: ImmutableCurveCreationParamsV0 | PlainMessage<ImmutableCurveCreationParamsV0> | undefined,
-  ): boolean {
+  static equals(a: ImmutableCurveCreationParamsV0 | PlainMessage<ImmutableCurveCreationParamsV0> | undefined, b: ImmutableCurveCreationParamsV0 | PlainMessage<ImmutableCurveCreationParamsV0> | undefined): boolean {
     return proto3.util.equals(ImmutableCurveCreationParamsV0, a, b);
   }
 }
@@ -402,31 +360,19 @@ export class IPrintrStorageTokenParamsV0 extends Message<IPrintrStorageTokenPara
     { no: 8, name: "base_prices", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
   ]);
 
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): IPrintrStorageTokenParamsV0 {
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): IPrintrStorageTokenParamsV0 {
     return new IPrintrStorageTokenParamsV0().fromBinary(bytes, options);
   }
 
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): IPrintrStorageTokenParamsV0 {
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): IPrintrStorageTokenParamsV0 {
     return new IPrintrStorageTokenParamsV0().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): IPrintrStorageTokenParamsV0 {
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): IPrintrStorageTokenParamsV0 {
     return new IPrintrStorageTokenParamsV0().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: IPrintrStorageTokenParamsV0 | PlainMessage<IPrintrStorageTokenParamsV0> | undefined,
-    b: IPrintrStorageTokenParamsV0 | PlainMessage<IPrintrStorageTokenParamsV0> | undefined,
-  ): boolean {
+  static equals(a: IPrintrStorageTokenParamsV0 | PlainMessage<IPrintrStorageTokenParamsV0> | undefined, b: IPrintrStorageTokenParamsV0 | PlainMessage<IPrintrStorageTokenParamsV0> | undefined): boolean {
     return proto3.util.equals(IPrintrStorageTokenParamsV0, a, b);
   }
 }
@@ -484,31 +430,19 @@ export class MutableTokenMetadataV0 extends Message<MutableTokenMetadataV0> {
     { no: 6, name: "external_url_github", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): MutableTokenMetadataV0 {
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MutableTokenMetadataV0 {
     return new MutableTokenMetadataV0().fromBinary(bytes, options);
   }
 
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): MutableTokenMetadataV0 {
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MutableTokenMetadataV0 {
     return new MutableTokenMetadataV0().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): MutableTokenMetadataV0 {
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MutableTokenMetadataV0 {
     return new MutableTokenMetadataV0().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: MutableTokenMetadataV0 | PlainMessage<MutableTokenMetadataV0> | undefined,
-    b: MutableTokenMetadataV0 | PlainMessage<MutableTokenMetadataV0> | undefined,
-  ): boolean {
+  static equals(a: MutableTokenMetadataV0 | PlainMessage<MutableTokenMetadataV0> | undefined, b: MutableTokenMetadataV0 | PlainMessage<MutableTokenMetadataV0> | undefined): boolean {
     return proto3.util.equals(MutableTokenMetadataV0, a, b);
   }
 }
@@ -557,10 +491,7 @@ export class AssetAmountV1 extends Message<AssetAmountV1> {
     return new AssetAmountV1().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: AssetAmountV1 | PlainMessage<AssetAmountV1> | undefined,
-    b: AssetAmountV1 | PlainMessage<AssetAmountV1> | undefined,
-  ): boolean {
+  static equals(a: AssetAmountV1 | PlainMessage<AssetAmountV1> | undefined, b: AssetAmountV1 | PlainMessage<AssetAmountV1> | undefined): boolean {
     return proto3.util.equals(AssetAmountV1, a, b);
   }
 }
@@ -619,10 +550,7 @@ export class TokenAmount extends Message<TokenAmount> {
     return new TokenAmount().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: TokenAmount | PlainMessage<TokenAmount> | undefined,
-    b: TokenAmount | PlainMessage<TokenAmount> | undefined,
-  ): boolean {
+  static equals(a: TokenAmount | PlainMessage<TokenAmount> | undefined, b: TokenAmount | PlainMessage<TokenAmount> | undefined): boolean {
     return proto3.util.equals(TokenAmount, a, b);
   }
 }
@@ -683,10 +611,7 @@ export class PricedAsset extends Message<PricedAsset> {
     return new PricedAsset().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: PricedAsset | PlainMessage<PricedAsset> | undefined,
-    b: PricedAsset | PlainMessage<PricedAsset> | undefined,
-  ): boolean {
+  static equals(a: PricedAsset | PlainMessage<PricedAsset> | undefined, b: PricedAsset | PlainMessage<PricedAsset> | undefined): boolean {
     return proto3.util.equals(PricedAsset, a, b);
   }
 }
@@ -737,10 +662,7 @@ export class UsdPricedAsset extends Message<UsdPricedAsset> {
     return new UsdPricedAsset().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: UsdPricedAsset | PlainMessage<UsdPricedAsset> | undefined,
-    b: UsdPricedAsset | PlainMessage<UsdPricedAsset> | undefined,
-  ): boolean {
+  static equals(a: UsdPricedAsset | PlainMessage<UsdPricedAsset> | undefined, b: UsdPricedAsset | PlainMessage<UsdPricedAsset> | undefined): boolean {
     return proto3.util.equals(UsdPricedAsset, a, b);
   }
 }
@@ -797,10 +719,7 @@ export class Price extends Message<Price> {
     return new Price().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: Price | PlainMessage<Price> | undefined,
-    b: Price | PlainMessage<Price> | undefined,
-  ): boolean {
+  static equals(a: Price | PlainMessage<Price> | undefined, b: Price | PlainMessage<Price> | undefined): boolean {
     return proto3.util.equals(Price, a, b);
   }
 }
@@ -859,17 +778,11 @@ export class TransactionReference extends Message<TransactionReference> {
     return new TransactionReference().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): TransactionReference {
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TransactionReference {
     return new TransactionReference().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: TransactionReference | PlainMessage<TransactionReference> | undefined,
-    b: TransactionReference | PlainMessage<TransactionReference> | undefined,
-  ): boolean {
+  static equals(a: TransactionReference | PlainMessage<TransactionReference> | undefined, b: TransactionReference | PlainMessage<TransactionReference> | undefined): boolean {
     return proto3.util.equals(TransactionReference, a, b);
   }
 }
@@ -909,10 +822,101 @@ export class Bps extends Message<Bps> {
     return new Bps().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: Bps | PlainMessage<Bps> | undefined,
-    b: Bps | PlainMessage<Bps> | undefined,
-  ): boolean {
+  static equals(a: Bps | PlainMessage<Bps> | undefined, b: Bps | PlainMessage<Bps> | undefined): boolean {
     return proto3.util.equals(Bps, a, b);
   }
 }
+
+/**
+ * Defines how fees are distributed when trading.
+ * The effective fees are specific per deployment and reflect the onchain situation closer.
+ *
+ * The requested fees represent what we wanted the fees to be in an ideal situation.
+ * Not all deployments are capable of supporting that, hence the two separate concepts.
+ *
+ * @generated from message printrfi.api.FeeSchedule
+ */
+export class FeeSchedule extends Message<FeeSchedule> {
+  /**
+   * The total trading fee the trader pays.
+   *
+   * @generated from field: printrfi.api.Bps effective_total = 1;
+   */
+  effectiveTotal?: Bps;
+
+  /**
+   * The share of the trading fee that goes to Printr.
+   *
+   * @generated from field: printrfi.api.Bps effective_printr_share = 2;
+   */
+  effectivePrintrShare?: Bps;
+
+  /**
+   * The share of the trading fee that goes to the provider.
+   *
+   * @generated from field: printrfi.api.Bps effective_provider_share = 3;
+   */
+  effectiveProviderShare?: Bps;
+
+  /**
+   * The share of the trading fee that goes to the fee sink.
+   *
+   * @generated from field: printrfi.api.Bps effective_fee_sink_share = 4;
+   */
+  effectiveFeeSinkShare?: Bps;
+
+  /**
+   * The total trading fee that was requested at token creation time.
+   *
+   * @generated from field: printrfi.api.Bps requested_total = 5;
+   */
+  requestedTotal?: Bps;
+
+  /**
+   * The requested share of the trading fee going to the fee sink.
+   *
+   * @generated from field: printrfi.api.Bps requested_fee_sink_share = 6;
+   */
+  requestedFeeSinkShare?: Bps;
+
+  /**
+   * The requested share of the trading fee going to Printr.
+   *
+   * @generated from field: printrfi.api.Bps requested_printr_share = 7;
+   */
+  requestedPrintrShare?: Bps;
+
+  constructor(data?: PartialMessage<FeeSchedule>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "printrfi.api.FeeSchedule";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "effective_total", kind: "message", T: Bps },
+    { no: 2, name: "effective_printr_share", kind: "message", T: Bps },
+    { no: 3, name: "effective_provider_share", kind: "message", T: Bps },
+    { no: 4, name: "effective_fee_sink_share", kind: "message", T: Bps },
+    { no: 5, name: "requested_total", kind: "message", T: Bps },
+    { no: 6, name: "requested_fee_sink_share", kind: "message", T: Bps },
+    { no: 7, name: "requested_printr_share", kind: "message", T: Bps },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): FeeSchedule {
+    return new FeeSchedule().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): FeeSchedule {
+    return new FeeSchedule().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): FeeSchedule {
+    return new FeeSchedule().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: FeeSchedule | PlainMessage<FeeSchedule> | undefined, b: FeeSchedule | PlainMessage<FeeSchedule> | undefined): boolean {
+    return proto3.util.equals(FeeSchedule, a, b);
+  }
+}
+
