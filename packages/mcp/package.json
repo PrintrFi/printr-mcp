@@ -55,12 +55,12 @@
     "@printr/sdk": "workspace:*",
     "@solana/web3.js": "^1.98.4",
     "bs58": "^6.0.0",
-    "hono": "^4.12.12",
+    "hono": "^4.12.14",
     "neverthrow": "^8.2.0",
     "qrcode": "^1.5.4",
     "sharp": "^0.34.5",
     "ts-pattern": "^5.9.0",
-    "viem": "^2.47.14",
+    "viem": "^2.48.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

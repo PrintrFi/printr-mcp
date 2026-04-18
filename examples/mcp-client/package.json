@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "@printr/mcp": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.28.0"
+    "@modelcontextprotocol/sdk": "^1.29.0"
   }
 }
