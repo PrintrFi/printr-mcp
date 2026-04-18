@@ -34,6 +34,35 @@ import { activeWallets } from "~/server/wallet-sessions.js";
 
 const normStr = (v?: string) => (!v || v === "null" || v === "undefined" ? undefined : v);
 
+const feeSinkSchema = z
+  .enum(["dev", "stake_pool", "buyback", "liquidity_pool"])
+  .optional()
+  .describe(
+    "Where creator fees are directed. " +
+      "'dev': creator wallet receives fees (default). " +
+      "'stake_pool': fees flow to Proof of Belief staking pool, rewarding token holders who stake. " +
+      "'buyback': fees used to buy back and burn tokens (Solana only). " +
+      "'liquidity_pool': fees compound into LP, deepening liquidity (Solana only, post-graduation).",
+  );
+
+const customFeesSchema = z
+  .object({
+    bonding_curve_dev_fee_bps: z
+      .number()
+      .min(0)
+      .max(150)
+      .optional()
+      .describe("Custom fee on bonding curve trades in basis points (max 150 bps / 1.5%)."),
+    amm_dev_fee_bps: z
+      .number()
+      .min(0)
+      .max(80)
+      .optional()
+      .describe("Custom fee on AMM trades post-graduation in basis points (max 80 bps / 0.8%)."),
+  })
+  .optional()
+  .describe("Custom fee configuration. Omit to use platform defaults.");
+
 const inputSchema = z.object({
   creator_accounts: z
     .array(caip10Address)
@@ -63,6 +92,8 @@ const inputSchema = z.object({
   initial_buy: initialBuy,
   graduation_threshold_per_chain_usd: graduationThreshold,
   external_links: externalLinks,
+  fee_sink: feeSinkSchema,
+  custom_fees: customFeesSchema,
   private_key: z
     .string()
     .optional()

@@ -7,6 +7,8 @@ import { generateTokenImage, processImagePath } from "./image.js";
 
 type CreateTokenRequestBody = paths["/print"]["post"]["requestBody"]["content"]["application/json"];
 
+export type FeeSink = "dev" | "stake_pool" | "buyback" | "liquidity_pool";
+
 export type BuildTokenInput = {
   creator_accounts?: string[] | undefined;
   name: string;
@@ -27,6 +29,17 @@ export type BuildTokenInput = {
         x?: string | undefined;
         telegram?: string | undefined;
         github?: string | undefined;
+      }
+    | undefined;
+  /** Where creator fees are directed. Defaults to "dev" (creator wallet). */
+  fee_sink?: FeeSink | undefined;
+  /** Custom fee configuration in basis points (100 bps = 1%). */
+  custom_fees?:
+    | {
+        /** Custom fee on bonding curve trades (max 150 bps / 1.5%). */
+        bonding_curve_dev_fee_bps?: number | undefined;
+        /** Custom fee on AMM trades post-graduation (max 80 bps / 0.8%). */
+        amm_dev_fee_bps?: number | undefined;
       }
     | undefined;
 };
