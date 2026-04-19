@@ -75,7 +75,7 @@ export const CHAIN_META: Record<string, ChainMeta> = {
     name: "Avalanche",
     symbol: "AVAX",
     decimals: 18,
-    defaultRpc: "https://api.avax.network/ext/bc/C/rpc",
+    defaultRpc: "https://avalanche-c-chain-rpc.publicnode.com",
   },
   "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp": {
     name: "Solana",
