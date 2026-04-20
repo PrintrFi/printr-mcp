@@ -49,12 +49,14 @@ const customFeesSchema = z
   .object({
     bonding_curve_dev_fee_bps: z
       .number()
+      .int()
       .min(0)
       .max(150)
       .optional()
       .describe("Custom fee on bonding curve trades in basis points (max 150 bps / 1.5%)."),
     amm_dev_fee_bps: z
       .number()
+      .int()
       .min(0)
       .max(80)
       .optional()
