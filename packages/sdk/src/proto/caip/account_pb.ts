@@ -2,6 +2,7 @@
 // @generated from file caip/account.proto (package printrfi.caip, syntax proto3)
 /* eslint-disable */
 // @ts-nocheck
+
 import type {
   BinaryReadOptions,
   FieldList,

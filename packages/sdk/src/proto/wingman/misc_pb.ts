@@ -838,6 +838,48 @@ export class SolanaTx extends Message<SolanaTx> {
 }
 
 /**
+ * Staking accumulator value (u128 as string).
+ *
+ * @generated from message printrfi.wingman.Accumulator
+ */
+export class Accumulator extends Message<Accumulator> {
+  /**
+   * @generated from field: string value = 1;
+   */
+  value = "";
+
+  constructor(data?: PartialMessage<Accumulator>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "printrfi.wingman.Accumulator";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "value", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Accumulator {
+    return new Accumulator().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Accumulator {
+    return new Accumulator().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Accumulator {
+    return new Accumulator().fromJsonString(jsonString, options);
+  }
+
+  static equals(
+    a: Accumulator | PlainMessage<Accumulator> | undefined,
+    b: Accumulator | PlainMessage<Accumulator> | undefined,
+  ): boolean {
+    return proto3.util.equals(Accumulator, a, b);
+  }
+}
+
+/**
  * @generated from message printrfi.wingman.PlatformPayload
  */
 export class PlatformPayload extends Message<PlatformPayload> {

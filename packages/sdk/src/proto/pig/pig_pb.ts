@@ -2,7 +2,7 @@
 // @generated from file pig/pig.proto (package printrfi.pig, syntax proto3)
 /* eslint-disable */
 // @ts-nocheck
-// biome-ignore-all lint/suspicious/noShadowRestrictedNames: Generated proto code
+
 import type {
   BinaryReadOptions,
   FieldList,

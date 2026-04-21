@@ -2,6 +2,7 @@
 // @generated from file chains/chains.proto (package printrfi.chains, syntax proto3)
 /* eslint-disable */
 // @ts-nocheck
+
 import type {
   BinaryReadOptions,
   FieldList,

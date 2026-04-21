@@ -2,7 +2,6 @@
 // @generated from file api/misc.proto (package printrfi.api, syntax proto3)
 /* eslint-disable */
 // @ts-nocheck
-// biome-ignore-all lint/suspicious/noShadowRestrictedNames: Generated proto code
 
 import type {
   BinaryReadOptions,
@@ -914,5 +913,101 @@ export class Bps extends Message<Bps> {
     b: Bps | PlainMessage<Bps> | undefined,
   ): boolean {
     return proto3.util.equals(Bps, a, b);
+  }
+}
+
+/**
+ * Defines how fees are distributed when trading.
+ * The effective fees are specific per deployment and reflect the onchain situation closer.
+ *
+ * The requested fees represent what we wanted the fees to be in an ideal situation.
+ * Not all deployments are capable of supporting that, hence the two separate concepts.
+ *
+ * @generated from message printrfi.api.FeeSchedule
+ */
+export class FeeSchedule extends Message<FeeSchedule> {
+  /**
+   * The total trading fee the trader pays.
+   *
+   * @generated from field: printrfi.api.Bps effective_total = 1;
+   */
+  effectiveTotal?: Bps;
+
+  /**
+   * The share of the trading fee that goes to Printr.
+   *
+   * @generated from field: printrfi.api.Bps effective_printr_share = 2;
+   */
+  effectivePrintrShare?: Bps;
+
+  /**
+   * The share of the trading fee that goes to the provider.
+   *
+   * @generated from field: printrfi.api.Bps effective_provider_share = 3;
+   */
+  effectiveProviderShare?: Bps;
+
+  /**
+   * The share of the trading fee that goes to the fee sink.
+   *
+   * @generated from field: printrfi.api.Bps effective_fee_sink_share = 4;
+   */
+  effectiveFeeSinkShare?: Bps;
+
+  /**
+   * The total trading fee that was requested at token creation time.
+   *
+   * @generated from field: printrfi.api.Bps requested_total = 5;
+   */
+  requestedTotal?: Bps;
+
+  /**
+   * The requested share of the trading fee going to the fee sink.
+   *
+   * @generated from field: printrfi.api.Bps requested_fee_sink_share = 6;
+   */
+  requestedFeeSinkShare?: Bps;
+
+  /**
+   * The requested share of the trading fee going to Printr.
+   *
+   * @generated from field: printrfi.api.Bps requested_printr_share = 7;
+   */
+  requestedPrintrShare?: Bps;
+
+  constructor(data?: PartialMessage<FeeSchedule>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "printrfi.api.FeeSchedule";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "effective_total", kind: "message", T: Bps },
+    { no: 2, name: "effective_printr_share", kind: "message", T: Bps },
+    { no: 3, name: "effective_provider_share", kind: "message", T: Bps },
+    { no: 4, name: "effective_fee_sink_share", kind: "message", T: Bps },
+    { no: 5, name: "requested_total", kind: "message", T: Bps },
+    { no: 6, name: "requested_fee_sink_share", kind: "message", T: Bps },
+    { no: 7, name: "requested_printr_share", kind: "message", T: Bps },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): FeeSchedule {
+    return new FeeSchedule().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): FeeSchedule {
+    return new FeeSchedule().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): FeeSchedule {
+    return new FeeSchedule().fromJsonString(jsonString, options);
+  }
+
+  static equals(
+    a: FeeSchedule | PlainMessage<FeeSchedule> | undefined,
+    b: FeeSchedule | PlainMessage<FeeSchedule> | undefined,
+  ): boolean {
+    return proto3.util.equals(FeeSchedule, a, b);
   }
 }

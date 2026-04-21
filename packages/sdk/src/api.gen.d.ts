@@ -217,11 +217,8 @@ export interface components {
        */
       chains: components["schemas"]["CAIP_2_Chain"][];
       initial_buy: components["schemas"]["VariableInitialBuy"];
-      /**
-       * @description The graduation threshold (bonding curve size) for each chain deployed to. Accepted values: $69,000 or $250,000 USD. Defaults to $69,000 USD.
-       * @enum {integer}
-       */
-      graduation_threshold_per_chain_usd?: 69000 | 250000;
+      /** @description The graduation threshold (bonding curve size) per chain in USD. Min: $15,000, max: $1,000,000. Defaults to $69,000 USD. */
+      graduation_threshold_per_chain_usd?: number;
       /**
        * @description Optional custom fee configuration.
        *     Fees are in basis points (100 bps = 1%).
@@ -233,10 +230,14 @@ export interface components {
       };
       /**
        * @description Where telecoin fees are directed.
+       *     - dev: Creator wallet receives fees (default)
+       *     - stake_pool: Proof of Belief staking pool rewards stakers
+       *     - buyback: Buy back and burn tokens (Solana only)
+       *     - liquidity_pool: Compound fees into LP (Solana only, post-graduation)
        *     Defaults to "dev" if omitted.
        * @enum {string}
        */
-      fee_sink?: "dev" | "stake_pool";
+      fee_sink?: "dev" | "stake_pool" | "buyback" | "liquidity_pool";
       /**
        * @description Ratio of the telecoin supply sold on the bonding curve, in basis points.
        *     The remainder is deposited into the AMM after graduation.
@@ -245,6 +246,12 @@ export interface components {
        *     Omit or use 0 for a default.
        */
       telecoin_supply_on_curve_ratio_bps?: number;
+      /**
+       * @description The maximum total telecoin supply across all chains.
+       *     Defaults to 1 billion if omitted.
+       * @enum {string}
+       */
+      max_telecoin_supply?: "100_million" | "1_billion" | "10_billion";
     };
     /**
      * @description Chain Agnostic Improvement Proposal (CAIP-10) account identifier. Provides a universal format for identifying accounts across different blockchain networks. Format: {namespace}:{reference}:{account_address}
@@ -359,11 +366,8 @@ export interface components {
       /** @description Array of chains where the token will be deployed. */
       chains: components["schemas"]["CAIP_2_Chain"][];
       initial_buy: components["schemas"]["VariableInitialBuy"];
-      /**
-       * @description The graduation threshold (bonding curve size) for each chain deployed to. Accepted values: $69,000 or $250,000 USD. Defaults to $69,000 USD.
-       * @enum {integer}
-       */
-      graduation_threshold_per_chain_usd?: 69000 | 250000;
+      /** @description The graduation threshold (bonding curve size) per chain in USD. Min: $15,000, max: $1,000,000. Defaults to $69,000 USD. */
+      graduation_threshold_per_chain_usd?: number;
       /**
        * @description Optional custom fee configuration.
        *     Fees are in basis points (100 bps = 1%).
@@ -375,10 +379,14 @@ export interface components {
       };
       /**
        * @description Where telecoin fees are directed.
+       *     - dev: Creator wallet receives fees (default)
+       *     - stake_pool: Proof of Belief staking pool rewards stakers
+       *     - buyback: Buy back and burn tokens (Solana only)
+       *     - liquidity_pool: Compound fees into LP (Solana only, post-graduation)
        *     Defaults to "dev" if omitted.
        * @enum {string}
        */
-      fee_sink?: "dev" | "stake_pool";
+      fee_sink?: "dev" | "stake_pool" | "buyback" | "liquidity_pool";
       /**
        * @description Ratio of the telecoin supply sold on the bonding curve, in basis points.
        *     The remainder is deposited into the AMM after graduation.
@@ -387,6 +395,12 @@ export interface components {
        *     Omit or use 0 for a default.
        */
       telecoin_supply_on_curve_ratio_bps?: number;
+      /**
+       * @description The maximum total telecoin supply across all chains.
+       *     Defaults to 1 billion if omitted.
+       * @enum {string}
+       */
+      max_telecoin_supply?: "100_million" | "1_billion" | "10_billion";
     };
     /** Payload (EVM) */
     Payload_Evm: {

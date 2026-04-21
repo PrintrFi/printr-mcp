@@ -19,9 +19,11 @@ import {
   AssetAmountV0,
   AssetAmountV1,
   Bps,
+  FeeSchedule,
   ImmutableCurveCreationParamsV0,
   MutableTokenMetadataV0,
   PricedAsset,
+  TokenAmount,
   TransactionReference,
 } from "./misc_pb.js";
 
@@ -381,12 +383,24 @@ export enum FeeSink {
    * @generated from enum value: FEE_SINK_STAKE_POOL = 2;
    */
   STAKE_POOL = 2,
+
+  /**
+   * @generated from enum value: FEE_SINK_BUYBACK = 3;
+   */
+  BUYBACK = 3,
+
+  /**
+   * @generated from enum value: FEE_SINK_LIQUIDITY_POOL = 4;
+   */
+  LIQUIDITY_POOL = 4,
 }
 // Retrieve enum metadata with: proto3.getEnumType(FeeSink)
 proto3.util.setEnumType(FeeSink, "printrfi.api.FeeSink", [
   { no: 0, name: "FEE_SINK_UNSPECIFIED" },
   { no: 1, name: "FEE_SINK_DEV" },
   { no: 2, name: "FEE_SINK_STAKE_POOL" },
+  { no: 3, name: "FEE_SINK_BUYBACK" },
+  { no: 4, name: "FEE_SINK_LIQUIDITY_POOL" },
 ]);
 
 /**
@@ -1883,6 +1897,15 @@ export class CreateRequest extends Message<CreateRequest> {
    */
   telecoinSupplyOnCurveRatio?: Bps;
 
+  /**
+   * Custom quote pair addresses per chain (chain_id → quote pair token address).
+   * If not specified for a chain, defaults to the wrapped native token.
+   * Only one quote pair per chain is allowed.
+   *
+   * @generated from field: repeated printrfi.caip.Account quote_pairs = 27;
+   */
+  quotePairs: Account[] = [];
+
   constructor(data?: PartialMessage<CreateRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -1936,6 +1959,7 @@ export class CreateRequest extends Message<CreateRequest> {
     { no: 24, name: "custom_fees", kind: "message", T: CustomFees },
     { no: 25, name: "fee_sink", kind: "enum", T: proto3.getEnumType(FeeSink) },
     { no: 26, name: "telecoin_supply_on_curve_ratio", kind: "message", T: Bps },
+    { no: 27, name: "quote_pairs", kind: "message", T: Account, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateRequest {
@@ -2415,6 +2439,16 @@ export class ListTokensRequest extends Message<ListTokensRequest> {
    */
   chainMatchMode?: ChainMatchMode;
 
+  /**
+   * @generated from field: optional printrfi.api.FeeSink fee_sink = 13;
+   */
+  feeSink?: FeeSink;
+
+  /**
+   * @generated from field: optional google.protobuf.Timestamp since = 14;
+   */
+  since?: Timestamp;
+
   constructor(data?: PartialMessage<ListTokensRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -2453,6 +2487,8 @@ export class ListTokensRequest extends Message<ListTokensRequest> {
       T: proto3.getEnumType(ChainMatchMode),
       opt: true,
     },
+    { no: 13, name: "fee_sink", kind: "enum", T: proto3.getEnumType(FeeSink), opt: true },
+    { no: 14, name: "since", kind: "message", T: Timestamp, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListTokensRequest {
@@ -2695,6 +2731,11 @@ export class TokenInfo extends Message<TokenInfo> {
    */
   ammByCaip2: { [key: string]: TelecoinAmm } = {};
 
+  /**
+   * @generated from field: printrfi.api.FeeSink fee_sink = 18;
+   */
+  feeSink = FeeSink.UNSPECIFIED;
+
   constructor(data?: PartialMessage<TokenInfo>) {
     super();
     proto3.util.initPartial(data, this);
@@ -2780,6 +2821,7 @@ export class TokenInfo extends Message<TokenInfo> {
       K: 9 /* ScalarType.STRING */,
       V: { kind: "message", T: TelecoinAmm },
     },
+    { no: 18, name: "fee_sink", kind: "enum", T: proto3.getEnumType(FeeSink) },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TokenInfo {
@@ -2853,6 +2895,16 @@ export class TokenContractDeployment extends Message<TokenContractDeployment> {
    */
   quoteReserveAtGraduation?: AssetAmountV1;
 
+  /**
+   * @generated from field: optional printrfi.api.FeeSchedule curve_fee_schedule = 11;
+   */
+  curveFeeSchedule?: FeeSchedule;
+
+  /**
+   * @generated from field: printrfi.api.Bps telecoin_supply_on_curve_ratio = 12;
+   */
+  telecoinSupplyOnCurveRatio?: Bps;
+
   constructor(data?: PartialMessage<TokenContractDeployment>) {
     super();
     proto3.util.initPartial(data, this);
@@ -2870,6 +2922,8 @@ export class TokenContractDeployment extends Message<TokenContractDeployment> {
     { no: 8, name: "telecoin_graduation_price", kind: "message", T: PricedAsset },
     { no: 9, name: "telecoin_max_supply", kind: "message", T: AssetAmountV1 },
     { no: 10, name: "quote_reserve_at_graduation", kind: "message", T: AssetAmountV1 },
+    { no: 11, name: "curve_fee_schedule", kind: "message", T: FeeSchedule, opt: true },
+    { no: 12, name: "telecoin_supply_on_curve_ratio", kind: "message", T: Bps },
   ]);
 
   static fromBinary(
@@ -3027,6 +3081,11 @@ export class TelecoinAmm extends Message<TelecoinAmm> {
    */
   liquidityDeployedInTx?: TransactionReference;
 
+  /**
+   * @generated from field: optional printrfi.api.FeeSchedule amm_fee_schedule = 5;
+   */
+  ammFeeSchedule?: FeeSchedule;
+
   constructor(data?: PartialMessage<TelecoinAmm>) {
     super();
     proto3.util.initPartial(data, this);
@@ -3045,6 +3104,7 @@ export class TelecoinAmm extends Message<TelecoinAmm> {
       T: TransactionReference,
       opt: true,
     },
+    { no: 5, name: "amm_fee_schedule", kind: "message", T: FeeSchedule, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TelecoinAmm {
@@ -3071,82 +3131,40 @@ export class TelecoinAmm extends Message<TelecoinAmm> {
  * InitialTokenMetrics is the metrics for the token at the time of deployment.
  * This is the state before any trading or bridging has occurred.
  *
- * todo: we will need to merge this with TokenMetrics in the future
- * for now we leave them separate as these metrics are not updated
- * and so should not be interpreted as live data
- *
  * @generated from message printrfi.api.InitialTokenMetrics
  */
 export class InitialTokenMetrics extends Message<InitialTokenMetrics> {
   /**
-   * @generated from field: string total_supply = 1;
+   * Per-chain virtual reserve in the reference quote asset, always 18 decimals.
+   *
+   * @generated from field: printrfi.api.TokenAmount virtual_reserve_per_chain = 15;
    */
-  totalSupply = "";
+  virtualReservePerChain?: TokenAmount;
 
   /**
-   * @generated from field: double graduation_threshold_usd = 2;
+   * The aggregated mcap in USD across all chains at the time of printing
+   * (will be outdated with changing quote price) that would trigger graduation.
+   * This is the graduation price in USD * the graduation telecoin supply ignoring decimals.
+   * Specifically, this is the telecoin supply at which we trigger graduation, not the supply
+   * after the telecoin is graduated.
+   *
+   * # Important
+   * Will be 0.0 for V1 telecoins.
+   *
+   * @generated from field: double aggregated_graduation_threshold_market_cap_in_usd_at_print_time = 16;
    */
-  graduationThresholdUsd = 0;
+  aggregatedGraduationThresholdMarketCapInUsdAtPrintTime = 0;
 
   /**
-   * @generated from field: double graduation_liquidity_usd = 3;
+   * The initial market cap in USD at print time, calculated as initial_price * max_supply
+   * converted from the quote asset price to USD.
+   *
+   * # Important
+   * Will be 0.0 for V1 telecoins.
+   *
+   * @generated from field: double initial_market_cap_in_usd_at_print_time = 17;
    */
-  graduationLiquidityUsd = 0;
-
-  /**
-   * @generated from field: string graduation_liquidity_ref = 4;
-   */
-  graduationLiquidityRef = "";
-
-  /**
-   * @generated from field: string fdv_ref = 5;
-   */
-  fdvRef = "";
-
-  /**
-   * @generated from field: string fdv_usd = 6;
-   */
-  fdvUsd = "";
-
-  /**
-   * @generated from field: double price_usd = 7;
-   */
-  priceUsd = 0;
-
-  /**
-   * @generated from field: string price_ref = 8;
-   */
-  priceRef = "";
-
-  /**
-   * @generated from field: string market_cap_usd = 9;
-   */
-  marketCapUsd = "";
-
-  /**
-   * @generated from field: string market_cap_ref = 10;
-   */
-  marketCapRef = "";
-
-  /**
-   * @generated from field: double volume_usd = 11;
-   */
-  volumeUsd = 0;
-
-  /**
-   * @generated from field: string volume_ref = 12;
-   */
-  volumeRef = "";
-
-  /**
-   * @generated from field: double ref_price_usd = 13;
-   */
-  refPriceUsd = 0;
-
-  /**
-   * @generated from field: string max_supply = 14;
-   */
-  maxSupply = "";
+  initialMarketCapInUsdAtPrintTime = 0;
 
   constructor(data?: PartialMessage<InitialTokenMetrics>) {
     super();
@@ -3156,20 +3174,19 @@ export class InitialTokenMetrics extends Message<InitialTokenMetrics> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "printrfi.api.InitialTokenMetrics";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "total_supply", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "graduation_threshold_usd", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 3, name: "graduation_liquidity_usd", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 4, name: "graduation_liquidity_ref", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "fdv_ref", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "fdv_usd", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 7, name: "price_usd", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 8, name: "price_ref", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 9, name: "market_cap_usd", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 10, name: "market_cap_ref", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 11, name: "volume_usd", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 12, name: "volume_ref", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 13, name: "ref_price_usd", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 14, name: "max_supply", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 15, name: "virtual_reserve_per_chain", kind: "message", T: TokenAmount },
+    {
+      no: 16,
+      name: "aggregated_graduation_threshold_market_cap_in_usd_at_print_time",
+      kind: "scalar",
+      T: 1 /* ScalarType.DOUBLE */,
+    },
+    {
+      no: 17,
+      name: "initial_market_cap_in_usd_at_print_time",
+      kind: "scalar",
+      T: 1 /* ScalarType.DOUBLE */,
+    },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): InitialTokenMetrics {
@@ -4230,6 +4247,116 @@ export class GetProfileByWalletResponse extends Message<GetProfileByWalletRespon
 }
 
 /**
+ * @generated from message printrfi.api.GetProfilesByWalletsRequest
+ */
+export class GetProfilesByWalletsRequest extends Message<GetProfilesByWalletsRequest> {
+  /**
+   * @generated from field: repeated string wallet_addresses = 1;
+   */
+  walletAddresses: string[] = [];
+
+  constructor(data?: PartialMessage<GetProfilesByWalletsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "printrfi.api.GetProfilesByWalletsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: "wallet_addresses",
+      kind: "scalar",
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ]);
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetProfilesByWalletsRequest {
+    return new GetProfilesByWalletsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetProfilesByWalletsRequest {
+    return new GetProfilesByWalletsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetProfilesByWalletsRequest {
+    return new GetProfilesByWalletsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(
+    a: GetProfilesByWalletsRequest | PlainMessage<GetProfilesByWalletsRequest> | undefined,
+    b: GetProfilesByWalletsRequest | PlainMessage<GetProfilesByWalletsRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(GetProfilesByWalletsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message printrfi.api.GetProfilesByWalletsResponse
+ */
+export class GetProfilesByWalletsResponse extends Message<GetProfilesByWalletsResponse> {
+  /**
+   * @generated from field: map<string, printrfi.api.Profile> profiles = 1;
+   */
+  profiles: { [key: string]: Profile } = {};
+
+  constructor(data?: PartialMessage<GetProfilesByWalletsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "printrfi.api.GetProfilesByWalletsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: "profiles",
+      kind: "map",
+      K: 9 /* ScalarType.STRING */,
+      V: { kind: "message", T: Profile },
+    },
+  ]);
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetProfilesByWalletsResponse {
+    return new GetProfilesByWalletsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetProfilesByWalletsResponse {
+    return new GetProfilesByWalletsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetProfilesByWalletsResponse {
+    return new GetProfilesByWalletsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(
+    a: GetProfilesByWalletsResponse | PlainMessage<GetProfilesByWalletsResponse> | undefined,
+    b: GetProfilesByWalletsResponse | PlainMessage<GetProfilesByWalletsResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(GetProfilesByWalletsResponse, a, b);
+  }
+}
+
+/**
  * @generated from message printrfi.api.AttachWalletRequest
  */
 export class AttachWalletRequest extends Message<AttachWalletRequest> {
@@ -4243,6 +4370,11 @@ export class AttachWalletRequest extends Message<AttachWalletRequest> {
    */
   signature = new Uint8Array(0);
 
+  /**
+   * @generated from field: bool force = 3;
+   */
+  force = false;
+
   constructor(data?: PartialMessage<AttachWalletRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -4253,6 +4385,7 @@ export class AttachWalletRequest extends Message<AttachWalletRequest> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "wallet", kind: "message", T: Account },
     { no: 2, name: "signature", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+    { no: 3, name: "force", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AttachWalletRequest {
@@ -4287,6 +4420,11 @@ export class AttachWalletResponse extends Message<AttachWalletResponse> {
    */
   profile?: Profile;
 
+  /**
+   * @generated from field: printrfi.api.Profile conflicting_profile = 2;
+   */
+  conflictingProfile?: Profile;
+
   constructor(data?: PartialMessage<AttachWalletResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -4296,6 +4434,7 @@ export class AttachWalletResponse extends Message<AttachWalletResponse> {
   static readonly typeName = "printrfi.api.AttachWalletResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "profile", kind: "message", T: Profile },
+    { no: 2, name: "conflicting_profile", kind: "message", T: Profile },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AttachWalletResponse {
@@ -4404,6 +4543,186 @@ export class DetachWalletResponse extends Message<DetachWalletResponse> {
     b: DetachWalletResponse | PlainMessage<DetachWalletResponse> | undefined,
   ): boolean {
     return proto3.util.equals(DetachWalletResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message printrfi.api.LinkTwitterRequest
+ */
+export class LinkTwitterRequest extends Message<LinkTwitterRequest> {
+  /**
+   * @generated from field: string authorization_code = 1;
+   */
+  authorizationCode = "";
+
+  /**
+   * @generated from field: string code_verifier = 2;
+   */
+  codeVerifier = "";
+
+  /**
+   * @generated from field: string redirect_uri = 3;
+   */
+  redirectUri = "";
+
+  constructor(data?: PartialMessage<LinkTwitterRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "printrfi.api.LinkTwitterRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "authorization_code", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "code_verifier", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "redirect_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LinkTwitterRequest {
+    return new LinkTwitterRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): LinkTwitterRequest {
+    return new LinkTwitterRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): LinkTwitterRequest {
+    return new LinkTwitterRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(
+    a: LinkTwitterRequest | PlainMessage<LinkTwitterRequest> | undefined,
+    b: LinkTwitterRequest | PlainMessage<LinkTwitterRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(LinkTwitterRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message printrfi.api.LinkTwitterResponse
+ */
+export class LinkTwitterResponse extends Message<LinkTwitterResponse> {
+  /**
+   * @generated from field: printrfi.api.Profile profile = 1;
+   */
+  profile?: Profile;
+
+  constructor(data?: PartialMessage<LinkTwitterResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "printrfi.api.LinkTwitterResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "profile", kind: "message", T: Profile },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LinkTwitterResponse {
+    return new LinkTwitterResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): LinkTwitterResponse {
+    return new LinkTwitterResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): LinkTwitterResponse {
+    return new LinkTwitterResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(
+    a: LinkTwitterResponse | PlainMessage<LinkTwitterResponse> | undefined,
+    b: LinkTwitterResponse | PlainMessage<LinkTwitterResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(LinkTwitterResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message printrfi.api.UnlinkTwitterRequest
+ */
+export class UnlinkTwitterRequest extends Message<UnlinkTwitterRequest> {
+  constructor(data?: PartialMessage<UnlinkTwitterRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "printrfi.api.UnlinkTwitterRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => []);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UnlinkTwitterRequest {
+    return new UnlinkTwitterRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UnlinkTwitterRequest {
+    return new UnlinkTwitterRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UnlinkTwitterRequest {
+    return new UnlinkTwitterRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(
+    a: UnlinkTwitterRequest | PlainMessage<UnlinkTwitterRequest> | undefined,
+    b: UnlinkTwitterRequest | PlainMessage<UnlinkTwitterRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(UnlinkTwitterRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message printrfi.api.UnlinkTwitterResponse
+ */
+export class UnlinkTwitterResponse extends Message<UnlinkTwitterResponse> {
+  /**
+   * @generated from field: printrfi.api.Profile profile = 1;
+   */
+  profile?: Profile;
+
+  constructor(data?: PartialMessage<UnlinkTwitterResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "printrfi.api.UnlinkTwitterResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "profile", kind: "message", T: Profile },
+  ]);
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UnlinkTwitterResponse {
+    return new UnlinkTwitterResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UnlinkTwitterResponse {
+    return new UnlinkTwitterResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UnlinkTwitterResponse {
+    return new UnlinkTwitterResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(
+    a: UnlinkTwitterResponse | PlainMessage<UnlinkTwitterResponse> | undefined,
+    b: UnlinkTwitterResponse | PlainMessage<UnlinkTwitterResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(UnlinkTwitterResponse, a, b);
   }
 }
 

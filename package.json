@@ -29,10 +29,12 @@
     "check": "bun typecheck && bun lint && bun test",
     "examples:test": "bun run --cwd examples/sdk-basic test && bun run --cwd examples/mcp-client test",
     "generate:api": "bash scripts/generate-api.sh",
+    "generate:api:local": "PRINTR_REPO=$HOME/dev/printr bash scripts/generate-api.sh",
+    "generate:proto": "bash scripts/generate-proto.sh",
     "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.11",
+    "@biomejs/biome": "^2.4.12",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@types/bun": "latest",
@@ -42,7 +44,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",
-    "hono": "^4.12.12",
+    "hono": "^4.12.14",
     "minimatch": "^10.2.5"
   },
   "overrides": {
