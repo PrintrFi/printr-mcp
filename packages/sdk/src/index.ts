@@ -145,6 +145,29 @@ export {
   quoteOutput,
   tokenId,
 } from "./schemas.js";
+// Staking API
+export {
+  type CaipAccount as StakingCaipAccount,
+  type ClaimStakingRewardsParams,
+  type ClaimStakingRewardsResult,
+  claimStakingRewards,
+  formatCaip10 as formatStakingCaip10,
+  type ListStakePositionsParams,
+  type ListStakePositionsWithRewardsResult,
+  listStakePositionsWithRewards,
+  parseCaip10 as parseStakingCaip10,
+  type SimpleAssetAmount,
+  type SimpleEvmPayload,
+  type SimpleSolanaIx,
+  type SimpleSolanaPayload,
+  type SimpleStakePoolInfo,
+  type SimpleStakePositionInfo,
+  type SimpleStakePositionWithRewards,
+  type SimpleTelecoinInfo,
+  type SimpleTokenAmount,
+  type SimpleTxPayload,
+  StakingLockPeriod,
+} from "./staking-api.js";
 // State management
 export {
   type ChainTypeKey,

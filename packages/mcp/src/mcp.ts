@@ -3,6 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { createPrintrClient } from "@printr/sdk";
 import { env } from "~/lib/env.js";
 import { registerClaimFeesTool } from "~/tools/claim-fees.js";
+import { registerClaimStakingRewardsTool } from "~/tools/claim-staking-rewards.js";
 import { registerCreateTokenTool } from "~/tools/create-token.js";
 import { registerDrainDeploymentWalletTool } from "~/tools/drain-deployment-wallet.js";
 import { registerFundDeploymentWalletTool } from "~/tools/fund-deployment-wallet.js";
@@ -10,6 +11,7 @@ import { registerGenerateImageTool } from "~/tools/generate-image.js";
 import { registerGetBalanceTool } from "~/tools/get-balance.js";
 import { registerGetCreatorFeesTool } from "~/tools/get-creator-fees.js";
 import { registerGetDeploymentsTool } from "~/tools/get-deployments.js";
+import { registerGetStakingPositionsTool } from "~/tools/get-staking-positions.js";
 import { registerGetTokenTool } from "~/tools/get-token.js";
 import { registerGetTokenBalanceTool } from "~/tools/get-token-balance.js";
 import { registerLaunchTokenTool } from "~/tools/launch-token.js";
@@ -52,6 +54,8 @@ export async function startMcpServer() {
   registerSupportedChainsTool(server);
   registerGetCreatorFeesTool(server);
   registerClaimFeesTool(server);
+  registerGetStakingPositionsTool(server);
+  registerClaimStakingRewardsTool(server);
   if (env.OPENROUTER_API_KEY) {
     registerGenerateImageTool(server, env.OPENROUTER_API_KEY);
   }

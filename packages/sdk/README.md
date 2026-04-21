@@ -144,6 +144,15 @@ import { generateImageFromPrompt, generateTokenImage } from '@printr/sdk/image';
 
 // CAIP utilities — both return null for invalid input (never throw)
 import { parseCaip2, parseCaip10, chainTypeFromCaip2 } from '@printr/sdk/caip';
+
+// Staking API
+import {
+  listStakePositionsWithRewards,
+  claimStakingRewards,
+  parseStakingCaip10,
+  formatStakingCaip10,
+  StakingLockPeriod,
+} from '@printr/sdk';
 ```
 
 ## Configuration
