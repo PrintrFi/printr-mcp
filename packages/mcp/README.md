@@ -122,6 +122,13 @@ By default, token creation returns an unsigned transaction that you sign via bro
 | `printr_get_creator_fees`   | Check claimable creator fees for a token                             |
 | `printr_claim_fees`         | Claim accumulated creator fees                                       |
 
+### Staking
+
+| Tool                            | Description                                                      |
+| ------------------------------- | ---------------------------------------------------------------- |
+| `printr_get_staking_positions`  | Get staking positions with claimable rewards                     |
+| `printr_claim_staking_rewards`  | Claim rewards from a stake position (or withdraw if unlocked)    |
+
 ### Utility
 
 | Tool                        | Description                                                          |
