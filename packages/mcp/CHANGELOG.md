@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.14.0](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.13.1...mcp-v0.14.0) (2026-04-21)
+
+
+### Features
+
+* **mcp:** add staking positions and claim rewards tools ([06daa33](https://github.com/PrintrFi/printr-mcp/commit/06daa3319283fda54e8fbcfbf5abbe3f944f08a9))
+* **mcp:** add total_unlocked count to get_staking_positions output ([ea9736c](https://github.com/PrintrFi/printr-mcp/commit/ea9736c86debe8d73a820277e4272133bcd07ed5))
+* **sdk,mcp:** add fee_sink support for staking token creation ([0bdf712](https://github.com/PrintrFi/printr-mcp/commit/0bdf71263f2dea657c93c2b374f09e07616b9129))
+* **sdk,mcp:** add fee_sink support for staking token creation ([dc5bd19](https://github.com/PrintrFi/printr-mcp/commit/dc5bd193207d0272578edba292173663afa8f797))
+* staking positions and claim rewards MCP tools ([167a428](https://github.com/PrintrFi/printr-mcp/commit/167a428c309cedccd99ca6bd60c6711370b11e6a))
+
+
+### Bug Fixes
+
+* address Copilot PR review comments ([9541b35](https://github.com/PrintrFi/printr-mcp/commit/9541b35687275fc254d321fc4334c9ac4facb5ce))
+* address PR review comments ([7073bb7](https://github.com/PrintrFi/printr-mcp/commit/7073bb771bf23995ccc0d5b0172a5a95f1554795))
+
 ## [0.13.1](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.13.0...mcp-v0.13.1) (2026-03-26)
 
 

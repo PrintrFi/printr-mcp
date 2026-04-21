@@ -1,5 +1,5 @@
 {
-  "packages/sdk": "0.3.1",
-  "packages/mcp": "0.13.1",
+  "packages/sdk": "0.4.0",
+  "packages/mcp": "0.14.0",
   "packages/cli": "0.3.1"
 }
