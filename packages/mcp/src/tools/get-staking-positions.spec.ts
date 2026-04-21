@@ -24,6 +24,7 @@ describe("printr_get_staking_positions", () => {
     expect(schema.shape).toHaveProperty("positions");
     expect(schema.shape).toHaveProperty("total_positions");
     expect(schema.shape).toHaveProperty("total_with_claimable_rewards");
+    expect(schema.shape).toHaveProperty("total_unlocked");
     expect(schema.shape).toHaveProperty("message");
   });
 

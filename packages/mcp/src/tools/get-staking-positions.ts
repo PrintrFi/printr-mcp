@@ -70,6 +70,7 @@ const outputSchema = z.object({
   positions: z.array(positionSchema).describe("List of staking positions with rewards"),
   total_positions: z.number().describe("Total number of positions"),
   total_with_claimable_rewards: z.number().describe("Positions with claimable rewards"),
+  total_unlocked: z.number().describe("Unlocked positions ready for principal withdrawal"),
   next_cursor: z.string().optional().describe("Cursor for pagination"),
   message: z.string().describe("Status message"),
 });
@@ -139,14 +140,21 @@ function toOutputPosition(
   };
 }
 
-function buildMessage(total: number, withClaimable: number): string {
+function buildMessage(total: number, withClaimable: number, unlocked: number): string {
   if (total === 0) {
     return "No staking positions found.";
   }
-  if (withClaimable === 0) {
-    return `Found ${total} staking position(s), none with claimable rewards.`;
+  const parts: string[] = [`Found ${total} staking position(s)`];
+  if (withClaimable > 0) {
+    parts.push(`${withClaimable} with claimable rewards`);
   }
-  return `Found ${total} staking position(s), ${withClaimable} with claimable rewards.`;
+  if (unlocked > 0) {
+    parts.push(`${unlocked} unlocked`);
+  }
+  if (withClaimable === 0 && unlocked === 0) {
+    parts.push("none with claimable rewards or unlocked");
+  }
+  return `${parts.join(", ")}.`;
 }
 
 async function fetchPositions(
@@ -171,13 +179,15 @@ async function fetchPositions(
     .filter((p): p is OutputPosition => p !== undefined);
 
   const totalWithClaimable = positions.filter((p) => p.has_claimable_rewards).length;
+  const totalUnlocked = positions.filter((p) => p.is_unlocked && !p.was_closed).length;
 
   return {
     positions,
     total_positions: positions.length,
     total_with_claimable_rewards: totalWithClaimable,
+    total_unlocked: totalUnlocked,
     next_cursor: response.nextCursor,
-    message: buildMessage(positions.length, totalWithClaimable),
+    message: buildMessage(positions.length, totalWithClaimable, totalUnlocked),
   };
 }
 
