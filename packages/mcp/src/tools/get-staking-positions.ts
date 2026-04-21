@@ -19,6 +19,8 @@ const inputSchema = z.object({
     .describe(
       "CAIP-10 owner address to filter positions by. If omitted, uses treasury wallet addresses.",
     ),
+  cursor: z.string().optional().describe("Pagination cursor from previous response."),
+  limit: z.number().optional().describe("Maximum number of positions to return (default: 50)."),
 });
 
 const positionSchema = z.object({
@@ -160,6 +162,8 @@ function buildMessage(total: number, withClaimable: number, unlocked: number): s
 async function fetchPositions(
   token_id: string | undefined,
   owner: string | undefined,
+  cursor: string | undefined,
+  limit: number | undefined,
 ): Promise<z.infer<typeof outputSchema>> {
   const owners = owner ? [parseStakingCaip10(owner)] : defaultOwnersFromTreasury();
   if (owners.length === 0) {
@@ -171,6 +175,8 @@ async function fetchPositions(
   const response = await listStakePositionsWithRewards({
     telecoinIds: token_id ? [token_id] : [],
     owners,
+    ...(cursor !== undefined && { cursor }),
+    ...(limit !== undefined && { limit }),
   });
 
   const now = new Date();
@@ -203,10 +209,10 @@ export function registerGetStakingPositionsTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_get_staking_positions", ({ token_id, owner }) =>
+    logToolExecution("printr_get_staking_positions", ({ token_id, owner, cursor, limit }) =>
       toToolResponseAsync(
         ResultAsync.fromPromise(
-          fetchPositions(token_id, owner),
+          fetchPositions(token_id, owner, cursor, limit),
           (e) => new Error(e instanceof Error ? e.message : String(e)),
         ),
       ),

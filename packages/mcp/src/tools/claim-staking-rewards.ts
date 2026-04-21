@@ -81,20 +81,56 @@ function buildEvmPayload(
   });
 }
 
-function buildSvmPayload(svm: Extract<SimpleTxPayload, { case: "solana" }>["value"]): SvmPayload {
-  return {
-    ixs: svm.ixs.map((ix) => ({
-      program_id: ix.programId?.address || "",
-      accounts: ix.accounts.map((acc) => ({
+function buildSvmPayload(
+  svm: Extract<SimpleTxPayload, { case: "solana" }>["value"],
+): Result<SvmPayload, ClaimError> {
+  // Validate lookup tables - we only support one
+  if (svm.lookupTables.length > 1) {
+    return err(
+      claimErr(
+        `Backend returned ${svm.lookupTables.length} lookup tables, but only 1 is supported.`,
+      ),
+    );
+  }
+
+  // Validate and map instructions
+  const ixs: SvmPayload["ixs"] = [];
+  for (const [ixIndex, ix] of svm.ixs.entries()) {
+    const programId = ix.programId?.address;
+    if (!programId) {
+      return err(
+        claimErr(`Backend response missing Solana program ID for instruction ${ixIndex}.`),
+      );
+    }
+
+    const accounts: SvmPayload["ixs"][number]["accounts"] = [];
+    for (const [accIndex, acc] of ix.accounts.entries()) {
+      if (!acc.pubkeyBase58) {
+        return err(
+          claimErr(
+            `Backend response missing Solana account pubkey for instruction ${ixIndex}, account ${accIndex}.`,
+          ),
+        );
+      }
+      accounts.push({
         pubkey: acc.pubkeyBase58,
         is_signer: acc.isSigner,
         is_writable: acc.isWritable,
-      })),
+      });
+    }
+
+    ixs.push({
+      program_id: programId,
+      accounts,
       data: ix.dataBase64,
-    })),
+    });
+  }
+
+  return ok({
+    ixs,
     lookup_table: svm.lookupTables[0]?.address,
     mint_address: "",
-  };
+  });
 }
 
 function submitClaim(
@@ -124,16 +160,17 @@ function submitClaim(
   }
 
   if (txPayload.case === "solana") {
-    const svmPayload = buildSvmPayload(txPayload.value);
     const rpc = getSvmRpcUrl();
-    return ResultAsync.fromPromise(signAndSubmitSvm(svmPayload, treasuryKey, rpc), mapErr).map(
-      ({ signature }) => ({
+    return buildSvmPayload(txPayload.value)
+      .asyncAndThen((svmPayload) =>
+        ResultAsync.fromPromise(signAndSubmitSvm(svmPayload, treasuryKey, rpc), mapErr),
+      )
+      .map(({ signature }) => ({
         position,
         chain: positionAccount.chainId,
         tx_signature: signature,
         message: `Successfully submitted claim. Signature: ${signature}`,
-      }),
-    );
+      }));
   }
 
   const exhaustive: never = txPayload;
