@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.3.1...sdk-v0.4.0) (2026-04-21)
+
+
+### Features
+
+* **sdk,mcp:** add fee_sink support for staking token creation ([0bdf712](https://github.com/PrintrFi/printr-mcp/commit/0bdf71263f2dea657c93c2b374f09e07616b9129))
+* **sdk,mcp:** add fee_sink support for staking token creation ([dc5bd19](https://github.com/PrintrFi/printr-mcp/commit/dc5bd193207d0272578edba292173663afa8f797))
+* **sdk:** add staking API client for positions and reward claims ([b6b2bc6](https://github.com/PrintrFi/printr-mcp/commit/b6b2bc60613d550b59848925968faa6a94f47a52))
+* staking positions and claim rewards MCP tools ([167a428](https://github.com/PrintrFi/printr-mcp/commit/167a428c309cedccd99ca6bd60c6711370b11e6a))
+
+
+### Bug Fixes
+
+* **sdk:** use publicnode for avalanche rpc ([dce21e5](https://github.com/PrintrFi/printr-mcp/commit/dce21e5bc67c9a4146908c45f04ac71105d59a66))
+
 ## [0.3.1](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.3.0...sdk-v0.3.1) (2026-04-08)
 
 
