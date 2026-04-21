@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import { Account } from "../caip/account_pb.js";
 import { TxPayload } from "./payload_pb.js";
@@ -46,19 +53,31 @@ export class ClaimStakingRewardsRequest extends Message<ClaimStakingRewardsReque
     { no: 3, name: "creation_tx", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ClaimStakingRewardsRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ClaimStakingRewardsRequest {
     return new ClaimStakingRewardsRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ClaimStakingRewardsRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ClaimStakingRewardsRequest {
     return new ClaimStakingRewardsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ClaimStakingRewardsRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ClaimStakingRewardsRequest {
     return new ClaimStakingRewardsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: ClaimStakingRewardsRequest | PlainMessage<ClaimStakingRewardsRequest> | undefined, b: ClaimStakingRewardsRequest | PlainMessage<ClaimStakingRewardsRequest> | undefined): boolean {
+  static equals(
+    a: ClaimStakingRewardsRequest | PlainMessage<ClaimStakingRewardsRequest> | undefined,
+    b: ClaimStakingRewardsRequest | PlainMessage<ClaimStakingRewardsRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(ClaimStakingRewardsRequest, a, b);
   }
 }
@@ -83,20 +102,31 @@ export class ClaimStakingRewardsResponse extends Message<ClaimStakingRewardsResp
     { no: 1, name: "tx_payload", kind: "message", T: TxPayload },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ClaimStakingRewardsResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ClaimStakingRewardsResponse {
     return new ClaimStakingRewardsResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ClaimStakingRewardsResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ClaimStakingRewardsResponse {
     return new ClaimStakingRewardsResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ClaimStakingRewardsResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ClaimStakingRewardsResponse {
     return new ClaimStakingRewardsResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: ClaimStakingRewardsResponse | PlainMessage<ClaimStakingRewardsResponse> | undefined, b: ClaimStakingRewardsResponse | PlainMessage<ClaimStakingRewardsResponse> | undefined): boolean {
+  static equals(
+    a: ClaimStakingRewardsResponse | PlainMessage<ClaimStakingRewardsResponse> | undefined,
+    b: ClaimStakingRewardsResponse | PlainMessage<ClaimStakingRewardsResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(ClaimStakingRewardsResponse, a, b);
   }
 }
-

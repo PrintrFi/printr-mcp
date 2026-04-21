@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import { Account } from "../caip/account_pb.js";
 import { AssetAmountV1, PricedAsset } from "./misc_pb.js";
@@ -36,15 +43,17 @@ export class SpendOnTelecoinRequest extends Message<SpendOnTelecoinRequest> {
   /**
    * @generated from oneof printrfi.api.SpendOnTelecoinRequest.slippage
    */
-  slippage: {
-    /**
-     * Calculated on top of the latest price known to Printr.
-     *
-     * @generated from field: uint32 bps_on_current_price = 5;
-     */
-    value: number;
-    case: "bpsOnCurrentPrice";
-  } | { case: undefined; value?: undefined } = { case: undefined };
+  slippage:
+    | {
+        /**
+         * Calculated on top of the latest price known to Printr.
+         *
+         * @generated from field: uint32 bps_on_current_price = 5;
+         */
+        value: number;
+        case: "bpsOnCurrentPrice";
+      }
+    | { case: undefined; value?: undefined } = { case: undefined };
 
   constructor(data?: PartialMessage<SpendOnTelecoinRequest>) {
     super();
@@ -58,22 +67,40 @@ export class SpendOnTelecoinRequest extends Message<SpendOnTelecoinRequest> {
     { no: 2, name: "source_spender", kind: "message", T: Account },
     { no: 3, name: "spend_on_source", kind: "message", T: AssetAmountV1 },
     { no: 4, name: "destination_receiver", kind: "message", T: Account },
-    { no: 5, name: "bps_on_current_price", kind: "scalar", T: 13 /* ScalarType.UINT32 */, oneof: "slippage" },
+    {
+      no: 5,
+      name: "bps_on_current_price",
+      kind: "scalar",
+      T: 13 /* ScalarType.UINT32 */,
+      oneof: "slippage",
+    },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SpendOnTelecoinRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SpendOnTelecoinRequest {
     return new SpendOnTelecoinRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SpendOnTelecoinRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SpendOnTelecoinRequest {
     return new SpendOnTelecoinRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SpendOnTelecoinRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SpendOnTelecoinRequest {
     return new SpendOnTelecoinRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SpendOnTelecoinRequest | PlainMessage<SpendOnTelecoinRequest> | undefined, b: SpendOnTelecoinRequest | PlainMessage<SpendOnTelecoinRequest> | undefined): boolean {
+  static equals(
+    a: SpendOnTelecoinRequest | PlainMessage<SpendOnTelecoinRequest> | undefined,
+    b: SpendOnTelecoinRequest | PlainMessage<SpendOnTelecoinRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(SpendOnTelecoinRequest, a, b);
   }
 }
@@ -131,20 +158,31 @@ export class SpendOnTelecoinResponse extends Message<SpendOnTelecoinResponse> {
     { no: 5, name: "tx_payload", kind: "message", T: TxPayload },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SpendOnTelecoinResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SpendOnTelecoinResponse {
     return new SpendOnTelecoinResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SpendOnTelecoinResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SpendOnTelecoinResponse {
     return new SpendOnTelecoinResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SpendOnTelecoinResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SpendOnTelecoinResponse {
     return new SpendOnTelecoinResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SpendOnTelecoinResponse | PlainMessage<SpendOnTelecoinResponse> | undefined, b: SpendOnTelecoinResponse | PlainMessage<SpendOnTelecoinResponse> | undefined): boolean {
+  static equals(
+    a: SpendOnTelecoinResponse | PlainMessage<SpendOnTelecoinResponse> | undefined,
+    b: SpendOnTelecoinResponse | PlainMessage<SpendOnTelecoinResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(SpendOnTelecoinResponse, a, b);
   }
 }
-

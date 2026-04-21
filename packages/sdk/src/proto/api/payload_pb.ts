@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
 import { Account } from "../caip/account_pb.js";
 
@@ -16,19 +23,22 @@ export class TxPayload extends Message<TxPayload> {
   /**
    * @generated from oneof printrfi.api.TxPayload.payload
    */
-  payload: {
-    /**
-     * @generated from field: printrfi.api.EvmTxPayload evm = 1;
-     */
-    value: EvmTxPayload;
-    case: "evm";
-  } | {
-    /**
-     * @generated from field: printrfi.api.SolanaTxPayload solana = 2;
-     */
-    value: SolanaTxPayload;
-    case: "solana";
-  } | { case: undefined; value?: undefined } = { case: undefined };
+  payload:
+    | {
+        /**
+         * @generated from field: printrfi.api.EvmTxPayload evm = 1;
+         */
+        value: EvmTxPayload;
+        case: "evm";
+      }
+    | {
+        /**
+         * @generated from field: printrfi.api.SolanaTxPayload solana = 2;
+         */
+        value: SolanaTxPayload;
+        case: "solana";
+      }
+    | { case: undefined; value?: undefined } = { case: undefined };
 
   constructor(data?: PartialMessage<TxPayload>) {
     super();
@@ -54,7 +64,10 @@ export class TxPayload extends Message<TxPayload> {
     return new TxPayload().fromJsonString(jsonString, options);
   }
 
-  static equals(a: TxPayload | PlainMessage<TxPayload> | undefined, b: TxPayload | PlainMessage<TxPayload> | undefined): boolean {
+  static equals(
+    a: TxPayload | PlainMessage<TxPayload> | undefined,
+    b: TxPayload | PlainMessage<TxPayload> | undefined,
+  ): boolean {
     return proto3.util.equals(TxPayload, a, b);
   }
 }
@@ -117,7 +130,10 @@ export class EvmTxPayload extends Message<EvmTxPayload> {
     return new EvmTxPayload().fromJsonString(jsonString, options);
   }
 
-  static equals(a: EvmTxPayload | PlainMessage<EvmTxPayload> | undefined, b: EvmTxPayload | PlainMessage<EvmTxPayload> | undefined): boolean {
+  static equals(
+    a: EvmTxPayload | PlainMessage<EvmTxPayload> | undefined,
+    b: EvmTxPayload | PlainMessage<EvmTxPayload> | undefined,
+  ): boolean {
     return proto3.util.equals(EvmTxPayload, a, b);
   }
 }
@@ -166,7 +182,10 @@ export class SolanaTxPayload extends Message<SolanaTxPayload> {
     return new SolanaTxPayload().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaTxPayload | PlainMessage<SolanaTxPayload> | undefined, b: SolanaTxPayload | PlainMessage<SolanaTxPayload> | undefined): boolean {
+  static equals(
+    a: SolanaTxPayload | PlainMessage<SolanaTxPayload> | undefined,
+    b: SolanaTxPayload | PlainMessage<SolanaTxPayload> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaTxPayload, a, b);
   }
 }
@@ -230,7 +249,10 @@ export class SolanaIx extends Message<SolanaIx> {
     return new SolanaIx().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaIx | PlainMessage<SolanaIx> | undefined, b: SolanaIx | PlainMessage<SolanaIx> | undefined): boolean {
+  static equals(
+    a: SolanaIx | PlainMessage<SolanaIx> | undefined,
+    b: SolanaIx | PlainMessage<SolanaIx> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaIx, a, b);
   }
 }
@@ -287,8 +309,10 @@ export class AccountMeta extends Message<AccountMeta> {
     return new AccountMeta().fromJsonString(jsonString, options);
   }
 
-  static equals(a: AccountMeta | PlainMessage<AccountMeta> | undefined, b: AccountMeta | PlainMessage<AccountMeta> | undefined): boolean {
+  static equals(
+    a: AccountMeta | PlainMessage<AccountMeta> | undefined,
+    b: AccountMeta | PlainMessage<AccountMeta> | undefined,
+  ): boolean {
     return proto3.util.equals(AccountMeta, a, b);
   }
 }
-

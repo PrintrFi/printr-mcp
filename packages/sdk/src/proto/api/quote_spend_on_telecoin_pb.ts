@@ -3,10 +3,17 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import { AssetAmountV1, PricedAsset } from "./misc_pb.js";
 import { Chain } from "../caip/account_pb.js";
+import { AssetAmountV1, PricedAsset } from "./misc_pb.js";
 
 /**
  * @generated from message printrfi.api.QuoteSpendOnTelecoinRequest
@@ -40,19 +47,31 @@ export class QuoteSpendOnTelecoinRequest extends Message<QuoteSpendOnTelecoinReq
     { no: 3, name: "destination", kind: "message", T: Chain },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QuoteSpendOnTelecoinRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): QuoteSpendOnTelecoinRequest {
     return new QuoteSpendOnTelecoinRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QuoteSpendOnTelecoinRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): QuoteSpendOnTelecoinRequest {
     return new QuoteSpendOnTelecoinRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QuoteSpendOnTelecoinRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): QuoteSpendOnTelecoinRequest {
     return new QuoteSpendOnTelecoinRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: QuoteSpendOnTelecoinRequest | PlainMessage<QuoteSpendOnTelecoinRequest> | undefined, b: QuoteSpendOnTelecoinRequest | PlainMessage<QuoteSpendOnTelecoinRequest> | undefined): boolean {
+  static equals(
+    a: QuoteSpendOnTelecoinRequest | PlainMessage<QuoteSpendOnTelecoinRequest> | undefined,
+    b: QuoteSpendOnTelecoinRequest | PlainMessage<QuoteSpendOnTelecoinRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(QuoteSpendOnTelecoinRequest, a, b);
   }
 }
@@ -102,20 +121,31 @@ export class QuoteSpendOnTelecoinResponse extends Message<QuoteSpendOnTelecoinRe
     { no: 4, name: "effective_price", kind: "message", T: PricedAsset },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QuoteSpendOnTelecoinResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): QuoteSpendOnTelecoinResponse {
     return new QuoteSpendOnTelecoinResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QuoteSpendOnTelecoinResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): QuoteSpendOnTelecoinResponse {
     return new QuoteSpendOnTelecoinResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QuoteSpendOnTelecoinResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): QuoteSpendOnTelecoinResponse {
     return new QuoteSpendOnTelecoinResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: QuoteSpendOnTelecoinResponse | PlainMessage<QuoteSpendOnTelecoinResponse> | undefined, b: QuoteSpendOnTelecoinResponse | PlainMessage<QuoteSpendOnTelecoinResponse> | undefined): boolean {
+  static equals(
+    a: QuoteSpendOnTelecoinResponse | PlainMessage<QuoteSpendOnTelecoinResponse> | undefined,
+    b: QuoteSpendOnTelecoinResponse | PlainMessage<QuoteSpendOnTelecoinResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(QuoteSpendOnTelecoinResponse, a, b);
   }
 }
-

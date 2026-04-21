@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
 import { Base58Pubkey, SolanaIx, TelecoinParams, TokenAmount } from "./misc_pb.js";
 
@@ -59,19 +66,31 @@ export class SolanaCreateCurveRequest extends Message<SolanaCreateCurveRequest> 
     { no: 4, name: "printr_fee_lamports", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaCreateCurveRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaCreateCurveRequest {
     return new SolanaCreateCurveRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaCreateCurveRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCreateCurveRequest {
     return new SolanaCreateCurveRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaCreateCurveRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCreateCurveRequest {
     return new SolanaCreateCurveRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaCreateCurveRequest | PlainMessage<SolanaCreateCurveRequest> | undefined, b: SolanaCreateCurveRequest | PlainMessage<SolanaCreateCurveRequest> | undefined): boolean {
+  static equals(
+    a: SolanaCreateCurveRequest | PlainMessage<SolanaCreateCurveRequest> | undefined,
+    b: SolanaCreateCurveRequest | PlainMessage<SolanaCreateCurveRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaCreateCurveRequest, a, b);
   }
 }
@@ -164,19 +183,31 @@ export class SolanaCreateCurveResponse extends Message<SolanaCreateCurveResponse
     { no: 8, name: "initial_price_display", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaCreateCurveResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaCreateCurveResponse {
     return new SolanaCreateCurveResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaCreateCurveResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCreateCurveResponse {
     return new SolanaCreateCurveResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaCreateCurveResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCreateCurveResponse {
     return new SolanaCreateCurveResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaCreateCurveResponse | PlainMessage<SolanaCreateCurveResponse> | undefined, b: SolanaCreateCurveResponse | PlainMessage<SolanaCreateCurveResponse> | undefined): boolean {
+  static equals(
+    a: SolanaCreateCurveResponse | PlainMessage<SolanaCreateCurveResponse> | undefined,
+    b: SolanaCreateCurveResponse | PlainMessage<SolanaCreateCurveResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaCreateCurveResponse, a, b);
   }
 }
@@ -233,8 +264,10 @@ export class DeploymentCost extends Message<DeploymentCost> {
     return new DeploymentCost().fromJsonString(jsonString, options);
   }
 
-  static equals(a: DeploymentCost | PlainMessage<DeploymentCost> | undefined, b: DeploymentCost | PlainMessage<DeploymentCost> | undefined): boolean {
+  static equals(
+    a: DeploymentCost | PlainMessage<DeploymentCost> | undefined,
+    b: DeploymentCost | PlainMessage<DeploymentCost> | undefined,
+  ): boolean {
     return proto3.util.equals(DeploymentCost, a, b);
   }
 }
-

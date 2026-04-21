@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
 
 /**
@@ -38,8 +45,10 @@ export class HealthResponse extends Message<HealthResponse> {
     return new HealthResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: HealthResponse | PlainMessage<HealthResponse> | undefined, b: HealthResponse | PlainMessage<HealthResponse> | undefined): boolean {
+  static equals(
+    a: HealthResponse | PlainMessage<HealthResponse> | undefined,
+    b: HealthResponse | PlainMessage<HealthResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(HealthResponse, a, b);
   }
 }
-

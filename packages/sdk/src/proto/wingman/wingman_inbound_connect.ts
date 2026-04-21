@@ -5,16 +5,35 @@
 
 import { Empty, MethodKind } from "@bufbuild/protobuf";
 import { HealthResponse } from "./health_pb.js";
-import { SolanaCreateCurveRequest, SolanaCreateCurveResponse } from "./solana_create_curve_pb.js";
-import { SolanaSwapRequest, SolanaSwapResponse } from "./solana_swap_pb.js";
-import { SolanaXchainBuyOnSolanaRequest, SolanaXchainBuyOnSolanaResponse } from "./solana_xchain_buy_on_solana_pb.js";
-import { SolanaLzBridgeRequest, SolanaLzBridgeResponse } from "./solana_lz_bridge_pb.js";
-import { SolanaPrintFromEVMRequest, SolanaPrintFromEVMResponse, SolanaQuotePrintFromEVMResponse } from "./solana_print_from_evm_pb.js";
-import { SolanaCurveProgressRequest, SolanaCurveProgressResponse } from "./solana_curve_progress_pb.js";
 import { SolanaClaimFeesRequest, SolanaClaimFeesResponse } from "./solana_claim_fees_pb.js";
-import { SolanaHasAssociatedTokenAccountRequest, SolanaHasAssociatedTokenAccountResponse } from "./solana_has_associated_token_account_pb.js";
-import { SolanaCreateStakePositionRequest, SolanaCreateStakePositionResponse } from "./solana_create_stake_position_pb.js";
-import { SolanaClaimStakingRewardsRequest, SolanaClaimStakingRewardsResponse } from "./solana_claim_staking_rewards_pb.js";
+import {
+  SolanaClaimStakingRewardsRequest,
+  SolanaClaimStakingRewardsResponse,
+} from "./solana_claim_staking_rewards_pb.js";
+import { SolanaCreateCurveRequest, SolanaCreateCurveResponse } from "./solana_create_curve_pb.js";
+import {
+  SolanaCreateStakePositionRequest,
+  SolanaCreateStakePositionResponse,
+} from "./solana_create_stake_position_pb.js";
+import {
+  SolanaCurveProgressRequest,
+  SolanaCurveProgressResponse,
+} from "./solana_curve_progress_pb.js";
+import {
+  SolanaHasAssociatedTokenAccountRequest,
+  SolanaHasAssociatedTokenAccountResponse,
+} from "./solana_has_associated_token_account_pb.js";
+import { SolanaLzBridgeRequest, SolanaLzBridgeResponse } from "./solana_lz_bridge_pb.js";
+import {
+  SolanaPrintFromEVMRequest,
+  SolanaPrintFromEVMResponse,
+  SolanaQuotePrintFromEVMResponse,
+} from "./solana_print_from_evm_pb.js";
+import { SolanaSwapRequest, SolanaSwapResponse } from "./solana_swap_pb.js";
+import {
+  SolanaXchainBuyOnSolanaRequest,
+  SolanaXchainBuyOnSolanaResponse,
+} from "./solana_xchain_buy_on_solana_pb.js";
 import { XchainSpendOnEVMRequest, XchainSpendOnEVMResponse } from "./xchain_spend_on_evm_pb.js";
 
 /**
@@ -206,6 +225,5 @@ export const WingmanInbound = {
       O: XchainSpendOnEVMResponse,
       kind: MethodKind.Unary,
     },
-  }
+  },
 } as const;
-

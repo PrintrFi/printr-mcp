@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import { Base58Pubkey, PrintrProtocolVersion, SolanaIx, TokenAmount } from "./misc_pb.js";
 
@@ -60,19 +67,31 @@ export class SolanaClaimFeesRequest extends Message<SolanaClaimFeesRequest> {
     { no: 4, name: "token_protocol_version", kind: "message", T: PrintrProtocolVersion },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaClaimFeesRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaClaimFeesRequest {
     return new SolanaClaimFeesRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaClaimFeesRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaClaimFeesRequest {
     return new SolanaClaimFeesRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaClaimFeesRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaClaimFeesRequest {
     return new SolanaClaimFeesRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaClaimFeesRequest | PlainMessage<SolanaClaimFeesRequest> | undefined, b: SolanaClaimFeesRequest | PlainMessage<SolanaClaimFeesRequest> | undefined): boolean {
+  static equals(
+    a: SolanaClaimFeesRequest | PlainMessage<SolanaClaimFeesRequest> | undefined,
+    b: SolanaClaimFeesRequest | PlainMessage<SolanaClaimFeesRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaClaimFeesRequest, a, b);
   }
 }
@@ -135,20 +154,31 @@ export class SolanaClaimFeesResponse extends Message<SolanaClaimFeesResponse> {
     { no: 6, name: "source_gas_cost", kind: "message", T: TokenAmount },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaClaimFeesResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaClaimFeesResponse {
     return new SolanaClaimFeesResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaClaimFeesResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaClaimFeesResponse {
     return new SolanaClaimFeesResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaClaimFeesResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaClaimFeesResponse {
     return new SolanaClaimFeesResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaClaimFeesResponse | PlainMessage<SolanaClaimFeesResponse> | undefined, b: SolanaClaimFeesResponse | PlainMessage<SolanaClaimFeesResponse> | undefined): boolean {
+  static equals(
+    a: SolanaClaimFeesResponse | PlainMessage<SolanaClaimFeesResponse> | undefined,
+    b: SolanaClaimFeesResponse | PlainMessage<SolanaClaimFeesResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaClaimFeesResponse, a, b);
   }
 }
-

@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
@@ -44,7 +51,10 @@ export class Account extends Message<Account> {
     return new Account().fromJsonString(jsonString, options);
   }
 
-  static equals(a: Account | PlainMessage<Account> | undefined, b: Account | PlainMessage<Account> | undefined): boolean {
+  static equals(
+    a: Account | PlainMessage<Account> | undefined,
+    b: Account | PlainMessage<Account> | undefined,
+  ): boolean {
     return proto3.util.equals(Account, a, b);
   }
 }
@@ -81,8 +91,10 @@ export class Chain extends Message<Chain> {
     return new Chain().fromJsonString(jsonString, options);
   }
 
-  static equals(a: Chain | PlainMessage<Chain> | undefined, b: Chain | PlainMessage<Chain> | undefined): boolean {
+  static equals(
+    a: Chain | PlainMessage<Chain> | undefined,
+    b: Chain | PlainMessage<Chain> | undefined,
+  ): boolean {
     return proto3.util.equals(Chain, a, b);
   }
 }
-

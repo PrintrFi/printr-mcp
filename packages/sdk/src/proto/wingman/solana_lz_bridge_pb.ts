@@ -3,10 +3,17 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
-import { Base58Pubkey, SolanaIx, TokenAmount } from "./misc_pb.js";
 import { Account } from "../caip/account_pb.js";
+import { Base58Pubkey, SolanaIx, TokenAmount } from "./misc_pb.js";
 
 /**
  * @generated from message printrfi.wingman.SolanaLzBridgeRequest
@@ -73,7 +80,10 @@ export class SolanaLzBridgeRequest extends Message<SolanaLzBridgeRequest> {
     { no: 5, name: "destination_gas_fee_atomic", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaLzBridgeRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaLzBridgeRequest {
     return new SolanaLzBridgeRequest().fromBinary(bytes, options);
   }
 
@@ -81,11 +91,17 @@ export class SolanaLzBridgeRequest extends Message<SolanaLzBridgeRequest> {
     return new SolanaLzBridgeRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaLzBridgeRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaLzBridgeRequest {
     return new SolanaLzBridgeRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaLzBridgeRequest | PlainMessage<SolanaLzBridgeRequest> | undefined, b: SolanaLzBridgeRequest | PlainMessage<SolanaLzBridgeRequest> | undefined): boolean {
+  static equals(
+    a: SolanaLzBridgeRequest | PlainMessage<SolanaLzBridgeRequest> | undefined,
+    b: SolanaLzBridgeRequest | PlainMessage<SolanaLzBridgeRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaLzBridgeRequest, a, b);
   }
 }
@@ -140,20 +156,31 @@ export class SolanaLzBridgeResponse extends Message<SolanaLzBridgeResponse> {
     { no: 4, name: "source_gas_cost", kind: "message", T: TokenAmount },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaLzBridgeResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaLzBridgeResponse {
     return new SolanaLzBridgeResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaLzBridgeResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaLzBridgeResponse {
     return new SolanaLzBridgeResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaLzBridgeResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaLzBridgeResponse {
     return new SolanaLzBridgeResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaLzBridgeResponse | PlainMessage<SolanaLzBridgeResponse> | undefined, b: SolanaLzBridgeResponse | PlainMessage<SolanaLzBridgeResponse> | undefined): boolean {
+  static equals(
+    a: SolanaLzBridgeResponse | PlainMessage<SolanaLzBridgeResponse> | undefined,
+    b: SolanaLzBridgeResponse | PlainMessage<SolanaLzBridgeResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaLzBridgeResponse, a, b);
   }
 }
-

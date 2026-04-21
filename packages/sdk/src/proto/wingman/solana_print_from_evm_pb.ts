@@ -3,10 +3,17 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import { EvmTx, QuotedEvmTx, TelecoinInstance, TelecoinParams, TxInfo } from "./misc_pb.js";
 import { Account } from "../caip/account_pb.js";
+import { EvmTx, QuotedEvmTx, TelecoinInstance, TelecoinParams, TxInfo } from "./misc_pb.js";
 
 /**
  * @generated from message printrfi.wingman.SolanaPrintFromEVMRequest
@@ -34,19 +41,31 @@ export class SolanaPrintFromEVMRequest extends Message<SolanaPrintFromEVMRequest
     { no: 2, name: "payer", kind: "message", T: Account },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaPrintFromEVMRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaPrintFromEVMRequest {
     return new SolanaPrintFromEVMRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaPrintFromEVMRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaPrintFromEVMRequest {
     return new SolanaPrintFromEVMRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaPrintFromEVMRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaPrintFromEVMRequest {
     return new SolanaPrintFromEVMRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaPrintFromEVMRequest | PlainMessage<SolanaPrintFromEVMRequest> | undefined, b: SolanaPrintFromEVMRequest | PlainMessage<SolanaPrintFromEVMRequest> | undefined): boolean {
+  static equals(
+    a: SolanaPrintFromEVMRequest | PlainMessage<SolanaPrintFromEVMRequest> | undefined,
+    b: SolanaPrintFromEVMRequest | PlainMessage<SolanaPrintFromEVMRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaPrintFromEVMRequest, a, b);
   }
 }
@@ -87,19 +106,31 @@ export class SolanaPrintFromEVMResponse extends Message<SolanaPrintFromEVMRespon
     { no: 3, name: "tx", kind: "message", T: EvmTx },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaPrintFromEVMResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaPrintFromEVMResponse {
     return new SolanaPrintFromEVMResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaPrintFromEVMResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaPrintFromEVMResponse {
     return new SolanaPrintFromEVMResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaPrintFromEVMResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaPrintFromEVMResponse {
     return new SolanaPrintFromEVMResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaPrintFromEVMResponse | PlainMessage<SolanaPrintFromEVMResponse> | undefined, b: SolanaPrintFromEVMResponse | PlainMessage<SolanaPrintFromEVMResponse> | undefined): boolean {
+  static equals(
+    a: SolanaPrintFromEVMResponse | PlainMessage<SolanaPrintFromEVMResponse> | undefined,
+    b: SolanaPrintFromEVMResponse | PlainMessage<SolanaPrintFromEVMResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaPrintFromEVMResponse, a, b);
   }
 }
@@ -140,20 +171,31 @@ export class SolanaQuotePrintFromEVMResponse extends Message<SolanaQuotePrintFro
     { no: 3, name: "tx", kind: "message", T: QuotedEvmTx },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaQuotePrintFromEVMResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaQuotePrintFromEVMResponse {
     return new SolanaQuotePrintFromEVMResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaQuotePrintFromEVMResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaQuotePrintFromEVMResponse {
     return new SolanaQuotePrintFromEVMResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaQuotePrintFromEVMResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaQuotePrintFromEVMResponse {
     return new SolanaQuotePrintFromEVMResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaQuotePrintFromEVMResponse | PlainMessage<SolanaQuotePrintFromEVMResponse> | undefined, b: SolanaQuotePrintFromEVMResponse | PlainMessage<SolanaQuotePrintFromEVMResponse> | undefined): boolean {
+  static equals(
+    a: SolanaQuotePrintFromEVMResponse | PlainMessage<SolanaQuotePrintFromEVMResponse> | undefined,
+    b: SolanaQuotePrintFromEVMResponse | PlainMessage<SolanaQuotePrintFromEVMResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaQuotePrintFromEVMResponse, a, b);
   }
 }
-

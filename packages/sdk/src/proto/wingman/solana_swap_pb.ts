@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
 import { Base58Pubkey, PrintrProtocolVersion, SolanaIx } from "./misc_pb.js";
 
@@ -124,7 +131,10 @@ export class SolanaSwapRequest extends Message<SolanaSwapRequest> {
     return new SolanaSwapRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaSwapRequest | PlainMessage<SolanaSwapRequest> | undefined, b: SolanaSwapRequest | PlainMessage<SolanaSwapRequest> | undefined): boolean {
+  static equals(
+    a: SolanaSwapRequest | PlainMessage<SolanaSwapRequest> | undefined,
+    b: SolanaSwapRequest | PlainMessage<SolanaSwapRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaSwapRequest, a, b);
   }
 }
@@ -203,12 +213,17 @@ export class SolanaSwapResponse extends Message<SolanaSwapResponse> {
     return new SolanaSwapResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaSwapResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaSwapResponse {
     return new SolanaSwapResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaSwapResponse | PlainMessage<SolanaSwapResponse> | undefined, b: SolanaSwapResponse | PlainMessage<SolanaSwapResponse> | undefined): boolean {
+  static equals(
+    a: SolanaSwapResponse | PlainMessage<SolanaSwapResponse> | undefined,
+    b: SolanaSwapResponse | PlainMessage<SolanaSwapResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaSwapResponse, a, b);
   }
 }
-

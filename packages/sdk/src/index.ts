@@ -174,7 +174,7 @@ export {
   signAndSubmitSvm,
 } from "./svm.js";
 // Token operations
-export { type BuildTokenInput, type FeeSink, buildToken } from "./token.js";
+export { type BuildTokenInput, buildToken, type FeeSink } from "./token.js";
 // Transfer operations
 export {
   type EvmTransferResult,

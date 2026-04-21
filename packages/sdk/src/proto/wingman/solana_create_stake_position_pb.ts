@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import { Base58Pubkey, SolanaIx, TokenAmount } from "./misc_pb.js";
 
@@ -122,19 +129,37 @@ export class SolanaCreateStakePositionRequest extends Message<SolanaCreateStakeP
     { no: 5, name: "lock_period", kind: "enum", T: proto3.getEnumType(LockPeriodDays) },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaCreateStakePositionRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaCreateStakePositionRequest {
     return new SolanaCreateStakePositionRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaCreateStakePositionRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCreateStakePositionRequest {
     return new SolanaCreateStakePositionRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaCreateStakePositionRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCreateStakePositionRequest {
     return new SolanaCreateStakePositionRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaCreateStakePositionRequest | PlainMessage<SolanaCreateStakePositionRequest> | undefined, b: SolanaCreateStakePositionRequest | PlainMessage<SolanaCreateStakePositionRequest> | undefined): boolean {
+  static equals(
+    a:
+      | SolanaCreateStakePositionRequest
+      | PlainMessage<SolanaCreateStakePositionRequest>
+      | undefined,
+    b:
+      | SolanaCreateStakePositionRequest
+      | PlainMessage<SolanaCreateStakePositionRequest>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaCreateStakePositionRequest, a, b);
   }
 }
@@ -183,20 +208,37 @@ export class SolanaCreateStakePositionResponse extends Message<SolanaCreateStake
     { no: 3, name: "lookup_table", kind: "message", T: Base58Pubkey },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaCreateStakePositionResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaCreateStakePositionResponse {
     return new SolanaCreateStakePositionResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaCreateStakePositionResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCreateStakePositionResponse {
     return new SolanaCreateStakePositionResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaCreateStakePositionResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCreateStakePositionResponse {
     return new SolanaCreateStakePositionResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaCreateStakePositionResponse | PlainMessage<SolanaCreateStakePositionResponse> | undefined, b: SolanaCreateStakePositionResponse | PlainMessage<SolanaCreateStakePositionResponse> | undefined): boolean {
+  static equals(
+    a:
+      | SolanaCreateStakePositionResponse
+      | PlainMessage<SolanaCreateStakePositionResponse>
+      | undefined,
+    b:
+      | SolanaCreateStakePositionResponse
+      | PlainMessage<SolanaCreateStakePositionResponse>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaCreateStakePositionResponse, a, b);
   }
 }
-

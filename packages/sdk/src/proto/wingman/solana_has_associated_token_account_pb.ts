@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import { Base58Pubkey } from "./misc_pb.js";
 
@@ -41,19 +48,37 @@ export class SolanaHasAssociatedTokenAccountRequest extends Message<SolanaHasAss
     { no: 2, name: "wallet", kind: "message", T: Base58Pubkey },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaHasAssociatedTokenAccountRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaHasAssociatedTokenAccountRequest {
     return new SolanaHasAssociatedTokenAccountRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaHasAssociatedTokenAccountRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaHasAssociatedTokenAccountRequest {
     return new SolanaHasAssociatedTokenAccountRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaHasAssociatedTokenAccountRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaHasAssociatedTokenAccountRequest {
     return new SolanaHasAssociatedTokenAccountRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaHasAssociatedTokenAccountRequest | PlainMessage<SolanaHasAssociatedTokenAccountRequest> | undefined, b: SolanaHasAssociatedTokenAccountRequest | PlainMessage<SolanaHasAssociatedTokenAccountRequest> | undefined): boolean {
+  static equals(
+    a:
+      | SolanaHasAssociatedTokenAccountRequest
+      | PlainMessage<SolanaHasAssociatedTokenAccountRequest>
+      | undefined,
+    b:
+      | SolanaHasAssociatedTokenAccountRequest
+      | PlainMessage<SolanaHasAssociatedTokenAccountRequest>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaHasAssociatedTokenAccountRequest, a, b);
   }
 }
@@ -80,20 +105,37 @@ export class SolanaHasAssociatedTokenAccountResponse extends Message<SolanaHasAs
     { no: 1, name: "has_associated_token_account", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaHasAssociatedTokenAccountResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaHasAssociatedTokenAccountResponse {
     return new SolanaHasAssociatedTokenAccountResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaHasAssociatedTokenAccountResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaHasAssociatedTokenAccountResponse {
     return new SolanaHasAssociatedTokenAccountResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaHasAssociatedTokenAccountResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaHasAssociatedTokenAccountResponse {
     return new SolanaHasAssociatedTokenAccountResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaHasAssociatedTokenAccountResponse | PlainMessage<SolanaHasAssociatedTokenAccountResponse> | undefined, b: SolanaHasAssociatedTokenAccountResponse | PlainMessage<SolanaHasAssociatedTokenAccountResponse> | undefined): boolean {
+  static equals(
+    a:
+      | SolanaHasAssociatedTokenAccountResponse
+      | PlainMessage<SolanaHasAssociatedTokenAccountResponse>
+      | undefined,
+    b:
+      | SolanaHasAssociatedTokenAccountResponse
+      | PlainMessage<SolanaHasAssociatedTokenAccountResponse>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaHasAssociatedTokenAccountResponse, a, b);
   }
 }
-

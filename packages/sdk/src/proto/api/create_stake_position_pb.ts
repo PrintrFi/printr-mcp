@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import { Account } from "../caip/account_pb.js";
 import { AssetAmountV1 } from "./misc_pb.js";
@@ -103,19 +110,31 @@ export class CreateStakePositionRequest extends Message<CreateStakePositionReque
     { no: 4, name: "lock_period", kind: "enum", T: proto3.getEnumType(StakingLockPeriod) },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateStakePositionRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateStakePositionRequest {
     return new CreateStakePositionRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreateStakePositionRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateStakePositionRequest {
     return new CreateStakePositionRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreateStakePositionRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateStakePositionRequest {
     return new CreateStakePositionRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: CreateStakePositionRequest | PlainMessage<CreateStakePositionRequest> | undefined, b: CreateStakePositionRequest | PlainMessage<CreateStakePositionRequest> | undefined): boolean {
+  static equals(
+    a: CreateStakePositionRequest | PlainMessage<CreateStakePositionRequest> | undefined,
+    b: CreateStakePositionRequest | PlainMessage<CreateStakePositionRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(CreateStakePositionRequest, a, b);
   }
 }
@@ -140,20 +159,31 @@ export class CreateStakePositionResponse extends Message<CreateStakePositionResp
     { no: 1, name: "tx_payload", kind: "message", T: TxPayload },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateStakePositionResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateStakePositionResponse {
     return new CreateStakePositionResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreateStakePositionResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateStakePositionResponse {
     return new CreateStakePositionResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreateStakePositionResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateStakePositionResponse {
     return new CreateStakePositionResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: CreateStakePositionResponse | PlainMessage<CreateStakePositionResponse> | undefined, b: CreateStakePositionResponse | PlainMessage<CreateStakePositionResponse> | undefined): boolean {
+  static equals(
+    a: CreateStakePositionResponse | PlainMessage<CreateStakePositionResponse> | undefined,
+    b: CreateStakePositionResponse | PlainMessage<CreateStakePositionResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(CreateStakePositionResponse, a, b);
   }
 }
-

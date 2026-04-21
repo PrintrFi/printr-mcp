@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import { Base58Pubkey, SolanaIx } from "./misc_pb.js";
 
@@ -52,19 +59,37 @@ export class SolanaClaimStakingRewardsRequest extends Message<SolanaClaimStaking
     { no: 3, name: "position_nonce", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaClaimStakingRewardsRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaClaimStakingRewardsRequest {
     return new SolanaClaimStakingRewardsRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaClaimStakingRewardsRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaClaimStakingRewardsRequest {
     return new SolanaClaimStakingRewardsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaClaimStakingRewardsRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaClaimStakingRewardsRequest {
     return new SolanaClaimStakingRewardsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaClaimStakingRewardsRequest | PlainMessage<SolanaClaimStakingRewardsRequest> | undefined, b: SolanaClaimStakingRewardsRequest | PlainMessage<SolanaClaimStakingRewardsRequest> | undefined): boolean {
+  static equals(
+    a:
+      | SolanaClaimStakingRewardsRequest
+      | PlainMessage<SolanaClaimStakingRewardsRequest>
+      | undefined,
+    b:
+      | SolanaClaimStakingRewardsRequest
+      | PlainMessage<SolanaClaimStakingRewardsRequest>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaClaimStakingRewardsRequest, a, b);
   }
 }
@@ -103,20 +128,37 @@ export class SolanaClaimStakingRewardsResponse extends Message<SolanaClaimStakin
     { no: 2, name: "lookup_table", kind: "message", T: Base58Pubkey },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaClaimStakingRewardsResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaClaimStakingRewardsResponse {
     return new SolanaClaimStakingRewardsResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaClaimStakingRewardsResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaClaimStakingRewardsResponse {
     return new SolanaClaimStakingRewardsResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaClaimStakingRewardsResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaClaimStakingRewardsResponse {
     return new SolanaClaimStakingRewardsResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaClaimStakingRewardsResponse | PlainMessage<SolanaClaimStakingRewardsResponse> | undefined, b: SolanaClaimStakingRewardsResponse | PlainMessage<SolanaClaimStakingRewardsResponse> | undefined): boolean {
+  static equals(
+    a:
+      | SolanaClaimStakingRewardsResponse
+      | PlainMessage<SolanaClaimStakingRewardsResponse>
+      | undefined,
+    b:
+      | SolanaClaimStakingRewardsResponse
+      | PlainMessage<SolanaClaimStakingRewardsResponse>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaClaimStakingRewardsResponse, a, b);
   }
 }
-

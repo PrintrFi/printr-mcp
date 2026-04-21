@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
 import { Chain } from "../caip/account_pb.js";
 import { AssetAmountV1 } from "./misc_pb.js";
@@ -55,19 +62,40 @@ export class GetTelecoinDeploymentBuybackAndBurnDetailRequest extends Message<Ge
     { no: 4, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */, opt: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetTelecoinDeploymentBuybackAndBurnDetailRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetTelecoinDeploymentBuybackAndBurnDetailRequest {
     return new GetTelecoinDeploymentBuybackAndBurnDetailRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetTelecoinDeploymentBuybackAndBurnDetailRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetTelecoinDeploymentBuybackAndBurnDetailRequest {
     return new GetTelecoinDeploymentBuybackAndBurnDetailRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetTelecoinDeploymentBuybackAndBurnDetailRequest {
-    return new GetTelecoinDeploymentBuybackAndBurnDetailRequest().fromJsonString(jsonString, options);
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetTelecoinDeploymentBuybackAndBurnDetailRequest {
+    return new GetTelecoinDeploymentBuybackAndBurnDetailRequest().fromJsonString(
+      jsonString,
+      options,
+    );
   }
 
-  static equals(a: GetTelecoinDeploymentBuybackAndBurnDetailRequest | PlainMessage<GetTelecoinDeploymentBuybackAndBurnDetailRequest> | undefined, b: GetTelecoinDeploymentBuybackAndBurnDetailRequest | PlainMessage<GetTelecoinDeploymentBuybackAndBurnDetailRequest> | undefined): boolean {
+  static equals(
+    a:
+      | GetTelecoinDeploymentBuybackAndBurnDetailRequest
+      | PlainMessage<GetTelecoinDeploymentBuybackAndBurnDetailRequest>
+      | undefined,
+    b:
+      | GetTelecoinDeploymentBuybackAndBurnDetailRequest
+      | PlainMessage<GetTelecoinDeploymentBuybackAndBurnDetailRequest>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(GetTelecoinDeploymentBuybackAndBurnDetailRequest, a, b);
   }
 }
@@ -127,19 +155,40 @@ export class GetTelecoinDeploymentBuybackAndBurnDetailResponse extends Message<G
     { no: 5, name: "trades", kind: "message", T: BuybackAndBurnTx, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetTelecoinDeploymentBuybackAndBurnDetailResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetTelecoinDeploymentBuybackAndBurnDetailResponse {
     return new GetTelecoinDeploymentBuybackAndBurnDetailResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetTelecoinDeploymentBuybackAndBurnDetailResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetTelecoinDeploymentBuybackAndBurnDetailResponse {
     return new GetTelecoinDeploymentBuybackAndBurnDetailResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetTelecoinDeploymentBuybackAndBurnDetailResponse {
-    return new GetTelecoinDeploymentBuybackAndBurnDetailResponse().fromJsonString(jsonString, options);
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetTelecoinDeploymentBuybackAndBurnDetailResponse {
+    return new GetTelecoinDeploymentBuybackAndBurnDetailResponse().fromJsonString(
+      jsonString,
+      options,
+    );
   }
 
-  static equals(a: GetTelecoinDeploymentBuybackAndBurnDetailResponse | PlainMessage<GetTelecoinDeploymentBuybackAndBurnDetailResponse> | undefined, b: GetTelecoinDeploymentBuybackAndBurnDetailResponse | PlainMessage<GetTelecoinDeploymentBuybackAndBurnDetailResponse> | undefined): boolean {
+  static equals(
+    a:
+      | GetTelecoinDeploymentBuybackAndBurnDetailResponse
+      | PlainMessage<GetTelecoinDeploymentBuybackAndBurnDetailResponse>
+      | undefined,
+    b:
+      | GetTelecoinDeploymentBuybackAndBurnDetailResponse
+      | PlainMessage<GetTelecoinDeploymentBuybackAndBurnDetailResponse>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(GetTelecoinDeploymentBuybackAndBurnDetailResponse, a, b);
   }
 }
@@ -194,8 +243,10 @@ export class BuybackAndBurnTx extends Message<BuybackAndBurnTx> {
     return new BuybackAndBurnTx().fromJsonString(jsonString, options);
   }
 
-  static equals(a: BuybackAndBurnTx | PlainMessage<BuybackAndBurnTx> | undefined, b: BuybackAndBurnTx | PlainMessage<BuybackAndBurnTx> | undefined): boolean {
+  static equals(
+    a: BuybackAndBurnTx | PlainMessage<BuybackAndBurnTx> | undefined,
+    b: BuybackAndBurnTx | PlainMessage<BuybackAndBurnTx> | undefined,
+  ): boolean {
     return proto3.util.equals(BuybackAndBurnTx, a, b);
   }
 }
-

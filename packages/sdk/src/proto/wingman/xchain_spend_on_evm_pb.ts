@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import { Account } from "../caip/account_pb.js";
 import { AssetAmount, EvmTx, PlatformPayload, XchainIntent } from "./misc_pb.js";
@@ -98,19 +105,31 @@ export class XchainSpendOnEVMRequest extends Message<XchainSpendOnEVMRequest> {
     { no: 7, name: "spend_token", kind: "message", T: Account },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): XchainSpendOnEVMRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): XchainSpendOnEVMRequest {
     return new XchainSpendOnEVMRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): XchainSpendOnEVMRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): XchainSpendOnEVMRequest {
     return new XchainSpendOnEVMRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): XchainSpendOnEVMRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): XchainSpendOnEVMRequest {
     return new XchainSpendOnEVMRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: XchainSpendOnEVMRequest | PlainMessage<XchainSpendOnEVMRequest> | undefined, b: XchainSpendOnEVMRequest | PlainMessage<XchainSpendOnEVMRequest> | undefined): boolean {
+  static equals(
+    a: XchainSpendOnEVMRequest | PlainMessage<XchainSpendOnEVMRequest> | undefined,
+    b: XchainSpendOnEVMRequest | PlainMessage<XchainSpendOnEVMRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(XchainSpendOnEVMRequest, a, b);
   }
 }
@@ -173,20 +192,31 @@ export class XchainSpendOnEVMResponse extends Message<XchainSpendOnEVMResponse> 
     { no: 5, name: "payload", kind: "message", T: PlatformPayload },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): XchainSpendOnEVMResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): XchainSpendOnEVMResponse {
     return new XchainSpendOnEVMResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): XchainSpendOnEVMResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): XchainSpendOnEVMResponse {
     return new XchainSpendOnEVMResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): XchainSpendOnEVMResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): XchainSpendOnEVMResponse {
     return new XchainSpendOnEVMResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: XchainSpendOnEVMResponse | PlainMessage<XchainSpendOnEVMResponse> | undefined, b: XchainSpendOnEVMResponse | PlainMessage<XchainSpendOnEVMResponse> | undefined): boolean {
+  static equals(
+    a: XchainSpendOnEVMResponse | PlainMessage<XchainSpendOnEVMResponse> | undefined,
+    b: XchainSpendOnEVMResponse | PlainMessage<XchainSpendOnEVMResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(XchainSpendOnEVMResponse, a, b);
   }
 }
-

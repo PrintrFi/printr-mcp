@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import { Platform } from "../chains/chains_pb.js";
 
@@ -33,7 +40,10 @@ export class GetAllocationsRequest extends Message<GetAllocationsRequest> {
     { no: 2, name: "campaign", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetAllocationsRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetAllocationsRequest {
     return new GetAllocationsRequest().fromBinary(bytes, options);
   }
 
@@ -41,11 +51,17 @@ export class GetAllocationsRequest extends Message<GetAllocationsRequest> {
     return new GetAllocationsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetAllocationsRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetAllocationsRequest {
     return new GetAllocationsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetAllocationsRequest | PlainMessage<GetAllocationsRequest> | undefined, b: GetAllocationsRequest | PlainMessage<GetAllocationsRequest> | undefined): boolean {
+  static equals(
+    a: GetAllocationsRequest | PlainMessage<GetAllocationsRequest> | undefined,
+    b: GetAllocationsRequest | PlainMessage<GetAllocationsRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(GetAllocationsRequest, a, b);
   }
 }
@@ -94,7 +110,10 @@ export class AllocationAction extends Message<AllocationAction> {
     return new AllocationAction().fromJsonString(jsonString, options);
   }
 
-  static equals(a: AllocationAction | PlainMessage<AllocationAction> | undefined, b: AllocationAction | PlainMessage<AllocationAction> | undefined): boolean {
+  static equals(
+    a: AllocationAction | PlainMessage<AllocationAction> | undefined,
+    b: AllocationAction | PlainMessage<AllocationAction> | undefined,
+  ): boolean {
     return proto3.util.equals(AllocationAction, a, b);
   }
 }
@@ -139,20 +158,31 @@ export class GetAllocationsResponse extends Message<GetAllocationsResponse> {
     { no: 4, name: "total_points", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetAllocationsResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetAllocationsResponse {
     return new GetAllocationsResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetAllocationsResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetAllocationsResponse {
     return new GetAllocationsResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetAllocationsResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetAllocationsResponse {
     return new GetAllocationsResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetAllocationsResponse | PlainMessage<GetAllocationsResponse> | undefined, b: GetAllocationsResponse | PlainMessage<GetAllocationsResponse> | undefined): boolean {
+  static equals(
+    a: GetAllocationsResponse | PlainMessage<GetAllocationsResponse> | undefined,
+    b: GetAllocationsResponse | PlainMessage<GetAllocationsResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(GetAllocationsResponse, a, b);
   }
 }
-

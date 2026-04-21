@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import { TokenAmount } from "./misc_pb.js";
 
@@ -31,19 +38,31 @@ export class SolanaCurveProgressRequest extends Message<SolanaCurveProgressReque
     { no: 1, name: "printr_token_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaCurveProgressRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaCurveProgressRequest {
     return new SolanaCurveProgressRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaCurveProgressRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCurveProgressRequest {
     return new SolanaCurveProgressRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaCurveProgressRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCurveProgressRequest {
     return new SolanaCurveProgressRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaCurveProgressRequest | PlainMessage<SolanaCurveProgressRequest> | undefined, b: SolanaCurveProgressRequest | PlainMessage<SolanaCurveProgressRequest> | undefined): boolean {
+  static equals(
+    a: SolanaCurveProgressRequest | PlainMessage<SolanaCurveProgressRequest> | undefined,
+    b: SolanaCurveProgressRequest | PlainMessage<SolanaCurveProgressRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaCurveProgressRequest, a, b);
   }
 }
@@ -141,20 +160,31 @@ export class SolanaCurveProgressResponse extends Message<SolanaCurveProgressResp
     { no: 9, name: "graduation_telecoin_supply_on_this_curve", kind: "message", T: TokenAmount },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaCurveProgressResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaCurveProgressResponse {
     return new SolanaCurveProgressResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaCurveProgressResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCurveProgressResponse {
     return new SolanaCurveProgressResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaCurveProgressResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaCurveProgressResponse {
     return new SolanaCurveProgressResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaCurveProgressResponse | PlainMessage<SolanaCurveProgressResponse> | undefined, b: SolanaCurveProgressResponse | PlainMessage<SolanaCurveProgressResponse> | undefined): boolean {
+  static equals(
+    a: SolanaCurveProgressResponse | PlainMessage<SolanaCurveProgressResponse> | undefined,
+    b: SolanaCurveProgressResponse | PlainMessage<SolanaCurveProgressResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaCurveProgressResponse, a, b);
   }
 }
-

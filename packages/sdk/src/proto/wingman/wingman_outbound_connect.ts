@@ -3,8 +3,19 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { EventBuybackAndBurnRequest, EventDebridgeOrderExecutedRequest, EventProjectedStakingRewardsRequest, EventStakePositionCreatedRequest, EventStakingRefreshedRequest, EventStakingRewardsClaimedRequest, EventTeleportInRequest, EventTeleportOutRequest, EventTokenContractDeployedRequest, EventTokenGraduatedRequest } from "./wingman_outbound_pb.js";
 import { Empty, MethodKind } from "@bufbuild/protobuf";
+import {
+  EventBuybackAndBurnRequest,
+  EventDebridgeOrderExecutedRequest,
+  EventProjectedStakingRewardsRequest,
+  EventStakePositionCreatedRequest,
+  EventStakingRefreshedRequest,
+  EventStakingRewardsClaimedRequest,
+  EventTeleportInRequest,
+  EventTeleportOutRequest,
+  EventTokenContractDeployedRequest,
+  EventTokenGraduatedRequest,
+} from "./wingman_outbound_pb.js";
 
 /**
  * @generated from service printrfi.wingman.WingmanOutbound
@@ -102,6 +113,5 @@ export const WingmanOutbound = {
       O: Empty,
       kind: MethodKind.Unary,
     },
-  }
+  },
 } as const;
-

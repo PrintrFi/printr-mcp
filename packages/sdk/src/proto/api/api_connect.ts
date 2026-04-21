@@ -3,15 +3,88 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AttachWalletRequest, AttachWalletResponse, ChainsRequest, ChainsResponse, CreateRequest, CreateResponse, DeleteCommentRequest, DeleteCommentResponse, DeployRequest, DeployResponse, DetachWalletRequest, DetachWalletResponse, FollowTelecoinsRequest, FollowTelecoinsResponse, GetCommentsRequest, GetCommentsResponse, GetFollowedTelecoinsRequest, GetFollowedTelecoinsResponse, GetProfileByWalletRequest, GetProfileByWalletResponse, GetProfileRequest, GetProfileResponse, GetProfilesByWalletsRequest, GetProfilesByWalletsResponse, GetTokensByAddressRequest, GetTokensByAddressResponse, GetTokensRequest, GetTokensResponse, IssueProfileRequest, IssueProfileResponse, LikeCommentRequest, LikeCommentResponse, LinkTwitterRequest, LinkTwitterResponse, ListTokensRequest, ListTokensResponse, ListXchainMsgsRequest, ListXchainMsgsResponse, PostCommentRequest, PostCommentResponse, ProtocolFeesRequest, ProtocolFeesResponse, SellRequest, SellResponse, SpendRequest, SpendResponse, TransferRequest, TransferResponse, UnfollowTelecoinsRequest, UnfollowTelecoinsResponse, UnlinkTwitterRequest, UnlinkTwitterResponse, UpdateProfileRequest, UpdateProfileResponse, UploadProfileImageRequest, UploadProfileImageResponse } from "./api_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
-import { QuoteSpendOnTelecoinRequest, QuoteSpendOnTelecoinResponse } from "./quote_spend_on_telecoin_pb.js";
-import { SpendOnTelecoinRequest, SpendOnTelecoinResponse } from "./spend_on_telecoin_pb.js";
-import { CreateStakePositionRequest, CreateStakePositionResponse } from "./create_stake_position_pb.js";
-import { ClaimStakingRewardsRequest, ClaimStakingRewardsResponse } from "./claim_staking_rewards_pb.js";
-import { ListStakePositionsRequest, ListStakePositionsResponse, ListStakePositionsWithRewardsResponse } from "./list_stake_positions_pb.js";
 import { GetAllocationsRequest, GetAllocationsResponse } from "./allocations_pb.js";
-import { GetTelecoinDeploymentBuybackAndBurnDetailRequest, GetTelecoinDeploymentBuybackAndBurnDetailResponse } from "./get_buyback_and_burn_detail_pb.js";
+import {
+  AttachWalletRequest,
+  AttachWalletResponse,
+  ChainsRequest,
+  ChainsResponse,
+  CreateRequest,
+  CreateResponse,
+  DeleteCommentRequest,
+  DeleteCommentResponse,
+  DeployRequest,
+  DeployResponse,
+  DetachWalletRequest,
+  DetachWalletResponse,
+  FollowTelecoinsRequest,
+  FollowTelecoinsResponse,
+  GetCommentsRequest,
+  GetCommentsResponse,
+  GetFollowedTelecoinsRequest,
+  GetFollowedTelecoinsResponse,
+  GetProfileByWalletRequest,
+  GetProfileByWalletResponse,
+  GetProfileRequest,
+  GetProfileResponse,
+  GetProfilesByWalletsRequest,
+  GetProfilesByWalletsResponse,
+  GetTokensByAddressRequest,
+  GetTokensByAddressResponse,
+  GetTokensRequest,
+  GetTokensResponse,
+  IssueProfileRequest,
+  IssueProfileResponse,
+  LikeCommentRequest,
+  LikeCommentResponse,
+  LinkTwitterRequest,
+  LinkTwitterResponse,
+  ListTokensRequest,
+  ListTokensResponse,
+  ListXchainMsgsRequest,
+  ListXchainMsgsResponse,
+  PostCommentRequest,
+  PostCommentResponse,
+  ProtocolFeesRequest,
+  ProtocolFeesResponse,
+  SellRequest,
+  SellResponse,
+  SpendRequest,
+  SpendResponse,
+  TransferRequest,
+  TransferResponse,
+  UnfollowTelecoinsRequest,
+  UnfollowTelecoinsResponse,
+  UnlinkTwitterRequest,
+  UnlinkTwitterResponse,
+  UpdateProfileRequest,
+  UpdateProfileResponse,
+  UploadProfileImageRequest,
+  UploadProfileImageResponse,
+} from "./api_pb.js";
+import {
+  ClaimStakingRewardsRequest,
+  ClaimStakingRewardsResponse,
+} from "./claim_staking_rewards_pb.js";
+import {
+  CreateStakePositionRequest,
+  CreateStakePositionResponse,
+} from "./create_stake_position_pb.js";
+import {
+  GetTelecoinDeploymentBuybackAndBurnDetailRequest,
+  GetTelecoinDeploymentBuybackAndBurnDetailResponse,
+} from "./get_buyback_and_burn_detail_pb.js";
+import {
+  ListStakePositionsRequest,
+  ListStakePositionsResponse,
+  ListStakePositionsWithRewardsResponse,
+} from "./list_stake_positions_pb.js";
+import {
+  QuoteSpendOnTelecoinRequest,
+  QuoteSpendOnTelecoinResponse,
+} from "./quote_spend_on_telecoin_pb.js";
+import { SpendOnTelecoinRequest, SpendOnTelecoinResponse } from "./spend_on_telecoin_pb.js";
 
 /**
  * @generated from service printrfi.api.Backend
@@ -350,6 +423,5 @@ export const Backend = {
       O: GetTelecoinDeploymentBuybackAndBurnDetailResponse,
       kind: MethodKind.Unary,
     },
-  }
+  },
 } as const;
-

@@ -3,10 +3,17 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64, Timestamp } from "@bufbuild/protobuf";
-import { Accumulator, PrintrProtocolVersion, TokenAmount } from "./misc_pb.js";
 import { Account } from "../caip/account_pb.js";
+import { Accumulator, PrintrProtocolVersion, TokenAmount } from "./misc_pb.js";
 import { LockPeriodDays } from "./solana_create_stake_position_pb.js";
 
 /**
@@ -88,19 +95,37 @@ export class EventTokenContractDeployedRequest extends Message<EventTokenContrac
     { no: 10, name: "protocol_version", kind: "message", T: PrintrProtocolVersion },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventTokenContractDeployedRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): EventTokenContractDeployedRequest {
     return new EventTokenContractDeployedRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventTokenContractDeployedRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): EventTokenContractDeployedRequest {
     return new EventTokenContractDeployedRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventTokenContractDeployedRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): EventTokenContractDeployedRequest {
     return new EventTokenContractDeployedRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: EventTokenContractDeployedRequest | PlainMessage<EventTokenContractDeployedRequest> | undefined, b: EventTokenContractDeployedRequest | PlainMessage<EventTokenContractDeployedRequest> | undefined): boolean {
+  static equals(
+    a:
+      | EventTokenContractDeployedRequest
+      | PlainMessage<EventTokenContractDeployedRequest>
+      | undefined,
+    b:
+      | EventTokenContractDeployedRequest
+      | PlainMessage<EventTokenContractDeployedRequest>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(EventTokenContractDeployedRequest, a, b);
   }
 }
@@ -167,19 +192,31 @@ export class EventTokenGraduatedRequest extends Message<EventTokenGraduatedReque
     { no: 8, name: "block_timestamp", kind: "message", T: Timestamp, opt: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventTokenGraduatedRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): EventTokenGraduatedRequest {
     return new EventTokenGraduatedRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventTokenGraduatedRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): EventTokenGraduatedRequest {
     return new EventTokenGraduatedRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventTokenGraduatedRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): EventTokenGraduatedRequest {
     return new EventTokenGraduatedRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: EventTokenGraduatedRequest | PlainMessage<EventTokenGraduatedRequest> | undefined, b: EventTokenGraduatedRequest | PlainMessage<EventTokenGraduatedRequest> | undefined): boolean {
+  static equals(
+    a: EventTokenGraduatedRequest | PlainMessage<EventTokenGraduatedRequest> | undefined,
+    b: EventTokenGraduatedRequest | PlainMessage<EventTokenGraduatedRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(EventTokenGraduatedRequest, a, b);
   }
 }
@@ -254,19 +291,31 @@ export class EventTeleportOutRequest extends Message<EventTeleportOutRequest> {
     { no: 9, name: "block_timestamp", kind: "message", T: Timestamp, opt: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventTeleportOutRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): EventTeleportOutRequest {
     return new EventTeleportOutRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventTeleportOutRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): EventTeleportOutRequest {
     return new EventTeleportOutRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventTeleportOutRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): EventTeleportOutRequest {
     return new EventTeleportOutRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: EventTeleportOutRequest | PlainMessage<EventTeleportOutRequest> | undefined, b: EventTeleportOutRequest | PlainMessage<EventTeleportOutRequest> | undefined): boolean {
+  static equals(
+    a: EventTeleportOutRequest | PlainMessage<EventTeleportOutRequest> | undefined,
+    b: EventTeleportOutRequest | PlainMessage<EventTeleportOutRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(EventTeleportOutRequest, a, b);
   }
 }
@@ -335,19 +384,31 @@ export class EventTeleportInRequest extends Message<EventTeleportInRequest> {
     { no: 8, name: "block_timestamp", kind: "message", T: Timestamp, opt: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventTeleportInRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): EventTeleportInRequest {
     return new EventTeleportInRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventTeleportInRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): EventTeleportInRequest {
     return new EventTeleportInRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventTeleportInRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): EventTeleportInRequest {
     return new EventTeleportInRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: EventTeleportInRequest | PlainMessage<EventTeleportInRequest> | undefined, b: EventTeleportInRequest | PlainMessage<EventTeleportInRequest> | undefined): boolean {
+  static equals(
+    a: EventTeleportInRequest | PlainMessage<EventTeleportInRequest> | undefined,
+    b: EventTeleportInRequest | PlainMessage<EventTeleportInRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(EventTeleportInRequest, a, b);
   }
 }
@@ -395,19 +456,37 @@ export class EventDebridgeOrderExecutedRequest extends Message<EventDebridgeOrde
     { no: 4, name: "block_timestamp", kind: "message", T: Timestamp, opt: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventDebridgeOrderExecutedRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): EventDebridgeOrderExecutedRequest {
     return new EventDebridgeOrderExecutedRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventDebridgeOrderExecutedRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): EventDebridgeOrderExecutedRequest {
     return new EventDebridgeOrderExecutedRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventDebridgeOrderExecutedRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): EventDebridgeOrderExecutedRequest {
     return new EventDebridgeOrderExecutedRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: EventDebridgeOrderExecutedRequest | PlainMessage<EventDebridgeOrderExecutedRequest> | undefined, b: EventDebridgeOrderExecutedRequest | PlainMessage<EventDebridgeOrderExecutedRequest> | undefined): boolean {
+  static equals(
+    a:
+      | EventDebridgeOrderExecutedRequest
+      | PlainMessage<EventDebridgeOrderExecutedRequest>
+      | undefined,
+    b:
+      | EventDebridgeOrderExecutedRequest
+      | PlainMessage<EventDebridgeOrderExecutedRequest>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(EventDebridgeOrderExecutedRequest, a, b);
   }
 }
@@ -508,19 +587,37 @@ export class EventStakePositionCreatedRequest extends Message<EventStakePosition
     { no: 13, name: "position_address", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventStakePositionCreatedRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): EventStakePositionCreatedRequest {
     return new EventStakePositionCreatedRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventStakePositionCreatedRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): EventStakePositionCreatedRequest {
     return new EventStakePositionCreatedRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventStakePositionCreatedRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): EventStakePositionCreatedRequest {
     return new EventStakePositionCreatedRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: EventStakePositionCreatedRequest | PlainMessage<EventStakePositionCreatedRequest> | undefined, b: EventStakePositionCreatedRequest | PlainMessage<EventStakePositionCreatedRequest> | undefined): boolean {
+  static equals(
+    a:
+      | EventStakePositionCreatedRequest
+      | PlainMessage<EventStakePositionCreatedRequest>
+      | undefined,
+    b:
+      | EventStakePositionCreatedRequest
+      | PlainMessage<EventStakePositionCreatedRequest>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(EventStakePositionCreatedRequest, a, b);
   }
 }
@@ -625,19 +722,37 @@ export class EventStakingRewardsClaimedRequest extends Message<EventStakingRewar
     { no: 14, name: "telecoin_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventStakingRewardsClaimedRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): EventStakingRewardsClaimedRequest {
     return new EventStakingRewardsClaimedRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventStakingRewardsClaimedRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): EventStakingRewardsClaimedRequest {
     return new EventStakingRewardsClaimedRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventStakingRewardsClaimedRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): EventStakingRewardsClaimedRequest {
     return new EventStakingRewardsClaimedRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: EventStakingRewardsClaimedRequest | PlainMessage<EventStakingRewardsClaimedRequest> | undefined, b: EventStakingRewardsClaimedRequest | PlainMessage<EventStakingRewardsClaimedRequest> | undefined): boolean {
+  static equals(
+    a:
+      | EventStakingRewardsClaimedRequest
+      | PlainMessage<EventStakingRewardsClaimedRequest>
+      | undefined,
+    b:
+      | EventStakingRewardsClaimedRequest
+      | PlainMessage<EventStakingRewardsClaimedRequest>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(EventStakingRewardsClaimedRequest, a, b);
   }
 }
@@ -716,19 +831,31 @@ export class EventStakingRefreshedRequest extends Message<EventStakingRefreshedR
     { no: 10, name: "telecoin_mint_address", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventStakingRefreshedRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): EventStakingRefreshedRequest {
     return new EventStakingRefreshedRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventStakingRefreshedRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): EventStakingRefreshedRequest {
     return new EventStakingRefreshedRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventStakingRefreshedRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): EventStakingRefreshedRequest {
     return new EventStakingRefreshedRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: EventStakingRefreshedRequest | PlainMessage<EventStakingRefreshedRequest> | undefined, b: EventStakingRefreshedRequest | PlainMessage<EventStakingRefreshedRequest> | undefined): boolean {
+  static equals(
+    a: EventStakingRefreshedRequest | PlainMessage<EventStakingRefreshedRequest> | undefined,
+    b: EventStakingRefreshedRequest | PlainMessage<EventStakingRefreshedRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(EventStakingRefreshedRequest, a, b);
   }
 }
@@ -783,19 +910,37 @@ export class EventProjectedStakingRewardsRequest extends Message<EventProjectedS
     { no: 6, name: "telecoin_mint_address", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventProjectedStakingRewardsRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): EventProjectedStakingRewardsRequest {
     return new EventProjectedStakingRewardsRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventProjectedStakingRewardsRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): EventProjectedStakingRewardsRequest {
     return new EventProjectedStakingRewardsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventProjectedStakingRewardsRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): EventProjectedStakingRewardsRequest {
     return new EventProjectedStakingRewardsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: EventProjectedStakingRewardsRequest | PlainMessage<EventProjectedStakingRewardsRequest> | undefined, b: EventProjectedStakingRewardsRequest | PlainMessage<EventProjectedStakingRewardsRequest> | undefined): boolean {
+  static equals(
+    a:
+      | EventProjectedStakingRewardsRequest
+      | PlainMessage<EventProjectedStakingRewardsRequest>
+      | undefined,
+    b:
+      | EventProjectedStakingRewardsRequest
+      | PlainMessage<EventProjectedStakingRewardsRequest>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(EventProjectedStakingRewardsRequest, a, b);
   }
 }
@@ -850,20 +995,31 @@ export class EventBuybackAndBurnRequest extends Message<EventBuybackAndBurnReque
     { no: 6, name: "block_timestamp", kind: "message", T: Timestamp, opt: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventBuybackAndBurnRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): EventBuybackAndBurnRequest {
     return new EventBuybackAndBurnRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventBuybackAndBurnRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): EventBuybackAndBurnRequest {
     return new EventBuybackAndBurnRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventBuybackAndBurnRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): EventBuybackAndBurnRequest {
     return new EventBuybackAndBurnRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: EventBuybackAndBurnRequest | PlainMessage<EventBuybackAndBurnRequest> | undefined, b: EventBuybackAndBurnRequest | PlainMessage<EventBuybackAndBurnRequest> | undefined): boolean {
+  static equals(
+    a: EventBuybackAndBurnRequest | PlainMessage<EventBuybackAndBurnRequest> | undefined,
+    b: EventBuybackAndBurnRequest | PlainMessage<EventBuybackAndBurnRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(EventBuybackAndBurnRequest, a, b);
   }
 }
-

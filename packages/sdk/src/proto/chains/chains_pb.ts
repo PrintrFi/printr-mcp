@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
@@ -128,7 +135,10 @@ export class NativeCurrency extends Message<NativeCurrency> {
     return new NativeCurrency().fromJsonString(jsonString, options);
   }
 
-  static equals(a: NativeCurrency | PlainMessage<NativeCurrency> | undefined, b: NativeCurrency | PlainMessage<NativeCurrency> | undefined): boolean {
+  static equals(
+    a: NativeCurrency | PlainMessage<NativeCurrency> | undefined,
+    b: NativeCurrency | PlainMessage<NativeCurrency> | undefined,
+  ): boolean {
     return proto3.util.equals(NativeCurrency, a, b);
   }
 }
@@ -195,8 +205,10 @@ export class Chain extends Message<Chain> {
     return new Chain().fromJsonString(jsonString, options);
   }
 
-  static equals(a: Chain | PlainMessage<Chain> | undefined, b: Chain | PlainMessage<Chain> | undefined): boolean {
+  static equals(
+    a: Chain | PlainMessage<Chain> | undefined,
+    b: Chain | PlainMessage<Chain> | undefined,
+  ): boolean {
     return proto3.util.equals(Chain, a, b);
   }
 }
-

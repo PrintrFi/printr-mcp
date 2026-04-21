@@ -3,11 +3,18 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
 import { Account } from "../caip/account_pb.js";
-import { AssetAmountV1, Bps, SortDirectionV2 } from "./misc_pb.js";
 import { StakingLockPeriod } from "./create_stake_position_pb.js";
+import { AssetAmountV1, Bps, SortDirectionV2 } from "./misc_pb.js";
 
 /**
  * @generated from enum printrfi.api.StakePositionOrderBy
@@ -100,19 +107,31 @@ export class ListStakePositionsRequest extends Message<ListStakePositionsRequest
     { no: 7, name: "order_by", kind: "enum", T: proto3.getEnumType(StakePositionOrderBy) },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListStakePositionsRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ListStakePositionsRequest {
     return new ListStakePositionsRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListStakePositionsRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ListStakePositionsRequest {
     return new ListStakePositionsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListStakePositionsRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ListStakePositionsRequest {
     return new ListStakePositionsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: ListStakePositionsRequest | PlainMessage<ListStakePositionsRequest> | undefined, b: ListStakePositionsRequest | PlainMessage<ListStakePositionsRequest> | undefined): boolean {
+  static equals(
+    a: ListStakePositionsRequest | PlainMessage<ListStakePositionsRequest> | undefined,
+    b: ListStakePositionsRequest | PlainMessage<ListStakePositionsRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(ListStakePositionsRequest, a, b);
   }
 }
@@ -151,22 +170,40 @@ export class ListStakePositionsResponse extends Message<ListStakePositionsRespon
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "positions", kind: "message", T: StakePositionInfo, repeated: true },
     { no: 2, name: "next_cursor", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 3, name: "telecoins_by_id", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "message", T: StakeTelecoinInfo} },
+    {
+      no: 3,
+      name: "telecoins_by_id",
+      kind: "map",
+      K: 9 /* ScalarType.STRING */,
+      V: { kind: "message", T: StakeTelecoinInfo },
+    },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListStakePositionsResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ListStakePositionsResponse {
     return new ListStakePositionsResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListStakePositionsResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ListStakePositionsResponse {
     return new ListStakePositionsResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListStakePositionsResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ListStakePositionsResponse {
     return new ListStakePositionsResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: ListStakePositionsResponse | PlainMessage<ListStakePositionsResponse> | undefined, b: ListStakePositionsResponse | PlainMessage<ListStakePositionsResponse> | undefined): boolean {
+  static equals(
+    a: ListStakePositionsResponse | PlainMessage<ListStakePositionsResponse> | undefined,
+    b: ListStakePositionsResponse | PlainMessage<ListStakePositionsResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(ListStakePositionsResponse, a, b);
   }
 }
@@ -205,22 +242,46 @@ export class ListStakePositionsWithRewardsResponse extends Message<ListStakePosi
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "positions", kind: "message", T: StakePositionWithRewardsInfo, repeated: true },
     { no: 2, name: "next_cursor", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 3, name: "telecoins_by_id", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "message", T: StakeTelecoinInfo} },
+    {
+      no: 3,
+      name: "telecoins_by_id",
+      kind: "map",
+      K: 9 /* ScalarType.STRING */,
+      V: { kind: "message", T: StakeTelecoinInfo },
+    },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListStakePositionsWithRewardsResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ListStakePositionsWithRewardsResponse {
     return new ListStakePositionsWithRewardsResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListStakePositionsWithRewardsResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ListStakePositionsWithRewardsResponse {
     return new ListStakePositionsWithRewardsResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListStakePositionsWithRewardsResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ListStakePositionsWithRewardsResponse {
     return new ListStakePositionsWithRewardsResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: ListStakePositionsWithRewardsResponse | PlainMessage<ListStakePositionsWithRewardsResponse> | undefined, b: ListStakePositionsWithRewardsResponse | PlainMessage<ListStakePositionsWithRewardsResponse> | undefined): boolean {
+  static equals(
+    a:
+      | ListStakePositionsWithRewardsResponse
+      | PlainMessage<ListStakePositionsWithRewardsResponse>
+      | undefined,
+    b:
+      | ListStakePositionsWithRewardsResponse
+      | PlainMessage<ListStakePositionsWithRewardsResponse>
+      | undefined,
+  ): boolean {
     return proto3.util.equals(ListStakePositionsWithRewardsResponse, a, b);
   }
 }
@@ -259,7 +320,10 @@ export class StakeTelecoinInfo extends Message<StakeTelecoinInfo> {
     return new StakeTelecoinInfo().fromJsonString(jsonString, options);
   }
 
-  static equals(a: StakeTelecoinInfo | PlainMessage<StakeTelecoinInfo> | undefined, b: StakeTelecoinInfo | PlainMessage<StakeTelecoinInfo> | undefined): boolean {
+  static equals(
+    a: StakeTelecoinInfo | PlainMessage<StakeTelecoinInfo> | undefined,
+    b: StakeTelecoinInfo | PlainMessage<StakeTelecoinInfo> | undefined,
+  ): boolean {
     return proto3.util.equals(StakeTelecoinInfo, a, b);
   }
 }
@@ -341,7 +405,10 @@ export class StakePoolInfo extends Message<StakePoolInfo> {
     return new StakePoolInfo().fromJsonString(jsonString, options);
   }
 
-  static equals(a: StakePoolInfo | PlainMessage<StakePoolInfo> | undefined, b: StakePoolInfo | PlainMessage<StakePoolInfo> | undefined): boolean {
+  static equals(
+    a: StakePoolInfo | PlainMessage<StakePoolInfo> | undefined,
+    b: StakePoolInfo | PlainMessage<StakePoolInfo> | undefined,
+  ): boolean {
     return proto3.util.equals(StakePoolInfo, a, b);
   }
 }
@@ -435,7 +502,10 @@ export class StakePositionInfo extends Message<StakePositionInfo> {
     return new StakePositionInfo().fromJsonString(jsonString, options);
   }
 
-  static equals(a: StakePositionInfo | PlainMessage<StakePositionInfo> | undefined, b: StakePositionInfo | PlainMessage<StakePositionInfo> | undefined): boolean {
+  static equals(
+    a: StakePositionInfo | PlainMessage<StakePositionInfo> | undefined,
+    b: StakePositionInfo | PlainMessage<StakePositionInfo> | undefined,
+  ): boolean {
     return proto3.util.equals(StakePositionInfo, a, b);
   }
 }
@@ -484,20 +554,31 @@ export class StakePositionWithRewardsInfo extends Message<StakePositionWithRewar
     { no: 5, name: "claimed_telecoin_rewards", kind: "message", T: AssetAmountV1, opt: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StakePositionWithRewardsInfo {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): StakePositionWithRewardsInfo {
     return new StakePositionWithRewardsInfo().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StakePositionWithRewardsInfo {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): StakePositionWithRewardsInfo {
     return new StakePositionWithRewardsInfo().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StakePositionWithRewardsInfo {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): StakePositionWithRewardsInfo {
     return new StakePositionWithRewardsInfo().fromJsonString(jsonString, options);
   }
 
-  static equals(a: StakePositionWithRewardsInfo | PlainMessage<StakePositionWithRewardsInfo> | undefined, b: StakePositionWithRewardsInfo | PlainMessage<StakePositionWithRewardsInfo> | undefined): boolean {
+  static equals(
+    a: StakePositionWithRewardsInfo | PlainMessage<StakePositionWithRewardsInfo> | undefined,
+    b: StakePositionWithRewardsInfo | PlainMessage<StakePositionWithRewardsInfo> | undefined,
+  ): boolean {
     return proto3.util.equals(StakePositionWithRewardsInfo, a, b);
   }
 }
-

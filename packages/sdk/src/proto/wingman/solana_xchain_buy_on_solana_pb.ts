@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
 import { Account } from "../caip/account_pb.js";
 import { AssetAmount, Base58Pubkey, PrintrProtocolVersion, TokenAmount } from "./misc_pb.js";
@@ -71,19 +78,31 @@ export class SolanaXchainBuyOnSolanaRequest extends Message<SolanaXchainBuyOnSol
     { no: 6, name: "spend_on_source", kind: "message", T: AssetAmount },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaXchainBuyOnSolanaRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaXchainBuyOnSolanaRequest {
     return new SolanaXchainBuyOnSolanaRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaXchainBuyOnSolanaRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaXchainBuyOnSolanaRequest {
     return new SolanaXchainBuyOnSolanaRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaXchainBuyOnSolanaRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaXchainBuyOnSolanaRequest {
     return new SolanaXchainBuyOnSolanaRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaXchainBuyOnSolanaRequest | PlainMessage<SolanaXchainBuyOnSolanaRequest> | undefined, b: SolanaXchainBuyOnSolanaRequest | PlainMessage<SolanaXchainBuyOnSolanaRequest> | undefined): boolean {
+  static equals(
+    a: SolanaXchainBuyOnSolanaRequest | PlainMessage<SolanaXchainBuyOnSolanaRequest> | undefined,
+    b: SolanaXchainBuyOnSolanaRequest | PlainMessage<SolanaXchainBuyOnSolanaRequest> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaXchainBuyOnSolanaRequest, a, b);
   }
 }
@@ -170,20 +189,31 @@ export class SolanaXchainBuyOnSolanaResponse extends Message<SolanaXchainBuyOnSo
     { no: 8, name: "debridge_order_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SolanaXchainBuyOnSolanaResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SolanaXchainBuyOnSolanaResponse {
     return new SolanaXchainBuyOnSolanaResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SolanaXchainBuyOnSolanaResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaXchainBuyOnSolanaResponse {
     return new SolanaXchainBuyOnSolanaResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SolanaXchainBuyOnSolanaResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SolanaXchainBuyOnSolanaResponse {
     return new SolanaXchainBuyOnSolanaResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SolanaXchainBuyOnSolanaResponse | PlainMessage<SolanaXchainBuyOnSolanaResponse> | undefined, b: SolanaXchainBuyOnSolanaResponse | PlainMessage<SolanaXchainBuyOnSolanaResponse> | undefined): boolean {
+  static equals(
+    a: SolanaXchainBuyOnSolanaResponse | PlainMessage<SolanaXchainBuyOnSolanaResponse> | undefined,
+    b: SolanaXchainBuyOnSolanaResponse | PlainMessage<SolanaXchainBuyOnSolanaResponse> | undefined,
+  ): boolean {
     return proto3.util.equals(SolanaXchainBuyOnSolanaResponse, a, b);
   }
 }
-

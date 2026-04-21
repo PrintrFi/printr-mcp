@@ -17,7 +17,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
@@ -73,7 +80,10 @@ export class Http extends Message<Http> {
     return new Http().fromJsonString(jsonString, options);
   }
 
-  static equals(a: Http | PlainMessage<Http> | undefined, b: Http | PlainMessage<Http> | undefined): boolean {
+  static equals(
+    a: Http | PlainMessage<Http> | undefined,
+    b: Http | PlainMessage<Http> | undefined,
+  ): boolean {
     return proto3.util.equals(Http, a, b);
   }
 }
@@ -364,59 +374,66 @@ export class HttpRule extends Message<HttpRule> {
    *
    * @generated from oneof google.api.HttpRule.pattern
    */
-  pattern: {
-    /**
-     * Maps to HTTP GET. Used for listing and getting information about
-     * resources.
-     *
-     * @generated from field: string get = 2;
-     */
-    value: string;
-    case: "get";
-  } | {
-    /**
-     * Maps to HTTP PUT. Used for replacing a resource.
-     *
-     * @generated from field: string put = 3;
-     */
-    value: string;
-    case: "put";
-  } | {
-    /**
-     * Maps to HTTP POST. Used for creating a resource or performing an action.
-     *
-     * @generated from field: string post = 4;
-     */
-    value: string;
-    case: "post";
-  } | {
-    /**
-     * Maps to HTTP DELETE. Used for deleting a resource.
-     *
-     * @generated from field: string delete = 5;
-     */
-    value: string;
-    case: "delete";
-  } | {
-    /**
-     * Maps to HTTP PATCH. Used for updating a resource.
-     *
-     * @generated from field: string patch = 6;
-     */
-    value: string;
-    case: "patch";
-  } | {
-    /**
-     * The custom pattern is used for specifying an HTTP method that is not
-     * included in the `pattern` field, such as HEAD, or "*" to leave the
-     * HTTP method unspecified for this rule. The wild-card rule is useful
-     * for services that provide content to Web (HTML) clients.
-     *
-     * @generated from field: google.api.CustomHttpPattern custom = 8;
-     */
-    value: CustomHttpPattern;
-    case: "custom";
-  } | { case: undefined; value?: undefined } = { case: undefined };
+  pattern:
+    | {
+        /**
+         * Maps to HTTP GET. Used for listing and getting information about
+         * resources.
+         *
+         * @generated from field: string get = 2;
+         */
+        value: string;
+        case: "get";
+      }
+    | {
+        /**
+         * Maps to HTTP PUT. Used for replacing a resource.
+         *
+         * @generated from field: string put = 3;
+         */
+        value: string;
+        case: "put";
+      }
+    | {
+        /**
+         * Maps to HTTP POST. Used for creating a resource or performing an action.
+         *
+         * @generated from field: string post = 4;
+         */
+        value: string;
+        case: "post";
+      }
+    | {
+        /**
+         * Maps to HTTP DELETE. Used for deleting a resource.
+         *
+         * @generated from field: string delete = 5;
+         */
+        value: string;
+        case: "delete";
+      }
+    | {
+        /**
+         * Maps to HTTP PATCH. Used for updating a resource.
+         *
+         * @generated from field: string patch = 6;
+         */
+        value: string;
+        case: "patch";
+      }
+    | {
+        /**
+         * The custom pattern is used for specifying an HTTP method that is not
+         * included in the `pattern` field, such as HEAD, or "*" to leave the
+         * HTTP method unspecified for this rule. The wild-card rule is useful
+         * for services that provide content to Web (HTML) clients.
+         *
+         * @generated from field: google.api.CustomHttpPattern custom = 8;
+         */
+        value: CustomHttpPattern;
+        case: "custom";
+      }
+    | { case: undefined; value?: undefined } = { case: undefined };
 
   /**
    * The name of the request field whose value is mapped to the HTTP request
@@ -483,7 +500,10 @@ export class HttpRule extends Message<HttpRule> {
     return new HttpRule().fromJsonString(jsonString, options);
   }
 
-  static equals(a: HttpRule | PlainMessage<HttpRule> | undefined, b: HttpRule | PlainMessage<HttpRule> | undefined): boolean {
+  static equals(
+    a: HttpRule | PlainMessage<HttpRule> | undefined,
+    b: HttpRule | PlainMessage<HttpRule> | undefined,
+  ): boolean {
     return proto3.util.equals(HttpRule, a, b);
   }
 }
@@ -532,8 +552,10 @@ export class CustomHttpPattern extends Message<CustomHttpPattern> {
     return new CustomHttpPattern().fromJsonString(jsonString, options);
   }
 
-  static equals(a: CustomHttpPattern | PlainMessage<CustomHttpPattern> | undefined, b: CustomHttpPattern | PlainMessage<CustomHttpPattern> | undefined): boolean {
+  static equals(
+    a: CustomHttpPattern | PlainMessage<CustomHttpPattern> | undefined,
+    b: CustomHttpPattern | PlainMessage<CustomHttpPattern> | undefined,
+  ): boolean {
     return proto3.util.equals(CustomHttpPattern, a, b);
   }
 }
-
