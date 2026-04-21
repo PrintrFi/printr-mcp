@@ -92,6 +92,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["**/proto/**/*.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noShadowRestrictedNames": "off"
+          }
+        }
+      }
     }
   ]
 }
