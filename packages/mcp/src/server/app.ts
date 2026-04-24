@@ -1,5 +1,6 @@
 import { logger } from "@printr/sdk";
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import {
   type CreateSessionInput,
@@ -50,6 +51,9 @@ export function buildApp() {
       credentials: true,
     }),
   );
+
+  // Limit request body size to 1MB to prevent memory exhaustion attacks
+  app.use("*", bodyLimit({ maxSize: 1024 * 1024 }));
 
   app.get("/health", (c) => c.json({ ok: true }));
 

@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { isAbsolute, normalize, resolve } from "node:path";
 import { OpenRouter } from "@openrouter/sdk";
 import { err, ok, ResultAsync } from "neverthrow";
 import sharp from "sharp";
@@ -164,13 +165,50 @@ export function compressImageBuffer(buffer: Buffer): ResultAsync<Buffer, ImageEr
 }
 
 /**
+ * Validates that a file path is safe to read (no directory traversal).
+ * Rejects paths containing traversal sequences or non-absolute paths.
+ */
+function validateImagePath(filePath: string): ResultAsync<string, ImageError> {
+  // Normalize the path to resolve any . or .. segments
+  const normalizedPath = normalize(filePath);
+
+  // Check for directory traversal attempts
+  if (filePath.includes("..") || normalizedPath.includes("..")) {
+    return ResultAsync.fromSafePromise(
+      Promise.reject({ message: "Invalid file path: directory traversal not allowed" }),
+    );
+  }
+
+  // Require absolute paths to prevent ambiguity
+  if (!isAbsolute(normalizedPath)) {
+    return ResultAsync.fromSafePromise(
+      Promise.reject({ message: "Invalid file path: must be an absolute path" }),
+    );
+  }
+
+  // Verify the resolved path matches the normalized path (catches symlink tricks)
+  const resolvedPath = resolve(normalizedPath);
+  if (resolvedPath !== normalizedPath) {
+    return ResultAsync.fromSafePromise(
+      Promise.reject({ message: "Invalid file path: path resolution mismatch" }),
+    );
+  }
+
+  return ResultAsync.fromSafePromise(Promise.resolve(normalizedPath));
+}
+
+/**
  * Reads an image from disk, compresses it with sharp if it would exceed the
  * 500 KB base64 limit, and returns a raw base64 string (no data-URI prefix).
+ * Validates the path to prevent directory traversal attacks.
  */
 export function processImagePath(filePath: string): ResultAsync<string, ImageError> {
-  return ResultAsync.fromPromise(readFile(filePath), (e) => ({
-    message: `Cannot read image file: ${filePath} — ${String(e)}`,
-  }))
+  return validateImagePath(filePath)
+    .andThen((validPath) =>
+      ResultAsync.fromPromise(readFile(validPath), (e) => ({
+        message: `Cannot read image file: ${validPath} — ${String(e)}`,
+      })),
+    )
     .andThen((buffer) => compressImageBuffer(buffer))
     .map((buffer) => buffer.toString("base64"));
 }
