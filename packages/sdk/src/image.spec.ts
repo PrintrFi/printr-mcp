@@ -79,6 +79,19 @@ describe("processImagePath", () => {
     expect(b64).not.toStartWith("data:");
     expect(() => Buffer.from(b64, "base64")).not.toThrow();
   });
+
+  it.each([
+    ["foo.jpg", /must be an absolute path/],
+    ["./foo.jpg", /must be an absolute path/],
+    ["images/foo.jpg", /must be an absolute path/],
+    ["../etc/passwd", /directory traversal/],
+    ["/tmp/../etc/passwd", /directory traversal/],
+    ["/foo/..", /directory traversal/],
+  ])("rejects unsafe path %p as Result.err", async (badPath, expected) => {
+    const result = await processImagePath(badPath);
+    expect(result.isErr()).toBe(true);
+    expect(result._unsafeUnwrapErr().message).toMatch(expected);
+  });
 });
 
 // generateTokenImage ----------------------------------------------------
