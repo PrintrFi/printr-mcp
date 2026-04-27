@@ -6,9 +6,7 @@
       "name": "printr-mcp",
       "dependencies": {
         "@hono/node-server": "^1.19.14",
-        "bn.js": "^5.2.3",
         "hono": "^4.12.14",
-        "minimatch": "^10.2.5",
       },
       "devDependencies": {
         "@biomejs/biome": "^2.4.12",

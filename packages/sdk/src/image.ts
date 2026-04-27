@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { isAbsolute, normalize, resolve } from "node:path";
+import { isAbsolute, normalize } from "node:path";
 import { OpenRouter } from "@openrouter/sdk";
 import { err, errAsync, ok, okAsync, ResultAsync } from "neverthrow";
 import sharp from "sharp";
@@ -171,17 +171,16 @@ export function compressImageBuffer(buffer: Buffer): ResultAsync<Buffer, ImageEr
 function validateImagePath(filePath: string): ResultAsync<string, ImageError> {
   const normalizedPath = normalize(filePath);
 
-  if (filePath.includes("..") || normalizedPath.includes("..")) {
+  // Match `..` as a path segment, not a substring — `foo..bar.jpg` is a valid filename.
+  const hasTraversalSegment = (p: string): boolean =>
+    p.split(/[/\\]/).some((segment) => segment === "..");
+
+  if (hasTraversalSegment(filePath) || hasTraversalSegment(normalizedPath)) {
     return errAsync({ message: "Invalid file path: directory traversal not allowed" });
   }
 
   if (!isAbsolute(normalizedPath)) {
     return errAsync({ message: "Invalid file path: must be an absolute path" });
-  }
-
-  // Catch symlink/normalisation tricks where resolve() differs from normalize()
-  if (resolve(normalizedPath) !== normalizedPath) {
-    return errAsync({ message: "Invalid file path: path resolution mismatch" });
   }
 
   return okAsync(normalizedPath);

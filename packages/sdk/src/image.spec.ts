@@ -92,6 +92,16 @@ describe("processImagePath", () => {
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr().message).toMatch(expected);
   });
+
+  it("accepts a filename that contains '..' but no traversal segment", async () => {
+    const buf = await makeJpeg(64, 64);
+    const path = join(TMP_DIR, "foo..bar.jpg");
+    await writeFile(path, buf);
+
+    const result = await processImagePath(path);
+    expect(result.isOk()).toBe(true);
+    expect(Buffer.from(result._unsafeUnwrap(), "base64").length).toBe(buf.length);
+  });
 });
 
 // generateTokenImage ----------------------------------------------------
