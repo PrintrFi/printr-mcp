@@ -200,12 +200,16 @@ console.log(wallets.map((w) => `${w.label}: ${w.address}`));
 
 ### EVM Chains (via CAIP-2)
 - Ethereum: `eip155:1`
-- Base: `eip155:8453`
-- Polygon: `eip155:137`
-- Arbitrum: `eip155:42161`
-- Optimism: `eip155:10`
-- Avalanche: `eip155:43114`
 - BNB Smart Chain: `eip155:56`
+- Unichain: `eip155:130`
+- Monad: `eip155:143`
+- HyperEVM: `eip155:999`
+- MegaETH: `eip155:4326`
+- Mantle: `eip155:5000`
+- Base: `eip155:8453`
+- Plasma: `eip155:9745`
+- Arbitrum: `eip155:42161`
+- Avalanche: `eip155:43114`
 
 ### Solana
 - Mainnet: `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`
