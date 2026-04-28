@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
+import { isAbsolute, normalize } from "node:path";
 import { OpenRouter } from "@openrouter/sdk";
-import { err, ok, ResultAsync } from "neverthrow";
+import { err, errAsync, ok, okAsync, ResultAsync } from "neverthrow";
 import sharp from "sharp";
 import { env } from "./env.js";
 
@@ -164,13 +165,39 @@ export function compressImageBuffer(buffer: Buffer): ResultAsync<Buffer, ImageEr
 }
 
 /**
+ * Validates that a file path is safe to read (no directory traversal).
+ * Rejects paths containing traversal sequences or non-absolute paths.
+ */
+function validateImagePath(filePath: string): ResultAsync<string, ImageError> {
+  const normalizedPath = normalize(filePath);
+
+  // Match `..` as a path segment, not a substring — `foo..bar.jpg` is a valid filename.
+  const hasTraversalSegment = (p: string): boolean =>
+    p.split(/[/\\]/).some((segment) => segment === "..");
+
+  if (hasTraversalSegment(filePath) || hasTraversalSegment(normalizedPath)) {
+    return errAsync({ message: "Invalid file path: directory traversal not allowed" });
+  }
+
+  if (!isAbsolute(normalizedPath)) {
+    return errAsync({ message: "Invalid file path: must be an absolute path" });
+  }
+
+  return okAsync(normalizedPath);
+}
+
+/**
  * Reads an image from disk, compresses it with sharp if it would exceed the
  * 500 KB base64 limit, and returns a raw base64 string (no data-URI prefix).
+ * Validates the path to prevent directory traversal attacks.
  */
 export function processImagePath(filePath: string): ResultAsync<string, ImageError> {
-  return ResultAsync.fromPromise(readFile(filePath), (e) => ({
-    message: `Cannot read image file: ${filePath} — ${String(e)}`,
-  }))
+  return validateImagePath(filePath)
+    .andThen((validPath) =>
+      ResultAsync.fromPromise(readFile(validPath), (e) => ({
+        message: `Cannot read image file: ${validPath} — ${String(e)}`,
+      })),
+    )
     .andThen((buffer) => compressImageBuffer(buffer))
     .map((buffer) => buffer.toString("base64"));
 }

@@ -46,7 +46,10 @@ export function registerWalletTools(server: McpServer): void {
             "CAIP-2 chain ID (e.g. 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' or 'eip155:8453')",
           ),
         label: z.string().min(1).describe("Human-readable label for this wallet"),
-        password: z.string().min(1).describe("Password used to encrypt the private key at rest"),
+        password: z
+          .string()
+          .min(12)
+          .describe("Password used to encrypt the private key at rest (minimum 12 characters)"),
       }),
       outputSchema: z.object({
         address: z.string().describe("New wallet address"),
@@ -103,7 +106,11 @@ export function registerWalletTools(server: McpServer): void {
           .string()
           .optional()
           .describe("Label for saving to keystore (required together with password)"),
-        password: z.string().optional().describe("Password to encrypt and save to keystore"),
+        password: z
+          .string()
+          .min(12)
+          .optional()
+          .describe("Password to encrypt and save to keystore (minimum 12 characters)"),
       }),
       outputSchema: z.object({
         address: z.string().describe("Derived wallet address"),
@@ -184,7 +191,7 @@ export function registerWalletTools(server: McpServer): void {
         "of the session (until the MCP server restarts).",
       inputSchema: z.object({
         wallet_id: z.string().describe("Keystore wallet ID — from printr_wallet_list"),
-        password: z.string().describe("Decryption password"),
+        password: z.string().min(1).describe("Decryption password"),
       }),
       outputSchema: z.object({
         address: z.string().describe("Wallet address"),
