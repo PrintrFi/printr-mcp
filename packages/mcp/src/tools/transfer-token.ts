@@ -86,12 +86,12 @@ const inputSchema = z.object({
         "On Solana this MUST be the recipient's owner wallet, not an associated token account — " +
         "the ATA is derived automatically.",
     ),
-  token_address: z
+  token: z
     .string()
     .describe(
-      "Token contract address (EVM ERC20 contract) or SPL mint address. " +
-        "Must belong to the same chain as the recipient. " +
-        "Decimals are auto-detected from the token contract / mint.",
+      "CAIP-10 token ID (e.g. 'eip155:8453:0xtoken...' or 'solana:5eykt...:mintAddress'). " +
+        "Must be on the same chain as the recipient. Decimals are auto-detected from the " +
+        "token contract / mint.",
     ),
   amount: z.string().describe("Amount to send in human-readable units (e.g. '1.5' for 1.5 USDC)"),
   private_key: z
@@ -108,7 +108,7 @@ const outputSchema = z.object({
   to: z.string().describe("Recipient CAIP-10 address"),
   chain: z.string().describe("CAIP-2 chain ID"),
   chain_name: z.string().describe("Human-readable chain name"),
-  token_address: z.string().describe("Token contract or SPL mint address"),
+  token: z.string().describe("CAIP-10 token ID"),
   amount: z.string().describe("Amount sent in human-readable units"),
   amount_atomic: z.string().describe("Amount sent in atomic units"),
   tx_hash: z.string().optional().describe("EVM transaction hash"),
@@ -136,35 +136,33 @@ export function registerTransferTokenTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution(
-      "printr_transfer_token",
-      ({ to, token_address, amount, private_key, rpc_url }) =>
-        toToolResponseAsync(
-          validateInputs(to, private_key).asyncAndThen(
-            ({ namespace, chainRef, address, caip2, meta, key }) =>
-              executeTokenTransfer(
-                namespace,
-                chainRef,
-                address,
-                token_address,
-                amount,
-                key,
-                meta,
-                rpc_url,
-              ).map((result) => ({
-                to,
-                chain: caip2,
-                chain_name: meta.name,
-                token_address,
-                amount,
-                amount_atomic: result.amount_atomic,
-                ...match(result)
-                  .with({ type: "svm" }, (r) => ({ signature: r.signature }))
-                  .with({ type: "evm" }, (r) => ({ tx_hash: r.tx_hash }))
-                  .exhaustive(),
-              })),
-          ),
+    logToolExecution("printr_transfer_token", ({ to, token, amount, private_key, rpc_url }) =>
+      toToolResponseAsync(
+        validateInputs(to, private_key).asyncAndThen(
+          ({ namespace, chainRef, address, caip2, meta, key }) =>
+            executeTokenTransfer(
+              namespace,
+              chainRef,
+              address,
+              token,
+              amount,
+              key,
+              meta,
+              rpc_url,
+            ).map((result) => ({
+              to,
+              chain: caip2,
+              chain_name: meta.name,
+              token,
+              amount,
+              amount_atomic: result.amount_atomic,
+              ...match(result)
+                .with({ type: "svm" }, (r) => ({ signature: r.signature }))
+                .with({ type: "evm" }, (r) => ({ tx_hash: r.tx_hash }))
+                .exhaustive(),
+            })),
         ),
+      ),
     ),
   );
 }

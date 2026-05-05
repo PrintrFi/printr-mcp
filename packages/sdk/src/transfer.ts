@@ -16,6 +16,7 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import { errAsync, ResultAsync } from "neverthrow";
+import { parseCaip10, toCaip2 } from "./caip.js";
 import {
   createPublicClient,
   createWalletClient,
@@ -293,29 +294,48 @@ const fetchErc20Decimals = async (
  * Dispatch a fungible-token transfer to the appropriate chain implementation.
  *
  * Mirrors {@link executeTransfer} but for ERC20 / SPL tokens instead of native coins.
- * Token decimals are auto-detected from the contract (`decimals()`) on EVM, or from
- * the mint account on Solana, and the human-readable `amount` is parsed against them.
+ * The `token` parameter is a CAIP-10 token ID (e.g. `eip155:8453:0x...` or
+ * `solana:5eykt...:<mint>`); the dispatcher rejects tokens that do not belong to the
+ * same chain as the recipient before any RPC call. Decimals are auto-detected from
+ * the contract (`decimals()`) on EVM or from the mint account on Solana, and the
+ * human-readable `amount` is parsed against them.
  *
  * @param namespace - CAIP-2 namespace: `"eip155"` or `"solana"`
  * @param chainRef - Chain reference: numeric chain ID for EVM, base58 genesis hash for Solana
  * @param toAddress - Recipient address (raw, not CAIP-10)
- * @param tokenAddress - ERC20 contract address or SPL mint address
+ * @param token - CAIP-10 token ID (`<namespace>:<chainRef>:<contract-or-mint>`); must
+ *   match `namespace`/`chainRef`
  * @param amount - Human-readable amount (e.g. `"1.5"` for 1.5 USDC)
  * @param privateKey - Sender private key (hex for EVM, base58 secret key for Solana)
  * @param meta - Chain metadata for the destination chain
  * @param rpcOverride - Optional RPC endpoint override
  * @returns Result with the transfer outcome ({@link TransferResult}) or a {@link TransferError}
+ *   (including chain-mismatch errors)
  */
 export const executeTokenTransfer = (
   namespace: string,
   chainRef: string,
   toAddress: string,
-  tokenAddress: string,
+  token: string,
   amount: string,
   privateKey: string,
   meta: ChainMeta,
   rpcOverride?: string,
 ): ResultAsync<TransferResult, TransferError> => {
+  const expectedChain = toCaip2({ namespace, chainRef });
+
+  const tokenParsed = parseCaip10(token);
+  if (!tokenParsed) {
+    return errAsync({ message: `Invalid CAIP-10 token: ${token}` });
+  }
+  const tokenChain = toCaip2(tokenParsed);
+  if (tokenChain !== expectedChain) {
+    return errAsync({
+      message: `Token chain mismatch. Token is on ${tokenChain}, recipient is on ${expectedChain}.`,
+    });
+  }
+  const tokenAddress = tokenParsed.address;
+
   if (namespace === "solana") {
     const rpc = getSvmRpcUrl(rpcOverride);
     const connection = new Connection(rpc, "confirmed");
@@ -336,11 +356,10 @@ export const executeTokenTransfer = (
     );
   }
 
-  const caip2 = `eip155:${chainRef}`;
-  const rpc = getRpcUrl(caip2, rpcOverride);
+  const rpc = getRpcUrl(expectedChain, rpcOverride);
   if (!rpc) {
     return errAsync({
-      message: `No RPC URL for chain ${caip2}. Pass rpc_url explicitly or set RPC_URLS.`,
+      message: `No RPC URL for chain ${expectedChain}. Pass rpc_url explicitly or set RPC_URLS.`,
     });
   }
 
