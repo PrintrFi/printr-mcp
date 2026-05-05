@@ -22,6 +22,7 @@ import { registerSignAndSubmitEvmTool } from "~/tools/sign-and-submit-evm.js";
 import { registerSignAndSubmitSvmTool } from "~/tools/sign-and-submit-svm.js";
 import { registerSupportedChainsTool } from "~/tools/supported-chains.js";
 import { registerTransferTool } from "~/tools/transfer.js";
+import { registerTransferTokenTool } from "~/tools/transfer-token.js";
 import { registerWalletTools } from "~/tools/wallet.js";
 import { version } from "../package.json";
 
@@ -49,6 +50,7 @@ export async function startMcpServer() {
   registerGetBalanceTool(server);
   registerGetTokenBalanceTool(server);
   registerTransferTool(server);
+  registerTransferTokenTool(server);
   registerFundDeploymentWalletTool(server);
   registerDrainDeploymentWalletTool(server);
   registerSupportedChainsTool(server);
