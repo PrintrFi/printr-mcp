@@ -130,6 +130,23 @@ export const executeTransfer = (
   );
 };
 
+/**
+ * Transfer an ERC20 token on an EVM chain.
+ *
+ * Calls the standard `transfer(address,uint256)` method on the token contract.
+ * The caller is responsible for ensuring `amount` is in the token's atomic units
+ * (use {@link executeTokenTransfer} for human-readable amounts with auto-detected decimals).
+ *
+ * @param chainId - EVM chain ID (e.g. `8453` for Base)
+ * @param toAddress - Recipient EVM address
+ * @param tokenAddress - ERC20 contract address
+ * @param amount - Transfer amount in atomic units
+ * @param privateKey - Sender private key (hex, with or without `0x` prefix)
+ * @param rpcUrl - JSON-RPC endpoint URL
+ * @param meta - Chain metadata (used for viem chain definition)
+ * @returns Transaction hash and the amount sent
+ * @throws If the RPC call fails or the contract reverts
+ */
 export const transferErc20 = async (
   chainId: number,
   toAddress: `0x${string}`,
@@ -153,6 +170,24 @@ export const transferErc20 = async (
   return { type: "evm", tx_hash: hash, amount_atomic: amount.toString() };
 };
 
+/**
+ * Transfer an SPL token on Solana.
+ *
+ * Auto-detects the token program (SPL classic or Token-2022) from the mint account
+ * owner, fetches the mint's decimals, and creates the recipient's associated token
+ * account on demand if it does not yet exist (the sender pays the rent).
+ *
+ * The caller is responsible for ensuring `amount` is in the token's atomic units
+ * (use {@link executeTokenTransfer} for human-readable amounts with auto-detected decimals).
+ *
+ * @param toAddress - Recipient Solana address (the wallet, not the ATA)
+ * @param mintAddress - SPL token mint address
+ * @param amount - Transfer amount in atomic units (smallest unit, per mint decimals)
+ * @param privateKey - Sender keypair as a base58-encoded secret key
+ * @param rpcUrl - Solana JSON-RPC endpoint URL
+ * @returns Transaction signature and the amount sent
+ * @throws If the mint is not found, the RPC fails, or the transaction errors
+ */
 export const transferSplToken = async (
   toAddress: string,
   mintAddress: string,
@@ -236,6 +271,23 @@ const fetchSplDecimals = async (mintAddress: string, rpcUrl: string): Promise<nu
   return mintInfo.decimals;
 };
 
+/**
+ * Dispatch a fungible-token transfer to the appropriate chain implementation.
+ *
+ * Mirrors {@link executeTransfer} but for ERC20 / SPL tokens instead of native coins.
+ * Token decimals are auto-detected from the contract (`decimals()`) on EVM, or from
+ * the mint account on Solana, and the human-readable `amount` is parsed against them.
+ *
+ * @param namespace - CAIP-2 namespace: `"eip155"` or `"solana"`
+ * @param chainRef - Chain reference: numeric chain ID for EVM, base58 genesis hash for Solana
+ * @param toAddress - Recipient address (raw, not CAIP-10)
+ * @param tokenAddress - ERC20 contract address or SPL mint address
+ * @param amount - Human-readable amount (e.g. `"1.5"` for 1.5 USDC)
+ * @param privateKey - Sender private key (hex for EVM, base58 secret key for Solana)
+ * @param meta - Chain metadata for the destination chain
+ * @param rpcOverride - Optional RPC endpoint override
+ * @returns Result with the transfer outcome ({@link TransferResult}) or a {@link TransferError}
+ */
 export const executeTokenTransfer = (
   namespace: string,
   chainRef: string,

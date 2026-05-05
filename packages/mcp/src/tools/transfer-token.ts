@@ -110,6 +110,16 @@ const outputSchema = z.object({
   signature: z.string().optional().describe("Solana transaction signature"),
 });
 
+/**
+ * Register the `printr_transfer_token` MCP tool.
+ *
+ * Exposes fungible-token transfers (ERC20 on EVM chains, SPL tokens on Solana) over MCP.
+ * Decimals are auto-detected from the token contract or mint, and the recipient's SPL
+ * associated token account is created on demand if it does not exist. Falls back to the
+ * unlocked active wallet when `private_key` is omitted.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerTransferTokenTool(server: McpServer): void {
   server.registerTool(
     "printr_transfer_token",
