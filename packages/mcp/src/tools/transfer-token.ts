@@ -81,11 +81,16 @@ function validateInputs(
 const inputSchema = z.object({
   to: z
     .string()
-    .describe("CAIP-10 recipient address (e.g. 'eip155:8453:0x...' or 'solana:5eykt...:pubkey')"),
+    .describe(
+      "CAIP-10 recipient address (e.g. 'eip155:8453:0x...' or 'solana:5eykt...:pubkey'). " +
+        "On Solana this MUST be the recipient's owner wallet, not an associated token account — " +
+        "the ATA is derived automatically.",
+    ),
   token_address: z
     .string()
     .describe(
       "Token contract address (EVM ERC20 contract) or SPL mint address. " +
+        "Must belong to the same chain as the recipient. " +
         "Decimals are auto-detected from the token contract / mint.",
     ),
   amount: z.string().describe("Amount to send in human-readable units (e.g. '1.5' for 1.5 USDC)"),

@@ -1,7 +1,9 @@
 import {
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   createTransferCheckedInstruction,
+  ExtensionType,
   getAssociatedTokenAddress,
+  getExtensionTypes,
   getMint,
 } from "@solana/spl-token";
 import {
@@ -170,23 +172,64 @@ export const transferErc20 = async (
   return { type: "evm", tx_hash: hash, amount_atomic: amount.toString() };
 };
 
+type SplMintInfo = { programId: PublicKey; decimals: number };
+
+/**
+ * Fetch the program ID and decimals for an SPL mint, rejecting Token-2022 mints
+ * that use extensions ({@link ExtensionType}). Single round-trip for both pieces.
+ *
+ * Token-2022 extensions like `TransferFee`, `TransferHook`, and
+ * `ConfidentialTransferMint` require extension-aware instructions and additional
+ * accounts that {@link transferSplToken} does not currently emit. We surface a
+ * clear error rather than silently producing a transaction that will fail
+ * on-chain.
+ */
+const fetchSplMintInfo = async (connection: Connection, mint: PublicKey): Promise<SplMintInfo> => {
+  const mintAccount = await connection.getAccountInfo(mint);
+  if (!mintAccount) {
+    throw new Error(`Mint not found: ${mint.toBase58()}`);
+  }
+  const programId = mintAccount.owner;
+  const mintInfo = await getMint(connection, mint, undefined, programId);
+
+  const extensions = getExtensionTypes(mintInfo.tlvData);
+  if (extensions.length > 0) {
+    const names = extensions.map((e) => ExtensionType[e]).join(", ");
+    throw new Error(
+      `SPL mint ${mint.toBase58()} uses Token-2022 extensions (${names}) which are not ` +
+        `supported by transferSplToken. Tokens with extensions like TransferFee or ` +
+        `TransferHook require extension-aware instructions and additional accounts.`,
+    );
+  }
+
+  return { programId, decimals: mintInfo.decimals };
+};
+
 /**
  * Transfer an SPL token on Solana.
  *
- * Auto-detects the token program (SPL classic or Token-2022) from the mint account
- * owner, fetches the mint's decimals, and creates the recipient's associated token
- * account on demand if it does not yet exist (the sender pays the rent).
+ * Auto-detects the token program (SPL classic or Token-2022 without extensions) from
+ * the mint account owner, fetches the mint's decimals, and idempotently ensures the
+ * recipient's associated token account exists (the sender pays the rent if it has to
+ * be created).
+ *
+ * Token-2022 mints that enable extensions are rejected with a clear error — see
+ * {@link fetchSplMintInfo}.
  *
  * The caller is responsible for ensuring `amount` is in the token's atomic units
  * (use {@link executeTokenTransfer} for human-readable amounts with auto-detected decimals).
  *
- * @param toAddress - Recipient Solana address (the wallet, not the ATA)
+ * @param toAddress - Recipient Solana address — must be the **owner wallet**, not an
+ *   associated token account; the ATA is derived automatically
  * @param mintAddress - SPL token mint address
  * @param amount - Transfer amount in atomic units (smallest unit, per mint decimals)
  * @param privateKey - Sender keypair as a base58-encoded secret key
  * @param rpcUrl - Solana JSON-RPC endpoint URL
+ * @param mintInfo - Optional pre-fetched mint info to skip the on-chain lookup;
+ *   {@link executeTokenTransfer} passes this through after fetching once for decimals
  * @returns Transaction signature and the amount sent
- * @throws If the mint is not found, the RPC fails, or the transaction errors
+ * @throws If the mint is not found, uses unsupported Token-2022 extensions, or the
+ *   transaction errors
  */
 export const transferSplToken = async (
   toAddress: string,
@@ -194,40 +237,26 @@ export const transferSplToken = async (
   amount: bigint,
   privateKey: string,
   rpcUrl: string,
+  mintInfo?: SplMintInfo,
 ): Promise<SvmTransferResult> => {
   const connection = new Connection(rpcUrl, "confirmed");
   const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
   const mint = new PublicKey(mintAddress);
   const recipient = new PublicKey(toAddress);
 
-  const mintAccount = await connection.getAccountInfo(mint);
-  if (!mintAccount) {
-    throw new Error(`Mint not found: ${mintAddress}`);
-  }
-  const programId = mintAccount.owner;
-
-  const mintInfo = await getMint(connection, mint, undefined, programId);
-  const decimals = mintInfo.decimals;
+  const { programId, decimals } = mintInfo ?? (await fetchSplMintInfo(connection, mint));
 
   const sourceAta = await getAssociatedTokenAddress(mint, keypair.publicKey, false, programId);
   const destAta = await getAssociatedTokenAddress(mint, recipient, false, programId);
 
-  const transaction = new Transaction();
-
-  const destInfo = await connection.getAccountInfo(destAta);
-  if (!destInfo) {
-    transaction.add(
-      createAssociatedTokenAccountInstruction(
-        keypair.publicKey,
-        destAta,
-        recipient,
-        mint,
-        programId,
-      ),
-    );
-  }
-
-  transaction.add(
+  const transaction = new Transaction().add(
+    createAssociatedTokenAccountIdempotentInstruction(
+      keypair.publicKey,
+      destAta,
+      recipient,
+      mint,
+      programId,
+    ),
     createTransferCheckedInstruction(
       sourceAta,
       mint,
@@ -260,17 +289,6 @@ const fetchErc20Decimals = async (
   });
 };
 
-const fetchSplDecimals = async (mintAddress: string, rpcUrl: string): Promise<number> => {
-  const connection = new Connection(rpcUrl, "confirmed");
-  const mint = new PublicKey(mintAddress);
-  const mintAccount = await connection.getAccountInfo(mint);
-  if (!mintAccount) {
-    throw new Error(`Mint not found: ${mintAddress}`);
-  }
-  const mintInfo = await getMint(connection, mint, undefined, mintAccount.owner);
-  return mintInfo.decimals;
-};
-
 /**
  * Dispatch a fungible-token transfer to the appropriate chain implementation.
  *
@@ -300,10 +318,19 @@ export const executeTokenTransfer = (
 ): ResultAsync<TransferResult, TransferError> => {
   if (namespace === "solana") {
     const rpc = getSvmRpcUrl(rpcOverride);
-    return ResultAsync.fromPromise(fetchSplDecimals(tokenAddress, rpc), toTransferError).andThen(
-      (decimals) =>
+    const connection = new Connection(rpc, "confirmed");
+    const mint = new PublicKey(tokenAddress);
+    return ResultAsync.fromPromise(fetchSplMintInfo(connection, mint), toTransferError).andThen(
+      (mintInfo) =>
         ResultAsync.fromPromise(
-          transferSplToken(toAddress, tokenAddress, parseUnits(amount, decimals), privateKey, rpc),
+          transferSplToken(
+            toAddress,
+            tokenAddress,
+            parseUnits(amount, mintInfo.decimals),
+            privateKey,
+            rpc,
+            mintInfo,
+          ),
           toTransferError,
         ),
     );
