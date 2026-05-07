@@ -16,7 +16,6 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import { errAsync, ResultAsync } from "neverthrow";
-import { parseCaip10, toCaip2 } from "./caip.js";
 import {
   createPublicClient,
   createWalletClient,
@@ -26,6 +25,7 @@ import {
   parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import { parseCaip10, toCaip2 } from "./caip.js";
 import type { ChainMeta } from "./chains.js";
 import { getRpcUrl } from "./chains.js";
 import { normalisePrivateKey } from "./evm.js";
