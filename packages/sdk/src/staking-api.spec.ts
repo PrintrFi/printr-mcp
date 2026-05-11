@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { formatCaip10, parseCaip10, StakingLockPeriod } from "./staking-api.js";
+import { formatCaip10, parseCaip10, parseLockPeriod, StakingLockPeriod } from "./staking-api.js";
 
 describe("staking-api parseCaip10", () => {
   it("parses EVM CAIP-10", () => {
@@ -41,5 +41,28 @@ describe("StakingLockPeriod", () => {
   it("re-exports the enum", () => {
     expect(StakingLockPeriod.SEVEN_DAYS).toBeDefined();
     expect(StakingLockPeriod.THIRTY_DAYS).toBeDefined();
+  });
+});
+
+describe("parseLockPeriod", () => {
+  it("maps short form labels", () => {
+    expect(parseLockPeriod("7_DAYS")).toBe(StakingLockPeriod.SEVEN_DAYS);
+    expect(parseLockPeriod("14_DAYS")).toBe(StakingLockPeriod.FOURTEEN_DAYS);
+    expect(parseLockPeriod("30_DAYS")).toBe(StakingLockPeriod.THIRTY_DAYS);
+    expect(parseLockPeriod("60_DAYS")).toBe(StakingLockPeriod.SIXTY_DAYS);
+    expect(parseLockPeriod("90_DAYS")).toBe(StakingLockPeriod.NINETY_DAYS);
+    expect(parseLockPeriod("180_DAYS")).toBe(StakingLockPeriod.ONE_HUNDRED_EIGHTY_DAYS);
+    expect(parseLockPeriod("10_SECONDS")).toBe(StakingLockPeriod.TEN_SECONDS);
+  });
+
+  it("maps long form labels", () => {
+    expect(parseLockPeriod("SEVEN_DAYS")).toBe(StakingLockPeriod.SEVEN_DAYS);
+    expect(parseLockPeriod("ONE_HUNDRED_EIGHTY_DAYS")).toBe(
+      StakingLockPeriod.ONE_HUNDRED_EIGHTY_DAYS,
+    );
+  });
+
+  it("throws on unknown values", () => {
+    expect(() => parseLockPeriod("FIVE_DAYS")).toThrow("Invalid lock period");
   });
 });

@@ -13,7 +13,11 @@ import {
   type ClaimStakingRewardsResponse,
   ClaimStakingRewardsRequest as ProtoClaimStakingRewardsRequest,
 } from "./proto/api/claim_staking_rewards_pb.js";
-import { StakingLockPeriod } from "./proto/api/create_stake_position_pb.js";
+import {
+  type CreateStakePositionResponse,
+  CreateStakePositionRequest as ProtoCreateStakePositionRequest,
+  StakingLockPeriod,
+} from "./proto/api/create_stake_position_pb.js";
 import {
   type ListStakePositionsWithRewardsResponse,
   ListStakePositionsRequest as ProtoListStakePositionsRequest,
@@ -21,7 +25,7 @@ import {
   type StakePositionWithRewardsInfo,
   type StakeTelecoinInfo,
 } from "./proto/api/list_stake_positions_pb.js";
-import type { AssetAmountV1, TokenAmount } from "./proto/api/misc_pb.js";
+import { AssetAmountV1, TokenAmount } from "./proto/api/misc_pb.js";
 import type { EvmTxPayload, SolanaIx, SolanaTxPayload, TxPayload } from "./proto/api/payload_pb.js";
 import { Account } from "./proto/caip/account_pb.js";
 
@@ -128,6 +132,54 @@ export type SimpleTxPayload =
 export type ClaimStakingRewardsResult = {
   txPayload?: SimpleTxPayload | undefined;
 };
+
+export type CreateStakePositionParams = {
+  telecoinId: string;
+  payer: CaipAccount;
+  toStake: {
+    asset: CaipAccount;
+    atomic: string;
+    decimals: number;
+    display?: string;
+  };
+  lockPeriod: StakingLockPeriod;
+};
+
+export type CreateStakePositionResult = {
+  txPayload?: SimpleTxPayload | undefined;
+};
+
+/**
+ * Parse a lock-period string (e.g. "7_DAYS", "30_DAYS") into the proto enum.
+ * Throws on unknown values.
+ */
+export function parseLockPeriod(value: string): StakingLockPeriod {
+  switch (value) {
+    case "7_DAYS":
+    case "SEVEN_DAYS":
+      return StakingLockPeriod.SEVEN_DAYS;
+    case "14_DAYS":
+    case "FOURTEEN_DAYS":
+      return StakingLockPeriod.FOURTEEN_DAYS;
+    case "30_DAYS":
+    case "THIRTY_DAYS":
+      return StakingLockPeriod.THIRTY_DAYS;
+    case "60_DAYS":
+    case "SIXTY_DAYS":
+      return StakingLockPeriod.SIXTY_DAYS;
+    case "90_DAYS":
+    case "NINETY_DAYS":
+      return StakingLockPeriod.NINETY_DAYS;
+    case "180_DAYS":
+    case "ONE_HUNDRED_EIGHTY_DAYS":
+      return StakingLockPeriod.ONE_HUNDRED_EIGHTY_DAYS;
+    case "10_SECONDS":
+    case "TEN_SECONDS":
+      return StakingLockPeriod.TEN_SECONDS;
+    default:
+      throw new Error(`Invalid lock period: ${value}`);
+  }
+}
 
 // Singleton client
 let backendClient: Client<typeof Backend> | null = null;
@@ -401,6 +453,46 @@ export async function claimStakingRewards(
 
   const txPayload = toSimpleTxPayload(response.txPayload);
   const result: ClaimStakingRewardsResult = {};
+
+  if (txPayload !== undefined) {
+    result.txPayload = txPayload;
+  }
+
+  return result;
+}
+
+/**
+ * Create a new stake position for a telecoin.
+ * Returns a transaction payload to be signed and submitted by the payer.
+ */
+export async function createStakePosition(
+  request: CreateStakePositionParams,
+): Promise<CreateStakePositionResult> {
+  const client = getBackendClient();
+
+  const toStake = new AssetAmountV1({
+    asset: new Account({
+      chainId: request.toStake.asset.chainId,
+      address: request.toStake.asset.address,
+    }),
+    amount: new TokenAmount({
+      atomic: request.toStake.atomic,
+      display: request.toStake.display ?? "",
+      decimals: request.toStake.decimals,
+    }),
+  });
+
+  const protoRequest = new ProtoCreateStakePositionRequest({
+    telecoinId: request.telecoinId,
+    payer: new Account({ chainId: request.payer.chainId, address: request.payer.address }),
+    toStake,
+    lockPeriod: request.lockPeriod,
+  });
+
+  const response: CreateStakePositionResponse = await client.createStakePosition(protoRequest);
+
+  const txPayload = toSimpleTxPayload(response.txPayload);
+  const result: CreateStakePositionResult = {};
 
   if (txPayload !== undefined) {
     result.txPayload = txPayload;
