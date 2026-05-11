@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.5.0...sdk-v0.6.0) (2026-05-11)
+
+
+### Features
+
+* **sdk,mcp:** add printr_create_stake_position tool ([663b381](https://github.com/PrintrFi/printr-mcp/commit/663b3815dc11ffb4af6fe07fb366cc801adf82ab))
+* **sdk,mcp:** add printr_create_stake_position tool ([2607cae](https://github.com/PrintrFi/printr-mcp/commit/2607cae9094c5a0e78a42527567adc8cff900684))
+
 ## [0.5.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.4.0...sdk-v0.5.0) (2026-05-11)
 
 
