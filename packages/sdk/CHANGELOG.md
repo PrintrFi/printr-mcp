@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.4.0...sdk-v0.5.0) (2026-05-11)
+
+
+### Features
+
+* add fungible token transfer (SPL + ERC20) ([3f670e7](https://github.com/PrintrFi/printr-mcp/commit/3f670e7f06a757d1fac6f7d232da933e635cfe91))
+* **sdk,mcp:** require CAIP-10 token IDs for token transfer ([4b8c6d3](https://github.com/PrintrFi/printr-mcp/commit/4b8c6d387c3779ef997839a6ed93ce4e33fe1a3a)), closes [#58](https://github.com/PrintrFi/printr-mcp/issues/58)
+* **sdk:** add SPL and ERC20 token transfer functions ([e693191](https://github.com/PrintrFi/printr-mcp/commit/e6931917777ffa037c67b8b2107a2d946b150c3b))
+
+
+### Bug Fixes
+
+* **sdk,mcp:** address copilot review on token transfer ([fdaea12](https://github.com/PrintrFi/printr-mcp/commit/fdaea1230593d7a604a11bf99fdd5480dbb8dbcd))
+
 ## [0.4.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.3.1...sdk-v0.4.0) (2026-04-21)
 
 
