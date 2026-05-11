@@ -4,6 +4,7 @@ import { createPrintrClient } from "@printr/sdk";
 import { env } from "~/lib/env.js";
 import { registerClaimFeesTool } from "~/tools/claim-fees.js";
 import { registerClaimStakingRewardsTool } from "~/tools/claim-staking-rewards.js";
+import { registerCreateStakePositionTool } from "~/tools/create-stake-position.js";
 import { registerCreateTokenTool } from "~/tools/create-token.js";
 import { registerDrainDeploymentWalletTool } from "~/tools/drain-deployment-wallet.js";
 import { registerFundDeploymentWalletTool } from "~/tools/fund-deployment-wallet.js";
@@ -58,6 +59,7 @@ export async function startMcpServer() {
   registerClaimFeesTool(server);
   registerGetStakingPositionsTool(server);
   registerClaimStakingRewardsTool(server);
+  registerCreateStakePositionTool(server);
   if (env.OPENROUTER_API_KEY) {
     registerGenerateImageTool(server, env.OPENROUTER_API_KEY);
   }
