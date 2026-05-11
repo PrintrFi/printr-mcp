@@ -201,10 +201,13 @@ export { type BuildTokenInput, buildToken, type FeeSink } from "./token.js";
 // Transfer operations
 export {
   type EvmTransferResult,
+  executeTokenTransfer,
   executeTransfer,
   type SvmTransferResult,
   type TransferError,
   type TransferResult,
+  transferErc20,
   transferEvm,
+  transferSplToken,
   transferSvm,
 } from "./transfer.js";
