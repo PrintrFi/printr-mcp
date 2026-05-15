@@ -32,15 +32,21 @@ Or with `bunx`:
 }
 ```
 
-### Skills
+## Skill (optional, complements the MCP config above)
 
-If your agent runtime supports skills, you can install Printr directly:
+In addition to the MCP config, install the Printr skill to give your agent built-in guidance on when and how to use these tools. Compatible with Claude Code, Cursor, Codex, OpenCode, and [50+ other runtimes](https://www.skills.sh).
 
 ```sh
 npx skills add PrintrFi/printr-mcp
 ```
 
-See the [skill definition](packages/cli/skills/printr/SKILL.md) for details.
+Preview without installing:
+
+```sh
+npx skills add PrintrFi/printr-mcp --list
+```
+
+The skill is auto-discovered from `packages/cli/skills/printr/SKILL.md`. See the [skill definition](packages/cli/skills/printr/SKILL.md) for the full tool list and behavioral hints.
 
 ## Optional capabilities
 
