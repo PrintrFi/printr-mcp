@@ -84,15 +84,17 @@ By default, token creation returns an unsigned transaction that you sign via bro
 
 | Tool                        | Description                                                          |
 | --------------------------- | -------------------------------------------------------------------- |
-| `printr_quote`              | Get cost estimates for token creation                                |
-| `printr_create_token`       | Generate an unsigned token creation tx payload                       |
-| `printr_launch_token`       | Create and sign a token in one call                                  |
-| `printr_get_token`          | Look up token details by ID or address                               |
-| `printr_get_deployments`    | Check deployment status across target chains                         |
-| `printr_sign_and_submit_evm`| Sign and submit an EVM tx payload                                    |
-| `printr_sign_and_submit_svm`| Sign and submit a Solana tx payload                                  |
-| `printr_open_web_signer`    | Start a browser signing session (MetaMask / Phantom)                 |
-| `printr_generate_image`     | Generate a token avatar via OpenRouter (requires `OPENROUTER_API_KEY`)|
+| [`printr_quote`](packages/mcp/src/tools/quote.ts) | Get cost estimates for token creation                                |
+| [`printr_create_token`](packages/mcp/src/tools/create-token.ts) | Generate an unsigned token creation tx payload                       |
+| [`printr_launch_token`](packages/mcp/src/tools/launch-token.ts) | Create and sign a token in one call                                  |
+| [`printr_get_token`](packages/mcp/src/tools/get-token.ts) | Look up token details by ID or address                               |
+| [`printr_get_deployments`](packages/mcp/src/tools/get-deployments.ts) | Check deployment status across target chains                         |
+| [`printr_sign_and_submit_evm`](packages/mcp/src/tools/sign-and-submit-evm.ts) | Sign and submit an EVM tx payload                                    |
+| [`printr_sign_and_submit_svm`](packages/mcp/src/tools/sign-and-submit-svm.ts) | Sign and submit a Solana tx payload                                  |
+| [`printr_open_web_signer`](packages/mcp/src/tools/open-web-signer.ts) | Start a browser signing session (MetaMask / Phantom)                 |
+| [`printr_generate_image`](packages/mcp/src/tools/generate-image.ts) | Generate a token avatar via OpenRouter (requires `OPENROUTER_API_KEY`)|
+
+For the full tool list including wallet, balance, transfer, fees, and staking tools, see [`packages/cli/skills/printr/SKILL.md`](packages/cli/skills/printr/SKILL.md).
 
 ## Environment variables
 
@@ -115,9 +117,9 @@ By default, token creation returns an unsigned transaction that you sign via bro
 ## Development
 
 This is a monorepo with three packages:
-- `@printr/sdk` — Core TypeScript SDK (framework-agnostic)
-- `@printr/mcp` — MCP server wrapping the SDK
-- `@printr/cli` — CLI for setup and configuration
+- [`@printr/sdk`](packages/sdk) — Core TypeScript SDK (framework-agnostic)
+- [`@printr/mcp`](packages/mcp) — MCP server wrapping the SDK
+- [`@printr/cli`](packages/cli) — CLI for setup and configuration
 
 ```sh
 bun install
@@ -139,6 +141,8 @@ bun run --cwd packages/mcp build
 ```
 
 ### Using the SDK directly
+
+Uses [`createPrintrClient`](packages/sdk/src/client.ts) and [`buildToken`](packages/sdk/src/token.ts):
 
 ```typescript
 import { createPrintrClient, buildToken } from '@printr/sdk';
