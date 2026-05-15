@@ -1,0 +1,6 @@
+# CODEOWNERS — auto-requests review from listed users when a PR touches matching paths.
+# Syntax: <pattern> <owner> [<owner> ...]
+# Reference: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-security/customizing-your-repository/about-code-owners
+
+# Default owners for every file in the repo.
+*  @alanrsoares @0xCastr @lea-at-printr
