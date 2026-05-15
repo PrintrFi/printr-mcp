@@ -11,6 +11,14 @@ description: Launches cross-chain tokens via Printr MCP tools. Use when creating
 - Omit `private_key` to open browser signer
 - Omit `image`/`image_path` to auto-generate (requires OPENROUTER_API_KEY)
 
+## Two-Step Launch
+
+When the agent needs to inspect or relay the tx before signing, use the split flow:
+
+1. `printr_create_token` — returns an unsigned tx payload + token metadata
+2. `printr_sign_and_submit_evm` or `printr_sign_and_submit_svm` — sign and submit the payload (or pass `private_key` for autonomous mode)
+3. `printr_open_web_signer` — open a browser session (MetaMask / Phantom) when no key is available
+
 ## Treasury-Protected Launch
 
 For production, use ephemeral wallets to protect the treasury:
@@ -71,6 +79,15 @@ Specify ONE of:
 | `printr_create_stake_position` | Open a stake position on a Printr token |
 | `printr_get_staking_positions` | List stake positions (filter by token or owner) |
 | `printr_claim_staking_rewards` | Claim rewards or withdraw unlocked principal |
+
+## Signing Tools
+
+| Tool | Purpose |
+|------|---------|
+| `printr_create_token` | Build an unsigned token creation payload |
+| `printr_sign_and_submit_evm` | Sign and submit an EVM tx payload |
+| `printr_sign_and_submit_svm` | Sign and submit a Solana tx payload |
+| `printr_open_web_signer` | Start a browser signing session (MetaMask / Phantom) |
 
 ## Chain Format
 
