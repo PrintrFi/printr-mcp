@@ -1,5 +1,12 @@
 # @printr/mcp
 
+[![npm version](https://img.shields.io/npm/v/@printr/mcp.svg)](https://www.npmjs.com/package/@printr/mcp)
+[![npm downloads](https://img.shields.io/npm/dm/@printr/mcp.svg)](https://www.npmjs.com/package/@printr/mcp)
+[![license](https://img.shields.io/npm/l/@printr/mcp.svg)](https://github.com/PrintrFi/printr-mcp/blob/main/LICENSE)
+[![CI](https://github.com/PrintrFi/printr-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/PrintrFi/printr-mcp/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/PrintrFi/printr-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/PrintrFi/printr-mcp)
+[![skills.sh](https://skills.sh/b/PrintrFi/printr-mcp)](https://skills.sh/PrintrFi/printr-mcp)
+
 MCP server for [Printr](https://printr.money) — lets AI agents create, discover, and track tokens across chains.
 
 No API key required. Works out of the box.
