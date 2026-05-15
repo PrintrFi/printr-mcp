@@ -51,6 +51,7 @@ Specify ONE of:
 | `printr_get_balance` | Native token balance |
 | `printr_get_token_balance` | ERC-20/SPL token balance |
 | `printr_transfer` | Send native tokens |
+| `printr_transfer_token` | Send ERC-20/SPL tokens |
 | `printr_get_token` | Token metadata by ID |
 | `printr_get_deployments` | Per-chain deployment status |
 | `printr_supported_chains` | List all chains with CAIP-2 IDs |
@@ -62,6 +63,14 @@ Specify ONE of:
 |------|---------|
 | `printr_get_creator_fees` | Check claimable creator fees |
 | `printr_claim_fees` | Claim accumulated fees to treasury |
+
+## Staking Tools
+
+| Tool | Purpose |
+|------|---------|
+| `printr_create_stake_position` | Open a stake position on a Printr token |
+| `printr_get_staking_positions` | List stake positions (filter by token or owner) |
+| `printr_claim_staking_rewards` | Claim rewards or withdraw unlocked principal |
 
 ## Chain Format
 
