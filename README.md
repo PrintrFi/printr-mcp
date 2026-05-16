@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/PrintrFi/printr-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/PrintrFi/printr-mcp)
 [![skills.sh](https://skills.sh/b/PrintrFi/printr-mcp)](https://skills.sh/PrintrFi/printr-mcp)
 
-MCP server for [Printr](https://printr.money) — lets AI agents create, discover, and track tokens across chains.
+MCP server for [Printr](https://printr.money) — the cross-chain token launchpad built for holders. Lets AI agents launch, stake, and graduate tokens across EVM chains and Solana.
 
 No API key required. Works out of the box.
 
