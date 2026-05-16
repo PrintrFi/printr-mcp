@@ -1,6 +1,6 @@
 ---
 name: printr
-description: Launch cross-chain tokens via Printr MCP. Use to create memecoins, check wallet balances, manage keystore wallets, transfer native tokens on Base, Ethereum, Arbitrum, Solana, other supported chains.
+description: Launch cross-chain tokens via Printr MCP. Use to deploy tokens, check wallet balances, manage keystore wallets, transfer native or ERC-20 / SPL tokens on Base, Ethereum, Arbitrum, Solana, other supported chains.
 ---
 
 # Printr MCP
