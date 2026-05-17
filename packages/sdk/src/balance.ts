@@ -3,6 +3,7 @@ import { err, errAsync, ok, type Result, ResultAsync } from "neverthrow";
 import { createPublicClient, defineChain, erc20Abi, formatUnits, http } from "viem";
 import type { ChainMeta } from "./chains.js";
 import { getChainMeta, getRpcUrl, toCaip2 } from "./chains.js";
+import { PublicContractClient } from "./public-contract-client.js";
 import { getSvmRpcUrl } from "./svm.js";
 
 export type SimpleBalanceResult = {
@@ -173,18 +174,17 @@ export const getEvmTokenBalance = (
   rpcUrl: string,
   meta: ChainMeta,
 ): ResultAsync<SimpleBalanceResult, BalanceError> => {
-  const chain = createViemChain(chainId, meta, rpcUrl);
-  const client = createPublicClient({ chain, transport: http(rpcUrl) });
+  const token = new PublicContractClient({
+    address: tokenAddress,
+    abi: erc20Abi,
+    chain: createViemChain(chainId, meta, rpcUrl),
+    transport: http(rpcUrl),
+  });
   return ResultAsync.fromPromise(
     Promise.all([
-      client.readContract({
-        address: tokenAddress,
-        abi: erc20Abi,
-        functionName: "balanceOf",
-        args: [walletAddress],
-      }),
-      client.readContract({ address: tokenAddress, abi: erc20Abi, functionName: "decimals" }),
-      client.readContract({ address: tokenAddress, abi: erc20Abi, functionName: "symbol" }),
+      token.read({ functionName: "balanceOf", args: [walletAddress] }),
+      token.read({ functionName: "decimals" }),
+      token.read({ functionName: "symbol" }),
     ]).then(([balance, decimals, symbol]) => ({
       balance_atomic: balance.toString(),
       balance_formatted: formatUnits(balance, decimals),

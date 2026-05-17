@@ -133,6 +133,11 @@ export {
 } from "./keystore.js";
 // Logger
 export { createLogger, logger } from "./logger.js";
+// Public contract client
+export {
+  PublicContractClient,
+  type PublicContractClientConfig,
+} from "./public-contract-client.js";
 // Schemas
 export {
   asset,
