@@ -55,6 +55,10 @@ const createViemChain = (chainId: number, meta: ChainMeta, rpcUrl: string) =>
     rpcUrls: { default: { http: [rpcUrl] } },
   });
 
+/**
+ * Send the native gas token on an EVM chain. `amount` is in atomic units (wei).
+ * Throws if the RPC call fails. Use {@link executeTransfer} for namespace-agnostic transfers.
+ */
 export const transferEvm = async (
   chainId: number,
   toAddress: `0x${string}`,
@@ -72,6 +76,10 @@ export const transferEvm = async (
   return { type: "evm", tx_hash: hash, amount_atomic: amount.toString() };
 };
 
+/**
+ * Send native SOL. `lamports` is in atomic units (1 SOL = 1e9 lamports).
+ * `privateKey` is the base58-encoded secret key. Confirms before resolving.
+ */
 export const transferSvm = async (
   toAddress: string,
   lamports: bigint,
@@ -99,6 +107,11 @@ const toTransferError = (e: unknown): TransferError => ({
   message: e instanceof Error ? e.message : String(e),
 });
 
+/**
+ * Chain-agnostic native transfer. Accepts a human-readable `amount` and converts
+ * it to atomic units using `meta.decimals` (or 9 for Solana lamports).
+ * Dispatches to {@link transferSvm} or {@link transferEvm} based on namespace.
+ */
 export const executeTransfer = (
   namespace: string,
   chainRef: string,

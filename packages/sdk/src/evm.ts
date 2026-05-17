@@ -42,6 +42,11 @@ export type EvmSubmitResult = {
   status: "success" | "reverted";
 };
 
+/**
+ * Sign an EVM transaction payload with `privateKey`, broadcast it, and wait for the receipt.
+ * Resolves RPC from chain metadata unless `rpcUrl` is given.
+ * Throws if no RPC is configured for the target chain.
+ */
 export async function signAndSubmitEvm(
   payload: EvmPayload,
   privateKey: string,

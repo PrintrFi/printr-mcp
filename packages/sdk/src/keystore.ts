@@ -32,6 +32,7 @@ const DEFAULT_KDF_PARAMS = { N: 131072, r: 8, p: 1, dkLen: 32 } as const;
 // 128 * N * r bytes required; default OpenSSL cap is 32 MB — raise it to 256 MB.
 const SCRYPT_MAXMEM = 256 * 1024 * 1024;
 
+/** Absolute path to the keystore JSON file (defaults to `~/.printr/wallets.json`). */
 export function keystorePath(): string {
   const dir = env.PRINTR_WALLET_STORE ?? join(homedir(), ".printr");
   return join(dir, "wallets.json");
@@ -52,6 +53,10 @@ function saveKeystore(ks: Keystore): void {
   writeFileSync(path, JSON.stringify(ks, null, 2), "utf-8");
 }
 
+/**
+ * Encrypt a private key with `password` via scrypt + AES-256-GCM.
+ * Returns the crypto fields to be merged into a {@link WalletEntry}.
+ */
 export function encryptKey(
   privateKey: string,
   password: string,
@@ -77,6 +82,10 @@ export function encryptKey(
   };
 }
 
+/**
+ * Decrypt a wallet entry's private key. Returns `wrong_password` on any
+ * scrypt/GCM failure — the auth tag makes wrong passwords indistinguishable from tampering.
+ */
 export function decryptKey(entry: WalletEntry, password: string): Result<string, "wrong_password"> {
   try {
     const { kdfParams, salt, iv, encryptedKey } = entry;
@@ -100,21 +109,25 @@ export function decryptKey(entry: WalletEntry, password: string): Result<string,
   }
 }
 
+/** List all wallets, optionally filtered by CAIP-2 chain id. */
 export function listWallets(chain?: string): WalletEntry[] {
   const ks = loadKeystore();
   return chain ? ks.wallets.filter((w) => w.chain === chain) : ks.wallets;
 }
 
+/** Look up a wallet by its id, or `undefined` if not present. */
 export function getWallet(id: string): WalletEntry | undefined {
   return loadKeystore().wallets.find((w) => w.id === id);
 }
 
+/** Append a wallet to the keystore and persist to disk. Caller is responsible for id uniqueness. */
 export function addWallet(entry: WalletEntry): void {
   const ks = loadKeystore();
   ks.wallets.push(entry);
   saveKeystore(ks);
 }
 
+/** Remove a wallet by id. Returns `true` if a wallet was removed, `false` if no match. */
 export function removeWallet(id: string): boolean {
   const ks = loadKeystore();
   const idx = ks.wallets.findIndex((w) => w.id === id);
@@ -126,6 +139,7 @@ export function removeWallet(id: string): boolean {
   return true;
 }
 
+/** Bulk-remove wallets by id. Returns the number actually removed; skips disk write when zero. */
 export function removeWallets(ids: string[]): number {
   const ks = loadKeystore();
   const initialCount = ks.wallets.length;

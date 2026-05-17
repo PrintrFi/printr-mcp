@@ -172,6 +172,11 @@ export type SvmSubmitResult = {
   confirmation_status: "finalized" | "confirmed" | "processed";
 };
 
+/**
+ * Sign a Solana versioned transaction (with optional address lookup table),
+ * broadcast it, and wait for `confirmed` status.
+ * `privateKey` is the base58-encoded secret key.
+ */
 export async function signAndSubmitSvm(
   payload: SvmPayload,
   privateKey: string,

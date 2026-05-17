@@ -102,6 +102,7 @@ const CHAIN_NAME_TO_CAIP2: Record<string, string> = {
   ...CHAIN_ALIASES,
 };
 
+/** Look up name/symbol/decimals metadata for a CAIP-2 chain. */
 export function getChainMeta(caip2: string): ChainMeta | undefined {
   return CHAIN_META[caip2];
 }

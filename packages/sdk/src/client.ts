@@ -11,6 +11,10 @@ export interface ClientConfig {
   baseUrl: string;
 }
 
+/**
+ * Error returned by Printr API calls.
+ * Carries the HTTP status and a sanitised detail string from the response.
+ */
 export class PrintrApiError extends Error {
   constructor(
     public readonly status: number,
@@ -122,14 +126,15 @@ export function unwrapResultAsync<T>(
 /** Error type with a message (PrintrApiError, ImageError, etc.) for tool responses. */
 type ErrorWithMessage = { message: string };
 
-/**
- * Converts a ResultAsync into a Promise of the MCP tool response. Use this in
- * tool handlers so the pipeline stays ResultAsync instead of async/await + Result.
- */
+/** Discriminated MCP tool response: structured success or text-only error. */
 export type ToolResponse<T> =
   | { structuredContent: T; content: { type: "text"; text: string }[] }
   | { content: { type: "text"; text: string }[]; isError: true };
 
+/**
+ * Await a {@link ResultAsync} and convert it to an MCP tool response.
+ * Use at the tool-handler boundary to keep the pipeline ResultAsync-based.
+ */
 export async function toToolResponseAsync<T, E extends ErrorWithMessage>(
   resultAsync: ResultAsync<T, E>,
 ): Promise<ToolResponse<T>> {
