@@ -26,6 +26,10 @@ export type BalanceError = "no_rpc" | "fetch_failed";
 const MIN_SVM_LAMPORTS = 5_000n;
 const LAMPORTS_PER_SOL = 1_000_000_000n;
 
+/**
+ * Fetch EVM native balance and check it covers `gasLimit * gasPrice`.
+ * Resolves RPC from chain metadata unless `rpcUrl` is given.
+ */
 export function checkEvmBalance(
   address: string,
   chainId: number,
@@ -70,6 +74,9 @@ export function checkEvmBalance(
   );
 }
 
+/**
+ * Fetch Solana lamport balance and check it covers the minimum tx fee (5000 lamports).
+ */
 export function checkSvmBalance(
   address: string,
   rpcUrl?: string,
@@ -102,6 +109,10 @@ const createViemChain = (chainId: number, meta: ChainMeta, rpcUrl: string) =>
     rpcUrls: { default: { http: [rpcUrl] } },
   });
 
+/**
+ * Resolve an RPC URL for a CAIP-2 chain, preferring `rpcOverride` when set.
+ * Returns `no_rpc` if no endpoint is configured for the chain.
+ */
 export const resolveRpcUrl = (
   caip2: string,
   rpcOverride?: string,
@@ -116,6 +127,7 @@ export const resolveRpcUrl = (
   return err("no_rpc");
 };
 
+/** Read native gas-token balance on an EVM chain. */
 export const getEvmNativeBalance = (
   chainId: number,
   address: `0x${string}`,
@@ -135,6 +147,7 @@ export const getEvmNativeBalance = (
   );
 };
 
+/** Read native SOL balance for a Solana address. */
 export const getSvmNativeBalance = (
   address: string,
   rpcUrl: string,
@@ -152,6 +165,7 @@ export const getSvmNativeBalance = (
   );
 };
 
+/** Read ERC-20 balance, decimals, and symbol in one round of `eth_call`s. */
 export const getEvmTokenBalance = (
   chainId: number,
   tokenAddress: `0x${string}`,
@@ -181,6 +195,10 @@ export const getEvmTokenBalance = (
   );
 };
 
+/**
+ * Read SPL token balance from the wallet's first associated token account.
+ * Returns zero balance when no account exists for that mint.
+ */
 export const getSplTokenBalance = (
   mintAddress: string,
   walletAddress: string,
@@ -209,6 +227,10 @@ export const getSplTokenBalance = (
   );
 };
 
+/**
+ * Chain-agnostic native balance fetch.
+ * Dispatches to {@link getSvmNativeBalance} or {@link getEvmNativeBalance} based on namespace.
+ */
 export const fetchNativeBalance = (
   namespace: string,
   chainRef: string,
@@ -227,6 +249,10 @@ export const fetchNativeBalance = (
     : getEvmNativeBalance(Number(chainRef), address as `0x${string}`, rpcUrl, meta);
 };
 
+/**
+ * Chain-agnostic token balance fetch (ERC-20 or SPL).
+ * Dispatches to {@link getSplTokenBalance} or {@link getEvmTokenBalance} based on namespace.
+ */
 export const fetchTokenBalance = (
   namespace: string,
   chainRef: string,

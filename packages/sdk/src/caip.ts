@@ -11,6 +11,10 @@ export type ParsedCaip10 = ParsedCaip2 & {
 
 export type SupportedNamespace = "eip155" | "solana";
 
+/**
+ * Split a CAIP-2 chain id (`namespace:chainRef`).
+ * Returns `null` if the input is not exactly two non-empty colon-separated parts.
+ */
 export function parseCaip2(caip2: string): ParsedCaip2 | null {
   const parts = caip2.split(":");
   if (parts.length !== 2 || !parts[0] || !parts[1]) {
@@ -19,6 +23,10 @@ export function parseCaip2(caip2: string): ParsedCaip2 | null {
   return { namespace: parts[0], chainRef: parts[1] };
 }
 
+/**
+ * Split a CAIP-10 account id (`namespace:chainRef:address`).
+ * The address may contain colons and is preserved verbatim. Returns `null` on malformed input.
+ */
 export function parseCaip10(caip10: string): ParsedCaip10 | null {
   const parts = caip10.split(":");
   const namespace = parts[0];
@@ -29,13 +37,17 @@ export function parseCaip10(caip10: string): ParsedCaip10 | null {
   return { namespace, chainRef, address: parts.slice(2).join(":") };
 }
 
+/** Format a CAIP-2 chain id from its parts. */
 export const toCaip2 = ({ namespace, chainRef }: ParsedCaip2): string => `${namespace}:${chainRef}`;
 
+/** Type guard for namespaces the SDK supports (`eip155`, `solana`). */
 export const isSupportedNamespace = (ns: string): ns is SupportedNamespace =>
   ns === "eip155" || ns === "solana";
 
+/** Map a CAIP namespace to its chain family (`solana` → `svm`, everything else → `evm`). */
 export const namespaceToChainType = (namespace: string): ChainType =>
   namespace === "solana" ? "svm" : "evm";
 
+/** Shortcut for {@link namespaceToChainType} that reads from a full CAIP-2 string. */
 export const chainTypeFromCaip2 = (caip2: string): ChainType =>
   caip2.startsWith("solana:") ? "svm" : "evm";
