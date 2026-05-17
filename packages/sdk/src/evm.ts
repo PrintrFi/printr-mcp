@@ -7,8 +7,9 @@ import {
   http,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { getChainMeta, getRpcUrl } from "./chains.js";
+import { getChainMeta, getRpcUrls } from "./chains.js";
 import { ensureHex } from "./hex.js";
+import { type RpcInput, withRpcFallback } from "./rpc.js";
 
 /** Parse chain ID and address from a CAIP-10 string (e.g. "eip155:8453:0x...") */
 export function parseEvmCaip10(caip10: string): { chainId: number; address: Address } {
@@ -44,50 +45,53 @@ export type EvmSubmitResult = {
 
 /**
  * Sign an EVM transaction payload with `privateKey`, broadcast it, and wait for the receipt.
- * Resolves RPC from chain metadata unless `rpcUrl` is given.
- * Throws if no RPC is configured for the target chain.
+ * `rpcUrl` may be a single URL or an ordered priority list — on transport-level
+ * failures the call retries the next URL (see {@link withRpcFallback}). Resolves
+ * RPC from chain metadata when omitted. Throws if no RPC is configured.
  */
 export async function signAndSubmitEvm(
   payload: EvmPayload,
   privateKey: string,
-  rpcUrl?: string,
+  rpcUrl?: RpcInput,
 ): Promise<EvmSubmitResult> {
   const { chainId, address: toAddress } = parseEvmCaip10(payload.to);
   const caip2 = `eip155:${chainId}`;
   const meta = getChainMeta(caip2);
-  const rpc = getRpcUrl(caip2, rpcUrl);
-  if (!rpc) {
+  const urls = getRpcUrls(caip2, rpcUrl);
+  if (urls.length === 0) {
     throw new Error(`No RPC URL for chain ${caip2}. Pass rpc_url explicitly or set RPC_URLS.`);
   }
 
-  const chain = defineChain({
-    id: chainId,
-    name: meta?.name ?? caip2,
-    nativeCurrency: {
-      name: meta?.name ?? "Ether",
-      symbol: meta?.symbol ?? "ETH",
-      decimals: meta?.decimals ?? 18,
-    },
-    rpcUrls: { default: { http: [rpc] } },
-  });
-
   const account = privateKeyToAccount(normalisePrivateKey(privateKey));
 
-  const walletClient = createWalletClient({ account, chain, transport: http(rpc) });
-  const publicClient = createPublicClient({ chain, transport: http(rpc) });
+  return withRpcFallback(urls, async (rpc) => {
+    const chain = defineChain({
+      id: chainId,
+      name: meta?.name ?? caip2,
+      nativeCurrency: {
+        name: meta?.name ?? "Ether",
+        symbol: meta?.symbol ?? "ETH",
+        decimals: meta?.decimals ?? 18,
+      },
+      rpcUrls: { default: { http: [rpc] } },
+    });
 
-  const hash = await walletClient.sendTransaction({
-    to: toAddress,
-    data: ensureHex(payload.calldata),
-    value: BigInt(payload.value),
-    gas: BigInt(payload.gas_limit),
+    const walletClient = createWalletClient({ account, chain, transport: http(rpc) });
+    const publicClient = createPublicClient({ chain, transport: http(rpc) });
+
+    const hash = await walletClient.sendTransaction({
+      to: toAddress,
+      data: ensureHex(payload.calldata),
+      value: BigInt(payload.value),
+      gas: BigInt(payload.gas_limit),
+    });
+
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+    return {
+      tx_hash: hash,
+      block_number: String(receipt.blockNumber),
+      status: receipt.status satisfies "success" | "reverted",
+    };
   });
-
-  const receipt = await publicClient.waitForTransactionReceipt({ hash });
-
-  return {
-    tx_hash: hash,
-    block_number: String(receipt.blockNumber),
-    status: receipt.status satisfies "success" | "reverted",
-  };
 }

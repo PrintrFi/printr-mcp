@@ -62,6 +62,7 @@ export {
   getChainMeta,
   getEvmConfig,
   getRpcUrl,
+  getRpcUrls,
   isSupportedCaip2,
   type SupportedCaip2,
   toCaip2 as toCaip2FromParts,
@@ -148,6 +149,8 @@ export {
   PublicContractClient,
   type PublicContractClientConfig,
 } from "./public-contract-client.js";
+// RPC fallback
+export { isRetryableRpcError, type RpcInput, toRpcList, withRpcFallback } from "./rpc.js";
 // Schemas
 export {
   asset,
@@ -207,6 +210,7 @@ export {
 export {
   DEFAULT_SVM_RPC,
   getSvmRpcUrl,
+  getSvmRpcUrls,
   isHttpOnlyRpc,
   SOLANA_MAINNET_CAIP2,
   type SvmInstruction,

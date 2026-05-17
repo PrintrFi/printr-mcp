@@ -2,6 +2,7 @@
 
 import { parseCaip2 } from "./caip.js";
 import { ALCHEMY_RPC_TEMPLATES, env } from "./env.js";
+import type { RpcInput } from "./rpc.js";
 
 export type ChainMeta = {
   name: string;
@@ -183,27 +184,44 @@ function getAlchemyRpc(caip2: string): string | undefined {
 }
 
 /**
- * Get the RPC URL for a chain, with the following precedence:
- * 1. Explicit `rpcOverride` parameter (per-call override)
- * 2. User-configured RPC from `RPC_URLS` env var (by chain name or CAIP-2)
+ * Resolve all viable RPC URLs for a chain, in priority order:
+ * 1. Explicit `rpcOverride` (per-call override, single URL or array)
+ * 2. User-configured RPC from `RPC_URLS` env var
  * 3. Alchemy RPC (if `ALCHEMY_API_KEY` is set and chain is supported)
  * 4. Default public RPC from `CHAIN_META`
  *
- * Returns undefined if no RPC is available.
+ * Duplicates are removed while preserving order. Returns an empty array if no
+ * RPC is available — callers decide how to handle that.
+ */
+export function getRpcUrls(caip2: string, rpcOverride?: RpcInput): readonly string[] {
+  const seen = new Set<string>();
+  const push = (url: string | undefined) => {
+    if (url && !seen.has(url)) {
+      seen.add(url);
+    }
+  };
+
+  if (rpcOverride) {
+    const overrides = typeof rpcOverride === "string" ? [rpcOverride] : rpcOverride;
+    for (const url of overrides) {
+      push(url);
+    }
+  }
+  push(getUserRpc(caip2));
+  push(getAlchemyRpc(caip2));
+  push(getChainMeta(caip2)?.defaultRpc);
+
+  return [...seen];
+}
+
+/**
+ * Backwards-compatible single-URL accessor. Returns the highest-priority RPC
+ * from {@link getRpcUrls}, or `undefined` if none is configured.
+ *
+ * Prefer {@link getRpcUrls} when the caller can take advantage of fallback.
  */
 export function getRpcUrl(caip2: string, rpcOverride?: string): string | undefined {
-  if (rpcOverride) {
-    return rpcOverride;
-  }
-  const userConfigured = getUserRpc(caip2);
-  if (userConfigured) {
-    return userConfigured;
-  }
-  const alchemyRpc = getAlchemyRpc(caip2);
-  if (alchemyRpc) {
-    return alchemyRpc;
-  }
-  return getChainMeta(caip2)?.defaultRpc;
+  return getRpcUrls(caip2, rpcOverride)[0];
 }
 
 export type EvmConfigResult = { error: string } | { chainId: number; rpc: string };

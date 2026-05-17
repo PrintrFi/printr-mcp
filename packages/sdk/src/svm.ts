@@ -12,7 +12,8 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import { sleep } from "./async.js";
-import { getRpcUrl } from "./chains.js";
+import { getRpcUrl, getRpcUrls } from "./chains.js";
+import { type RpcInput, withRpcFallback } from "./rpc.js";
 
 export const SOLANA_MAINNET_CAIP2 = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 
@@ -22,6 +23,15 @@ export const DEFAULT_SVM_RPC = "https://api.mainnet-beta.solana.com";
 /** Get the RPC URL for Solana, respecting RPC_URLS config */
 export const getSvmRpcUrl = (rpcOverride?: string): string =>
   getRpcUrl(SOLANA_MAINNET_CAIP2, rpcOverride) ?? DEFAULT_SVM_RPC;
+
+/**
+ * Resolve all viable Solana RPC URLs in priority order, falling back to
+ * {@link DEFAULT_SVM_RPC} when nothing else is configured.
+ */
+export const getSvmRpcUrls = (rpcOverride?: RpcInput): readonly string[] => {
+  const urls = getRpcUrls(SOLANA_MAINNET_CAIP2, rpcOverride);
+  return urls.length > 0 ? urls : [DEFAULT_SVM_RPC];
+};
 
 type ConfirmationStatus = "finalized" | "confirmed" | "processed";
 type ConfirmationResult = { slot: number; confirmationStatus: ConfirmationStatus };
@@ -175,15 +185,16 @@ export type SvmSubmitResult = {
 /**
  * Sign a Solana versioned transaction (with optional address lookup table),
  * broadcast it, and wait for `confirmed` status.
- * `privateKey` is the base58-encoded secret key.
+ * `privateKey` is the base58-encoded secret key. `rpcUrlOverride` may be a
+ * single URL or an ordered priority list — on transport-level failures the
+ * call retries against the next URL (see {@link withRpcFallback}).
  */
 export async function signAndSubmitSvm(
   payload: SvmPayload,
   privateKey: string,
-  rpcUrlOverride?: string,
+  rpcUrlOverride?: RpcInput,
 ): Promise<SvmSubmitResult> {
-  const rpcUrl = getSvmRpcUrl(rpcUrlOverride);
-  const connection = new Connection(rpcUrl, "confirmed");
+  const urls = getSvmRpcUrls(rpcUrlOverride);
   const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
 
   const instructions = payload.ixs.map(
@@ -199,39 +210,45 @@ export async function signAndSubmitSvm(
       }),
   );
 
-  let altAccounts: AddressLookupTableAccount[] = [];
-  if (payload.lookup_table) {
-    const altResponse = await connection.getAddressLookupTable(new PublicKey(payload.lookup_table));
-    if (altResponse.value) {
-      altAccounts = [altResponse.value];
+  return withRpcFallback(urls, async (rpcUrl) => {
+    const connection = new Connection(rpcUrl, "confirmed");
+
+    let altAccounts: AddressLookupTableAccount[] = [];
+    if (payload.lookup_table) {
+      const altResponse = await connection.getAddressLookupTable(
+        new PublicKey(payload.lookup_table),
+      );
+      if (altResponse.value) {
+        altAccounts = [altResponse.value];
+      }
     }
-  }
 
-  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
-  const message = new TransactionMessage({
-    payerKey: keypair.publicKey,
-    recentBlockhash: blockhash,
-    instructions,
-  }).compileToV0Message(altAccounts);
+    const message = new TransactionMessage({
+      payerKey: keypair.publicKey,
+      recentBlockhash: blockhash,
+      instructions,
+    }).compileToV0Message(altAccounts);
 
-  const tx = new VersionedTransaction(message);
-  tx.sign([keypair]);
+    const tx = new VersionedTransaction(message);
+    tx.sign([keypair]);
 
-  const signature = await connection.sendRawTransaction(tx.serialize(), {
-    skipPreflight: false,
-    preflightCommitment: "confirmed",
+    const signature = await connection.sendRawTransaction(tx.serialize(), {
+      skipPreflight: false,
+      preflightCommitment: "confirmed",
+    });
+
+    const { slot, confirmationStatus } = await confirmTransaction(
+      connection,
+      signature,
+      blockhash,
+      lastValidBlockHeight,
+      "confirmed",
+    );
+
+    return { signature, slot, confirmation_status: confirmationStatus };
   });
-
-  const { slot, confirmationStatus } = await confirmTransaction(
-    connection,
-    signature,
-    blockhash,
-    lastValidBlockHeight,
-    "confirmed",
-  );
-
-  return { signature, slot, confirmation_status: confirmationStatus };
 }
 
 /**
