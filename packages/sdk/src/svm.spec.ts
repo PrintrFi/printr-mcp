@@ -55,4 +55,21 @@ describe("signAndSubmitSvm", () => {
       expect(result.error.kind).toBe("signing_failed");
     }
   });
+
+  it("returns signing_failed when an instruction has a malformed program_id", async () => {
+    // Valid 64-byte secret key (all zeros, base58-encoded) but the instruction
+    // has a non-base58 program_id, so PublicKey throws inside the ix map.
+    const validKey = "1".repeat(88); // all-zero secret key base58 is mostly 1s
+    const result = await signAndSubmitSvm(
+      {
+        ixs: [{ program_id: "not-valid-base58!!!", accounts: [], data: "" }],
+        mint_address: "solana:abc:mint",
+      },
+      validKey,
+    );
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.kind).toBe("signing_failed");
+    }
+  });
 });

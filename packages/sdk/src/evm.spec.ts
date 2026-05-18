@@ -113,4 +113,16 @@ describe("signAndSubmitEvm", () => {
       }
     }
   });
+
+  it("returns signing_failed when privateKeyToAccount throws (not 32 bytes)", async () => {
+    // privateKeyToAccount throws if the key isn't a 32-byte hex string.
+    const result = await signAndSubmitEvm(
+      { to: "eip155:8453:0x0", calldata: "0x", value: "0", gas_limit: 21000 },
+      "0xshort",
+    );
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.kind).toBe("signing_failed");
+    }
+  });
 });

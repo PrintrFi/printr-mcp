@@ -59,7 +59,7 @@ export type EvmPayload = {
 };
 
 export type EvmSubmitResult = {
-  tx_hash: string;
+  tx_hash: Hex;
   block_number: string;
   status: "success" | "reverted";
 };
@@ -68,6 +68,7 @@ export type EvmSubmitResult = {
 export type EvmSubmitError =
   | { kind: "invalid_caip10"; input: string }
   | { kind: "no_rpc"; caip2: string }
+  | { kind: "signing_failed"; message: string }
   | { kind: "broadcast_failed"; message: string }
   | { kind: "receipt_failed"; tx_hash: Hex; message: string }
   | { kind: "tx_reverted"; tx_hash: Hex; block_number: string };
@@ -79,6 +80,8 @@ export function formatEvmSubmitError(e: EvmSubmitError): string {
       return `Invalid CAIP-10 address: ${e.input}`;
     case "no_rpc":
       return `No RPC URL for chain ${e.caip2}. Pass rpc_url explicitly or set RPC_URLS.`;
+    case "signing_failed":
+      return `EVM signing failed: ${e.message}`;
     case "broadcast_failed":
       return `Transaction broadcast failed: ${e.message}`;
     case "receipt_failed":
@@ -121,12 +124,17 @@ export function signAndSubmitEvm(
     return errAsync({ kind: "no_rpc", caip2 });
   }
 
-  const account = privateKeyToAccount(normalisePrivateKey(privateKey));
+  let account: ReturnType<typeof privateKeyToAccount>;
+  try {
+    account = privateKeyToAccount(normalisePrivateKey(privateKey));
+  } catch (e) {
+    return errAsync({ kind: "signing_failed", message: toMessage(e) });
+  }
 
   const broadcast = (rpc: string): Promise<Hex> =>
     createWalletClient({
       account,
-      chain: createViemChain(chainId, rpc, meta, caip2),
+      chain: createViemChain(chainId, rpc, meta),
       transport: http(rpc),
     }).sendTransaction({
       to: toAddress,
@@ -137,7 +145,7 @@ export function signAndSubmitEvm(
 
   const waitReceipt = (hash: Hex) => (rpc: string) =>
     createPublicClient({
-      chain: createViemChain(chainId, rpc, meta, caip2),
+      chain: createViemChain(chainId, rpc, meta),
       transport: http(rpc),
     }).waitForTransactionReceipt({ hash });
 

@@ -235,24 +235,24 @@ export function signAndSubmitSvm(
   const urls = getSvmRpcUrls(rpcUrlOverride);
 
   let keypair: Keypair;
+  let instructions: TransactionInstruction[];
   try {
     keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
+    instructions = payload.ixs.map(
+      (ix) =>
+        new TransactionInstruction({
+          programId: new PublicKey(ix.program_id),
+          keys: ix.accounts.map((a) => ({
+            pubkey: new PublicKey(a.pubkey),
+            isSigner: a.is_signer,
+            isWritable: a.is_writable,
+          })),
+          data: Buffer.from(ix.data, "base64"),
+        }),
+    );
   } catch (e) {
     return errAsync({ kind: "signing_failed", message: toMessage(e) });
   }
-
-  const instructions = payload.ixs.map(
-    (ix) =>
-      new TransactionInstruction({
-        programId: new PublicKey(ix.program_id),
-        keys: ix.accounts.map((a) => ({
-          pubkey: new PublicKey(a.pubkey),
-          isSigner: a.is_signer,
-          isWritable: a.is_writable,
-        })),
-        data: Buffer.from(ix.data, "base64"),
-      }),
-  );
 
   async function broadcast(rpcUrl: string): Promise<SvmBroadcastResult> {
     const connection = new Connection(rpcUrl, "confirmed");

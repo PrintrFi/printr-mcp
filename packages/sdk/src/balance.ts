@@ -44,7 +44,7 @@ export function checkEvmBalance(
     return errAsync("no_rpc" as BalanceError);
   }
 
-  const chain = createViemChain(chainId, rpc, meta, caip2);
+  const chain = createViemChain(chainId, rpc, meta);
   const client = createPublicClient({ chain, transport: http(rpc) });
   const decimals = meta?.decimals ?? 18;
   const symbol = meta?.symbol ?? "ETH";

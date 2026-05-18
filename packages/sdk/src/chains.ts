@@ -246,22 +246,18 @@ export function getEvmConfig(chain: string, rpcOverride?: string): EvmConfigResu
 }
 
 /**
- * Build a viem {@link Chain} definition from a numeric chain id and RPC URL,
+ * Build a viem {@link Chain} definition from a numeric EVM chain id and RPC URL,
  * using {@link ChainMeta} for the name/native-currency when available and safe
- * defaults (`Ether`/`ETH`/18) when not.
+ * defaults (`Ether`/`ETH`/18) when not. When `meta` is absent the chain `name`
+ * falls back to the EVM CAIP-2 form `eip155:${chainId}`.
  *
  * Consolidates three previously-duplicated `createViemChain` / `buildChain`
  * helpers from `balance.ts`, `transfer.ts`, and `evm.ts`.
  */
-export function createViemChain(
-  chainId: number,
-  rpcUrl: string,
-  meta?: ChainMeta,
-  caip2Fallback?: string,
-): Chain {
+export function createViemChain(chainId: number, rpcUrl: string, meta?: ChainMeta): Chain {
   return defineChain({
     id: chainId,
-    name: meta?.name ?? caip2Fallback ?? `chain-${chainId}`,
+    name: meta?.name ?? `eip155:${chainId}`,
     nativeCurrency: {
       name: meta?.name ?? "Ether",
       symbol: meta?.symbol ?? "ETH",
