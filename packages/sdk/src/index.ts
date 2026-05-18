@@ -62,6 +62,8 @@ export {
   getChainMeta,
   getEvmConfig,
   getRpcUrl,
+  isSupportedCaip2,
+  type SupportedCaip2,
   toCaip2 as toCaip2FromParts,
 } from "./chains.js";
 // Client
