@@ -7,6 +7,8 @@ import {
   chainTypeFromCaip2,
   type EvmPayload,
   externalLinks,
+  formatEvmSubmitError,
+  formatSvmSubmitError,
   getActiveWalletId,
   getChainMeta,
   getEvmConfig,
@@ -173,28 +175,27 @@ function signWithKey(
   rpc_url: string | undefined,
 ) {
   if (isEvmPayload(payload)) {
-    return ResultAsync.fromPromise(signAndSubmitEvm(payload, privateKey, rpc_url), mapErr).map(
-      ({ tx_hash, block_number, status: tx_status }) => ({
+    return signAndSubmitEvm(payload, privateKey, rpc_url)
+      .mapErr((e) => new PrintrApiError(0, formatEvmSubmitError(e)))
+      .map(({ tx_hash, block_number, status: tx_status }) => ({
         status: "submitted" as const,
         token_id,
         quote,
         tx_hash,
         block_number,
         tx_status,
-      }),
-    );
+      }));
   }
-  return ResultAsync.fromPromise(
-    signAndSubmitSvm(payload as SvmPayload, privateKey, rpc_url),
-    mapErr,
-  ).map(({ signature, slot, confirmation_status }) => ({
-    status: "submitted" as const,
-    token_id,
-    quote,
-    signature,
-    slot,
-    confirmation_status,
-  }));
+  return signAndSubmitSvm(payload as SvmPayload, privateKey, rpc_url)
+    .mapErr((e) => new PrintrApiError(0, formatSvmSubmitError(e)))
+    .map(({ signature, slot, confirmation_status }) => ({
+      status: "submitted" as const,
+      token_id,
+      quote,
+      signature,
+      slot,
+      confirmation_status,
+    }));
 }
 
 function openWebSigner(

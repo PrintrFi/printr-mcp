@@ -1,8 +1,8 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { err, errAsync, ok, type Result, ResultAsync } from "neverthrow";
-import { createPublicClient, defineChain, erc20Abi, formatUnits, http } from "viem";
+import { createPublicClient, erc20Abi, formatUnits, http } from "viem";
 import type { ChainMeta } from "./chains.js";
-import { getChainMeta, getRpcUrl, toCaip2 } from "./chains.js";
+import { createViemChain, getChainMeta, getRpcUrl, toCaip2 } from "./chains.js";
 import { PublicContractClient } from "./public-contract-client.js";
 import { getSvmRpcUrl } from "./svm.js";
 
@@ -44,17 +44,7 @@ export function checkEvmBalance(
     return errAsync("no_rpc" as BalanceError);
   }
 
-  const chain = defineChain({
-    id: chainId,
-    name: meta?.name ?? caip2,
-    nativeCurrency: {
-      name: meta?.name ?? "Ether",
-      symbol: meta?.symbol ?? "ETH",
-      decimals: meta?.decimals ?? 18,
-    },
-    rpcUrls: { default: { http: [rpc] } },
-  });
-
+  const chain = createViemChain(chainId, rpc, meta);
   const client = createPublicClient({ chain, transport: http(rpc) });
   const decimals = meta?.decimals ?? 18;
   const symbol = meta?.symbol ?? "ETH";
@@ -102,14 +92,6 @@ export function checkSvmBalance(
   );
 }
 
-const createViemChain = (chainId: number, meta: ChainMeta, rpcUrl: string) =>
-  defineChain({
-    id: chainId,
-    name: meta.name,
-    nativeCurrency: { name: meta.name, symbol: meta.symbol, decimals: meta.decimals },
-    rpcUrls: { default: { http: [rpcUrl] } },
-  });
-
 /**
  * Resolve an RPC URL for a CAIP-2 chain, preferring `rpcOverride` when set.
  * Returns `no_rpc` if no endpoint is configured for the chain.
@@ -135,7 +117,7 @@ export const getEvmNativeBalance = (
   rpcUrl: string,
   meta: ChainMeta,
 ): ResultAsync<SimpleBalanceResult, BalanceError> => {
-  const chain = createViemChain(chainId, meta, rpcUrl);
+  const chain = createViemChain(chainId, rpcUrl, meta);
   const client = createPublicClient({ chain, transport: http(rpcUrl) });
   return ResultAsync.fromPromise(
     client.getBalance({ address }).then((balance) => ({
@@ -177,7 +159,7 @@ export const getEvmTokenBalance = (
   const token = new PublicContractClient({
     address: tokenAddress,
     abi: erc20Abi,
-    chain: createViemChain(chainId, meta, rpcUrl),
+    chain: createViemChain(chainId, rpcUrl, meta),
     transport: http(rpcUrl),
   });
   return ResultAsync.fromPromise(

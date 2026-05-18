@@ -1,5 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { caip10ToChainId, signAndSubmitEvm, toolError, toolOk } from "@printr/sdk";
+import {
+  caip10ToChainId,
+  formatEvmSubmitError,
+  signAndSubmitEvm,
+  toolError,
+  toolOk,
+} from "@printr/sdk";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
 import { logToolExecution } from "~/lib/logging.js";
@@ -49,28 +55,30 @@ export function registerSignAndSubmitEvmTool(server: McpServer): void {
       outputSchema,
     },
     logToolExecution("printr_sign_and_submit_evm", async ({ payload, private_key, rpc_url }) => {
-      try {
-        if (private_key) {
-          return toolOk(await signAndSubmitEvm(payload, private_key, rpc_url));
-        }
+      const submit = async (key: string) =>
+        (await signAndSubmitEvm(payload, key, rpc_url)).match(
+          (value) => toolOk(value),
+          (e) => toolError(formatEvmSubmitError(e)),
+        );
 
-        const resolution = await resolveWallet(server, caip10ToChainId(payload.to), {
-          type: "evm",
-          caip10To: payload.to,
-          gasLimit: payload.gas_limit,
-          rpcUrl: rpc_url,
-        });
-
-        if (resolution.kind === "ready") {
-          return toolOk(await signAndSubmitEvm(payload, resolution.privateKey, rpc_url));
-        }
-        if (resolution.kind === "insufficient_funds") {
-          return toolError(insufficientFundsMessage(resolution));
-        }
-        return toolError(resolution.message);
-      } catch (error) {
-        return toolError(error instanceof Error ? error.message : String(error));
+      if (private_key) {
+        return submit(private_key);
       }
+
+      const resolution = await resolveWallet(server, caip10ToChainId(payload.to), {
+        type: "evm",
+        caip10To: payload.to,
+        gasLimit: payload.gas_limit,
+        rpcUrl: rpc_url,
+      });
+
+      if (resolution.kind === "ready") {
+        return submit(resolution.privateKey);
+      }
+      if (resolution.kind === "insufficient_funds") {
+        return toolError(insufficientFundsMessage(resolution));
+      }
+      return toolError(resolution.message);
     }),
   );
 }

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "bun:test";
-import { normalisePrivateKey, parseEvmCaip10, tryParseEvmCaip10 } from "./evm.js";
+import {
+  type EvmSubmitError,
+  formatEvmSubmitError,
+  normalisePrivateKey,
+  parseEvmCaip10,
+  signAndSubmitEvm,
+  tryParseEvmCaip10,
+} from "./evm.js";
 
 describe("tryParseEvmCaip10", () => {
   it("returns ok for a well-formed CAIP-10", () => {
@@ -60,5 +67,62 @@ describe("normalisePrivateKey", () => {
 
   it("prepends 0x when missing", () => {
     expect(normalisePrivateKey("deadbeef")).toBe("0xdeadbeef");
+  });
+});
+
+describe("formatEvmSubmitError", () => {
+  it("renders each variant with its key context", () => {
+    expect(formatEvmSubmitError({ kind: "invalid_caip10", input: "bad" })).toContain("bad");
+    expect(formatEvmSubmitError({ kind: "no_rpc", caip2: "eip155:8453" })).toContain("eip155:8453");
+    expect(formatEvmSubmitError({ kind: "broadcast_failed", message: "boom" })).toContain(
+      "broadcast",
+    );
+    expect(
+      formatEvmSubmitError({ kind: "receipt_failed", tx_hash: "0xabc", message: "timeout" }),
+    ).toContain("0xabc");
+    expect(
+      formatEvmSubmitError({ kind: "tx_reverted", tx_hash: "0xabc", block_number: "100" }),
+    ).toContain("reverted");
+  });
+});
+
+describe("signAndSubmitEvm", () => {
+  it("returns invalid_caip10 for a malformed `to` address", async () => {
+    const result = await signAndSubmitEvm(
+      { to: "not-a-caip10", calldata: "0x", value: "0", gas_limit: 21000 },
+      "0x" + "0".repeat(64),
+    );
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.kind).toBe("invalid_caip10");
+    }
+  });
+
+  it("returns no_rpc when no RPC is configured for the chain", async () => {
+    // eip155:99999 is not in CHAIN_META and no env RPC is configured for it.
+    const result = await signAndSubmitEvm(
+      { to: "eip155:99999:0x0", calldata: "0x", value: "0", gas_limit: 21000 },
+      "0x" + "0".repeat(64),
+    );
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      const err: EvmSubmitError = result.error;
+      expect(err.kind).toBe("no_rpc");
+      if (err.kind === "no_rpc") {
+        expect(err.caip2).toBe("eip155:99999");
+      }
+    }
+  });
+
+  it("returns signing_failed when privateKeyToAccount throws (not 32 bytes)", async () => {
+    // privateKeyToAccount throws if the key isn't a 32-byte hex string.
+    const result = await signAndSubmitEvm(
+      { to: "eip155:8453:0x0", calldata: "0x", value: "0", gas_limit: 21000 },
+      "0xshort",
+    );
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.kind).toBe("signing_failed");
+    }
   });
 });

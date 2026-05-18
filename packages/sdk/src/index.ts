@@ -60,6 +60,7 @@ export {
   CHAIN_META,
   type ChainMeta,
   caip10ToChainId,
+  createViemChain,
   type EvmConfigResult,
   getChainMeta,
   getEvmConfig,
@@ -89,7 +90,9 @@ export { ALCHEMY_RPC_TEMPLATES, type Env, env, rpcUrlsSchema } from "./env.js";
 // EVM operations
 export {
   type EvmPayload,
+  type EvmSubmitError,
   type EvmSubmitResult,
+  formatEvmSubmitError,
   normalisePrivateKey,
   type ParseEvmCaip10Error,
   parseEvmCaip10,
@@ -226,12 +229,14 @@ export {
 // SVM (Solana) operations
 export {
   DEFAULT_SVM_RPC,
+  formatSvmSubmitError,
   getSvmRpcUrl,
   getSvmRpcUrls,
   isHttpOnlyRpc,
   SOLANA_MAINNET_CAIP2,
   type SvmInstruction,
   type SvmPayload,
+  type SvmSubmitError,
   type SvmSubmitResult,
   sendAndConfirmSvmTransaction,
   signAndSubmitSvm,

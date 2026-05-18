@@ -4,6 +4,8 @@ import {
   chainTypeFromCaip2,
   decryptKey,
   type EvmPayload,
+  formatEvmSubmitError,
+  formatSvmSubmitError,
   getChainMeta,
   getProtocolFees,
   getSvmRpcUrl,
@@ -214,9 +216,8 @@ function claimSvm(
 
   return fundStep
     .andThen(() =>
-      ResultAsync.fromPromise<{ signature: string }, ClaimError>(
-        signAndSubmitSvm(svmPayload, signingKey, rpc),
-        mapErr,
+      signAndSubmitSvm(svmPayload, signingKey, rpc).mapErr((e) =>
+        claimErr(formatSvmSubmitError(e)),
       ),
     )
     .map(({ signature }) => {
@@ -261,9 +262,9 @@ function executeClaim(ctx: ClaimContext, chain: string): ResultAsync<ClaimOutput
 
   return match(payload.payload)
     .with({ case: "evm" }, ({ value }) =>
-      ResultAsync.fromPromise(signAndSubmitEvm(toEvmPayload(value, chain), signingKey), mapErr).map(
-        ({ tx_hash }) => ({ ...base, tx_hash }),
-      ),
+      signAndSubmitEvm(toEvmPayload(value, chain), signingKey)
+        .mapErr((e) => claimErr(formatEvmSubmitError(e)))
+        .map(({ tx_hash }) => ({ ...base, tx_hash })),
     )
     .with({ case: "svm" }, ({ value }) =>
       claimSvm(toSvmPayload(value), ctx, chain).map((tx_signature) => ({

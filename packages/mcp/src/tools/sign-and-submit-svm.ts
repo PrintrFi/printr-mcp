@@ -1,5 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { caip10ToChainId, signAndSubmitSvm, toolError, toolOk } from "@printr/sdk";
+import {
+  caip10ToChainId,
+  formatSvmSubmitError,
+  signAndSubmitSvm,
+  toolError,
+  toolOk,
+} from "@printr/sdk";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
 import { logToolExecution } from "~/lib/logging.js";
@@ -57,24 +63,26 @@ export function registerSignAndSubmitSvmTool(server: McpServer): void {
       outputSchema,
     },
     logToolExecution("printr_sign_and_submit_svm", async ({ payload, private_key, rpc_url }) => {
-      try {
-        if (private_key) {
-          return toolOk(await signAndSubmitSvm(payload, private_key, rpc_url));
-        }
+      const submit = async (key: string) =>
+        (await signAndSubmitSvm(payload, key, rpc_url)).match(
+          (value) => toolOk(value),
+          (e) => toolError(formatSvmSubmitError(e)),
+        );
 
-        const caip2 = caip10ToChainId(payload.mint_address);
-        const resolution = await resolveWallet(server, caip2, { type: "svm", rpcUrl: rpc_url });
-
-        if (resolution.kind === "ready") {
-          return toolOk(await signAndSubmitSvm(payload, resolution.privateKey, rpc_url));
-        }
-        if (resolution.kind === "insufficient_funds") {
-          return toolError(insufficientFundsMessage(resolution));
-        }
-        return toolError(resolution.message);
-      } catch (error) {
-        return toolError(error instanceof Error ? error.message : String(error));
+      if (private_key) {
+        return submit(private_key);
       }
+
+      const caip2 = caip10ToChainId(payload.mint_address);
+      const resolution = await resolveWallet(server, caip2, { type: "svm", rpcUrl: rpc_url });
+
+      if (resolution.kind === "ready") {
+        return submit(resolution.privateKey);
+      }
+      if (resolution.kind === "insufficient_funds") {
+        return toolError(insufficientFundsMessage(resolution));
+      }
+      return toolError(resolution.message);
     }),
   );
 }
