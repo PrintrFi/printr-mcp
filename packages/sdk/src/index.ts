@@ -135,6 +135,14 @@ export {
 } from "./keystore.js";
 // Logger
 export { createLogger, logger } from "./logger.js";
+// Proto-shared helpers
+export {
+  type CaipAccount as ProtoCaipAccount,
+  formatCaip10 as formatProtoCaip10,
+  getBackendClient,
+  parseCaip10 as parseProtoCaip10,
+  toSimpleAccount as toSimpleProtoAccount,
+} from "./proto-shared.js";
 // Public contract client
 export {
   PublicContractClient,

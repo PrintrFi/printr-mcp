@@ -5,10 +5,6 @@
  * and claiming creator fees.
  */
 
-import { type Client, createClient } from "@connectrpc/connect";
-import { createGrpcWebTransport } from "@connectrpc/connect-web";
-import { env } from "./env.js";
-import { Backend } from "./proto/api/api_connect.js";
 import type {
   ChainProtocolFees as ProtoChainProtocolFees,
   Payload as ProtoPayload,
@@ -21,18 +17,15 @@ import type {
   AccountMeta as ProtoAccountMeta,
   SolanaIx as ProtoSolanaIx,
 } from "./proto/wingman/misc_pb.js";
-
-const PRINTR_API_URL = env.PRINTR_BACKEND_URL ?? "https://api.printr.money";
+import { type CaipAccount, getBackendClient, toSimpleAccount } from "./proto-shared.js";
 
 export type { ChainProtocolFees } from "./proto/api/api_pb.js";
 // Re-export proto types for consumers
 export { Account } from "./proto/caip/account_pb.js";
 
-// Simple types for API consumers
-export type CaipAccount = {
-  chainId: string;
-  address: string;
-};
+// Re-exported shared CAIP-10 helpers (kept here so existing
+// `parseFeeCaip10` / `formatFeeCaip10` aliases in `index.ts` continue to work).
+export { type CaipAccount, formatCaip10, parseCaip10 } from "./proto-shared.js";
 
 export type AssetAmount = {
   asset?: CaipAccount;
@@ -98,32 +91,6 @@ export type ProtocolFeesRequest = {
   chainIds?: string[] | undefined;
   payers?: CaipAccount[] | undefined;
 };
-
-// Singleton client
-let backendClient: Client<typeof Backend> | null = null;
-
-function getBackendClient(): Client<typeof Backend> {
-  if (!backendClient) {
-    const transport = createGrpcWebTransport({
-      baseUrl: PRINTR_API_URL,
-    });
-    backendClient = createClient(Backend, transport);
-  }
-  return backendClient;
-}
-
-/**
- * Convert proto Account to CaipAccount
- */
-function toSimpleAccount(account: Account | undefined): CaipAccount | undefined {
-  if (!account) {
-    return undefined;
-  }
-  return {
-    chainId: account.chainId,
-    address: account.address,
-  };
-}
 
 /**
  * Convert proto AssetAmountV0 to simple AssetAmount
@@ -283,25 +250,4 @@ export async function getProtocolFees(request: ProtocolFeesRequest): Promise<Pro
     ...(totalProtocol !== undefined ? { totalProtocol } : {}),
     ...(totalDev !== undefined ? { totalDev } : {}),
   };
-}
-
-/**
- * Parse CAIP-10 string into CaipAccount
- */
-export function parseCaip10(caip10: string): CaipAccount {
-  // Format: namespace:chainRef:address (e.g., eip155:8453:0x123...)
-  const parts = caip10.split(":");
-  if (parts.length < 3) {
-    throw new Error(`Invalid CAIP-10: ${caip10}`);
-  }
-  const chainId = `${parts[0]}:${parts[1]}`;
-  const address = parts.slice(2).join(":");
-  return { chainId, address };
-}
-
-/**
- * Format CaipAccount as CAIP-10 string
- */
-export function formatCaip10(account: CaipAccount): string {
-  return `${account.chainId}:${account.address}`;
 }
