@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.1](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.16.0...mcp-v0.16.1) (2026-05-18)
+
+
+### Bug Fixes
+
+* **deps:** pin zod to ~4.3.6 for MCP SDK 1.29 compat ([23ab19f](https://github.com/PrintrFi/printr-mcp/commit/23ab19f7730a27403e32fcbcb5b2ac52772294a4))
+
 ## [0.16.0](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.15.0...mcp-v0.16.0) (2026-05-11)
 
 
