@@ -5,6 +5,7 @@
  * staking positions and claiming staking rewards.
  */
 
+import { err, ok, type Result } from "neverthrow";
 import {
   type ClaimStakingRewardsResponse,
   ClaimStakingRewardsRequest as ProtoClaimStakingRewardsRequest,
@@ -142,36 +143,52 @@ export type CreateStakePositionResult = {
   txPayload?: SimpleTxPayload | undefined;
 };
 
+/** Error returned by {@link tryParseLockPeriod} for unknown lock-period strings. */
+export type ParseLockPeriodError = { kind: "invalid_lock_period"; input: string };
+
 /**
- * Parse a lock-period string (e.g. "7_DAYS", "30_DAYS") into the proto enum.
- * Throws on unknown values.
+ * Safe parser variant of {@link parseLockPeriod} — returns a {@link Result}
+ * instead of throwing. Prefer this at any boundary where the input is untrusted.
  */
-export function parseLockPeriod(value: string): StakingLockPeriod {
+export function tryParseLockPeriod(value: string): Result<StakingLockPeriod, ParseLockPeriodError> {
   switch (value) {
     case "7_DAYS":
     case "SEVEN_DAYS":
-      return StakingLockPeriod.SEVEN_DAYS;
+      return ok(StakingLockPeriod.SEVEN_DAYS);
     case "14_DAYS":
     case "FOURTEEN_DAYS":
-      return StakingLockPeriod.FOURTEEN_DAYS;
+      return ok(StakingLockPeriod.FOURTEEN_DAYS);
     case "30_DAYS":
     case "THIRTY_DAYS":
-      return StakingLockPeriod.THIRTY_DAYS;
+      return ok(StakingLockPeriod.THIRTY_DAYS);
     case "60_DAYS":
     case "SIXTY_DAYS":
-      return StakingLockPeriod.SIXTY_DAYS;
+      return ok(StakingLockPeriod.SIXTY_DAYS);
     case "90_DAYS":
     case "NINETY_DAYS":
-      return StakingLockPeriod.NINETY_DAYS;
+      return ok(StakingLockPeriod.NINETY_DAYS);
     case "180_DAYS":
     case "ONE_HUNDRED_EIGHTY_DAYS":
-      return StakingLockPeriod.ONE_HUNDRED_EIGHTY_DAYS;
+      return ok(StakingLockPeriod.ONE_HUNDRED_EIGHTY_DAYS);
     case "10_SECONDS":
     case "TEN_SECONDS":
-      return StakingLockPeriod.TEN_SECONDS;
+      return ok(StakingLockPeriod.TEN_SECONDS);
     default:
-      throw new Error(`Invalid lock period: ${value}`);
+      return err({ kind: "invalid_lock_period", input: value });
   }
+}
+
+/**
+ * Parse a lock-period string (e.g. `"7_DAYS"`, `"30_DAYS"`) into the proto enum.
+ * Throws on unknown values — prefer {@link tryParseLockPeriod} for untrusted input.
+ */
+export function parseLockPeriod(value: string): StakingLockPeriod {
+  return tryParseLockPeriod(value).match(
+    (period) => period,
+    (e) => {
+      throw new Error(`Invalid lock period: ${e.input}`);
+    },
+  );
 }
 
 /**
