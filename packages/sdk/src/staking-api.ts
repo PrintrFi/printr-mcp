@@ -5,10 +5,6 @@
  * staking positions and claiming staking rewards.
  */
 
-import { type Client, createClient } from "@connectrpc/connect";
-import { createGrpcWebTransport } from "@connectrpc/connect-web";
-import { env } from "./env.js";
-import { Backend } from "./proto/api/api_connect.js";
 import {
   type ClaimStakingRewardsResponse,
   ClaimStakingRewardsRequest as ProtoClaimStakingRewardsRequest,
@@ -28,18 +24,15 @@ import {
 import { AssetAmountV1, TokenAmount } from "./proto/api/misc_pb.js";
 import type { EvmTxPayload, SolanaIx, SolanaTxPayload, TxPayload } from "./proto/api/payload_pb.js";
 import { Account } from "./proto/caip/account_pb.js";
-
-const PRINTR_API_URL = env.PRINTR_BACKEND_URL ?? "https://api.printr.money";
+import { type CaipAccount, getBackendClient, toSimpleAccount } from "./proto-shared.js";
 
 export { StakingLockPeriod } from "./proto/api/create_stake_position_pb.js";
 // Re-export proto types for consumers
 export { Account } from "./proto/caip/account_pb.js";
 
-// Simple types for staking API consumers
-export type CaipAccount = {
-  chainId: string;
-  address: string;
-};
+// Re-exported shared CAIP-10 helpers (kept here so existing
+// `parseStakingCaip10` / `formatStakingCaip10` aliases in `index.ts` still work).
+export { type CaipAccount, formatCaip10, parseCaip10 } from "./proto-shared.js";
 
 export type SimpleTokenAmount = {
   atomic: string;
@@ -179,32 +172,6 @@ export function parseLockPeriod(value: string): StakingLockPeriod {
     default:
       throw new Error(`Invalid lock period: ${value}`);
   }
-}
-
-// Singleton client
-let backendClient: Client<typeof Backend> | null = null;
-
-function getBackendClient(): Client<typeof Backend> {
-  if (!backendClient) {
-    const transport = createGrpcWebTransport({
-      baseUrl: PRINTR_API_URL,
-    });
-    backendClient = createClient(Backend, transport);
-  }
-  return backendClient;
-}
-
-/**
- * Convert proto Account to CaipAccount
- */
-function toSimpleAccount(account: Account | undefined): CaipAccount | undefined {
-  if (!account) {
-    return undefined;
-  }
-  return {
-    chainId: account.chainId,
-    address: account.address,
-  };
 }
 
 /**
@@ -499,25 +466,4 @@ export async function createStakePosition(
   }
 
   return result;
-}
-
-/**
- * Parse CAIP-10 string into CaipAccount
- */
-export function parseCaip10(caip10: string): CaipAccount {
-  // Format: namespace:chainRef:address (e.g., eip155:8453:0x123...)
-  const parts = caip10.split(":");
-  if (parts.length < 3) {
-    throw new Error(`Invalid CAIP-10: ${caip10}`);
-  }
-  const chainId = `${parts[0]}:${parts[1]}`;
-  const address = parts.slice(2).join(":");
-  return { chainId, address };
-}
-
-/**
- * Format CaipAccount as CAIP-10 string
- */
-export function formatCaip10(account: CaipAccount): string {
-  return `${account.chainId}:${account.address}`;
 }
