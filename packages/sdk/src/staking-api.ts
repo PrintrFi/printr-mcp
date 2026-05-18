@@ -6,6 +6,7 @@
  */
 
 import { err, ok, type Result } from "neverthrow";
+import { match, P } from "ts-pattern";
 import {
   type ClaimStakingRewardsResponse,
   ClaimStakingRewardsRequest as ProtoClaimStakingRewardsRequest,
@@ -352,20 +353,25 @@ function toSimpleSolanaPayload(payload: SolanaTxPayload): SimpleSolanaPayload {
 }
 
 /**
- * Convert proto TxPayload to simple format
+ * Convert proto TxPayload to simple format.
+ *
+ * Exhaustive match on the `case` discriminator — when the proto adds a new
+ * variant here, `.exhaustive()` makes this a compile error instead of a silent
+ * fallthrough to `{ case: undefined }`.
  */
 function toSimpleTxPayload(payload: TxPayload | undefined): SimpleTxPayload | undefined {
   if (!payload) {
     return undefined;
   }
-  const p = payload.payload;
-  if (p.case === "evm") {
-    return { case: "evm", value: toSimpleEvmPayload(p.value) };
-  }
-  if (p.case === "solana") {
-    return { case: "solana", value: toSimpleSolanaPayload(p.value) };
-  }
-  return { case: undefined, value: undefined };
+  return match(payload.payload)
+    .returnType<SimpleTxPayload>()
+    .with({ case: "evm" }, ({ value }) => ({ case: "evm", value: toSimpleEvmPayload(value) }))
+    .with({ case: "solana" }, ({ value }) => ({
+      case: "solana",
+      value: toSimpleSolanaPayload(value),
+    }))
+    .with({ case: P.optional(undefined) }, () => ({ case: undefined, value: undefined }))
+    .exhaustive();
 }
 
 /**
