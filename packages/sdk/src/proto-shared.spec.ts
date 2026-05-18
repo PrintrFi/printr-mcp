@@ -1,6 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import { Account } from "./proto/caip/account_pb.js";
-import { formatCaip10, getBackendClient, parseCaip10, toSimpleAccount } from "./proto-shared.js";
+import {
+  formatCaip10,
+  getBackendClient,
+  parseCaip10,
+  toSimpleAccount,
+  tryParseCaip10,
+} from "./proto-shared.js";
 
 describe("parseCaip10", () => {
   it("splits namespace:chainRef:address into { chainId, address }", () => {
@@ -57,5 +63,31 @@ describe("getBackendClient", () => {
     const a = getBackendClient();
     const b = getBackendClient();
     expect(a).toBe(b);
+  });
+});
+
+describe("tryParseCaip10", () => {
+  it("returns ok for a well-formed CAIP-10", () => {
+    const result = tryParseCaip10("eip155:8453:0xabc");
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value).toEqual({ chainId: "eip155:8453", address: "0xabc" });
+    }
+  });
+
+  it("returns err with the raw input on malformed input", () => {
+    const result = tryParseCaip10("eip155:8453");
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error).toEqual({ kind: "invalid_caip10", input: "eip155:8453" });
+    }
+  });
+
+  it("preserves colons inside the address portion", () => {
+    const result = tryParseCaip10("solana:5eykt:addr:with:colons");
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value.address).toBe("addr:with:colons");
+    }
   });
 });

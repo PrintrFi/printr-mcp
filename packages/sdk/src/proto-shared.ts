@@ -7,6 +7,7 @@
 
 import { type Client, createClient } from "@connectrpc/connect";
 import { createGrpcWebTransport } from "@connectrpc/connect-web";
+import { err, ok, type Result } from "neverthrow";
 import { env } from "./env.js";
 import { Backend } from "./proto/api/api_connect.js";
 import type { Account } from "./proto/caip/account_pb.js";
@@ -42,18 +43,35 @@ export function toSimpleAccount(account: Account | undefined): CaipAccount | und
   return { chainId: account.chainId, address: account.address };
 }
 
+/** Error returned by {@link tryParseCaip10} for unrecoverable input. */
+export type ParseCaip10Error = { kind: "invalid_caip10"; input: string };
+
 /**
- * Parse a CAIP-10 string into the proto-flavoured {@link CaipAccount} split
- * (chain id combined, address separate). Throws on malformed input.
+ * Safe parser variant of {@link parseCaip10} — returns a {@link Result} instead
+ * of throwing. Prefer this at any boundary where the input is untrusted.
  */
-export function parseCaip10(caip10: string): CaipAccount {
+export function tryParseCaip10(caip10: string): Result<CaipAccount, ParseCaip10Error> {
   const parts = caip10.split(":");
   if (parts.length < 3) {
-    throw new Error(`Invalid CAIP-10: ${caip10}`);
+    return err({ kind: "invalid_caip10", input: caip10 });
   }
   const chainId = `${parts[0]}:${parts[1]}`;
   const address = parts.slice(2).join(":");
-  return { chainId, address };
+  return ok({ chainId, address });
+}
+
+/**
+ * Parse a CAIP-10 string into the proto-flavoured {@link CaipAccount} split
+ * (chain id combined, address separate). Throws on malformed input — prefer
+ * {@link tryParseCaip10} when the input is untrusted.
+ */
+export function parseCaip10(caip10: string): CaipAccount {
+  return tryParseCaip10(caip10).match(
+    (account) => account,
+    (e) => {
+      throw new Error(`Invalid CAIP-10: ${e.input}`);
+    },
+  );
 }
 
 /** Format a {@link CaipAccount} as a CAIP-10 string. */

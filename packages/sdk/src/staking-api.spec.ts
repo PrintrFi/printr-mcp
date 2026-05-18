@@ -1,5 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import { formatCaip10, parseCaip10, parseLockPeriod, StakingLockPeriod } from "./staking-api.js";
+import {
+  formatCaip10,
+  parseCaip10,
+  parseLockPeriod,
+  StakingLockPeriod,
+  tryParseLockPeriod,
+} from "./staking-api.js";
 
 describe("staking-api parseCaip10", () => {
   it("parses EVM CAIP-10", () => {
@@ -64,5 +70,31 @@ describe("parseLockPeriod", () => {
 
   it("throws on unknown values", () => {
     expect(() => parseLockPeriod("FIVE_DAYS")).toThrow("Invalid lock period");
+  });
+});
+
+describe("tryParseLockPeriod", () => {
+  it("returns ok for known short-form labels", () => {
+    const result = tryParseLockPeriod("7_DAYS");
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value).toBe(StakingLockPeriod.SEVEN_DAYS);
+    }
+  });
+
+  it("returns ok for long-form labels", () => {
+    const result = tryParseLockPeriod("ONE_HUNDRED_EIGHTY_DAYS");
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value).toBe(StakingLockPeriod.ONE_HUNDRED_EIGHTY_DAYS);
+    }
+  });
+
+  it("returns err with the raw input for unknown values", () => {
+    const result = tryParseLockPeriod("FIVE_DAYS");
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error).toEqual({ kind: "invalid_lock_period", input: "FIVE_DAYS" });
+    }
   });
 });

@@ -222,7 +222,7 @@ export async function signAndSubmitSvm(
       }),
   );
 
-  const broadcast = async (rpcUrl: string): Promise<SvmBroadcastResult> => {
+  async function broadcast(rpcUrl: string): Promise<SvmBroadcastResult> {
     const connection = new Connection(rpcUrl, "confirmed");
 
     const altAccounts: AddressLookupTableAccount[] = [];
@@ -252,7 +252,7 @@ export async function signAndSubmitSvm(
     });
 
     return { signature, blockhash, lastValidBlockHeight };
-  };
+  }
 
   const confirm =
     ({ signature, blockhash, lastValidBlockHeight }: SvmBroadcastResult) =>

@@ -91,9 +91,20 @@ export {
   type EvmPayload,
   type EvmSubmitResult,
   normalisePrivateKey,
+  type ParseEvmCaip10Error,
   parseEvmCaip10,
   signAndSubmitEvm,
+  tryParseEvmCaip10,
 } from "./evm.js";
+// Namespaced facade
+export {
+  balance,
+  type GetNativeBalanceParams,
+  type GetTokenBalanceParams,
+  type SendNativeParams,
+  type SendTokenParams,
+  tx,
+} from "./facade.js";
 // Fee API
 export {
   Account,
@@ -143,8 +154,10 @@ export {
   type CaipAccount as ProtoCaipAccount,
   formatCaip10 as formatProtoCaip10,
   getBackendClient,
+  type ParseCaip10Error as ParseProtoCaip10Error,
   parseCaip10 as parseProtoCaip10,
   toSimpleAccount as toSimpleProtoAccount,
+  tryParseCaip10 as tryParseProtoCaip10,
 } from "./proto-shared.js";
 // Public contract client
 export {
@@ -178,6 +191,7 @@ export {
   type ListStakePositionsParams,
   type ListStakePositionsWithRewardsResult,
   listStakePositionsWithRewards,
+  type ParseLockPeriodError,
   parseCaip10 as parseStakingCaip10,
   parseLockPeriod,
   type SimpleAssetAmount,
@@ -191,6 +205,7 @@ export {
   type SimpleTokenAmount,
   type SimpleTxPayload,
   StakingLockPeriod,
+  tryParseLockPeriod,
 } from "./staking-api.js";
 // State management
 export {

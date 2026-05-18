@@ -85,30 +85,41 @@ const balance = await checkEvmBalance(
 balance.match(
   ({ balanceFormatted, symbol, sufficient }) =>
     console.log(`Balance: ${balanceFormatted} ${symbol} (sufficient: ${sufficient})`),
-  (err) => console.error('Balance fetch failed:', err), // 'no_rpc' | 'fetch_failed'
+  (err) => console.error('Balance fetch failed:', err), // 'no_rpc' | 'fetch_failed' | 'chain_mismatch'
 );
 ```
 
-### Transfer tokens
+### Transfer tokens (recommended: namespaced facade)
+
+The `tx` and `balance` namespaces wrap the lower-level free functions with
+single-params-object signatures and internal `ChainMeta` resolution. Prefer
+these at call sites.
 
 ```typescript
-import { executeTransfer } from '@printr/sdk/transfer';
-import { getChainMeta } from '@printr/sdk/chains';
+import { tx, balance } from '@printr/sdk';
 
-const meta = getChainMeta('eip155:8453')!;
-const result = await executeTransfer(
-  'eip155',    // namespace
-  '8453',      // chainRef (Base)
-  '0xRecipientAddress',
-  '1.5',       // amount in native token units
-  process.env.EVM_WALLET_PRIVATE_KEY!,
-  meta,
+const sent = await tx.native.send({
+  chain: 'eip155:8453',
+  to: '0xRecipientAddress',
+  amount: '1.5',
+  privateKey: process.env.EVM_WALLET_PRIVATE_KEY!,
+});
+
+sent.match(
+  (result) => console.log('tx_hash' in result ? result.tx_hash : result.signature),
+  (err) => console.error('Transfer failed:', err.message),
 );
 
-if (result.isOk()) {
-  console.log('tx_hash' in result.value ? result.value.tx_hash : result.value.signature);
-}
+// Query balances the same way
+const usdc = await balance.token.get({
+  chain: 'eip155:8453',
+  address: '0xWallet',
+  token: 'eip155:8453:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+});
 ```
+
+The lower-level `executeTransfer` / `fetchTokenBalance` free functions are
+still exported for callers that already have `ChainMeta` resolved.
 
 ## Exports
 
@@ -116,7 +127,7 @@ The SDK is organized into focused modules that can be imported individually:
 
 ```typescript
 // Main exports
-import { createPrintrClient, buildToken } from '@printr/sdk';
+import { createPrintrClient, buildToken, tx, balance } from '@printr/sdk';
 
 // Client utilities
 import { createPrintrClient } from '@printr/sdk/client';
@@ -236,12 +247,37 @@ quoteToken(input: QuoteInput, client: PrintrClient): ResultAsync<QuoteOutput, Pr
 ### Transaction Signing
 
 ```typescript
-// Low-level: throws on error — wrap in ResultAsync.fromPromise or try/catch
-signAndSubmitEvm(payload: EvmPayload, privateKey: string, rpcUrl?: string): Promise<EvmSubmitResult>
-signAndSubmitSvm(payload: SvmPayload, privateKey: string, rpcUrl?: string): Promise<SvmSubmitResult>
+// Low-level: throws on error — wrap in ResultAsync.fromPromise or try/catch.
+// `rpcUrl` accepts a single URL or an ordered priority list (RpcInput); on
+// transport-level failures the call retries the next URL automatically.
+signAndSubmitEvm(payload: EvmPayload, privateKey: string, rpcUrl?: RpcInput): Promise<EvmSubmitResult>
+signAndSubmitSvm(payload: SvmPayload, privateKey: string, rpcUrl?: RpcInput): Promise<SvmSubmitResult>
 
 // High-level transfer (Result-safe):
 executeTransfer(namespace, chainRef, toAddress, amount, privateKey, meta): ResultAsync<TransferResult, TransferError>
+```
+
+### Namespaced facade
+
+```typescript
+// tx and balance group operations by asset kind with single-params-object signatures.
+tx.native.send({ chain, to, amount, privateKey, rpcUrl? }): ResultAsync<TransferResult, TransferError>
+tx.token.send({ chain, to, token, amount, privateKey, rpcUrl? }): ResultAsync<TransferResult, TransferError>
+balance.native.get({ chain, address, rpcUrl? }): ResultAsync<SimpleBalanceResult, BalanceError>
+balance.token.get({ chain, address, token, rpcUrl? }): ResultAsync<SimpleBalanceResult, BalanceError>
+// `chain` is CAIP-2; `token` is CAIP-10 and must match `chain` (else "chain_mismatch").
+```
+
+### Result-safe parser variants
+
+Three legacy parsers (`parseCaip10`, `parseEvmCaip10`, `parseLockPeriod`) still throw on
+malformed input for source compatibility. Use the `tryParse*` variants at any boundary
+where the input is untrusted:
+
+```typescript
+tryParseCaip10(s: string): Result<CaipAccount, ParseCaip10Error>
+tryParseEvmCaip10(s: string): Result<{chainId, address}, ParseEvmCaip10Error>
+tryParseLockPeriod(s: string): Result<StakingLockPeriod, ParseLockPeriodError>
 ```
 
 ## Examples

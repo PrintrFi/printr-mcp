@@ -1,3 +1,4 @@
+import { err, ok, type Result } from "neverthrow";
 import {
   type Address,
   createPublicClient,
@@ -11,18 +12,43 @@ import { getChainMeta, getRpcUrls } from "./chains.js";
 import { ensureHex } from "./hex.js";
 import { type RpcInput, withRpcFallback } from "./rpc.js";
 
-/** Parse chain ID and address from a CAIP-10 string (e.g. "eip155:8453:0x...") */
-export function parseEvmCaip10(caip10: string): { chainId: number; address: Address } {
+/** Error returned by {@link tryParseEvmCaip10}. */
+export type ParseEvmCaip10Error =
+  | { kind: "malformed"; input: string }
+  | { kind: "invalid_chain_id"; input: string };
+
+/**
+ * Safe parser variant of {@link parseEvmCaip10} — returns a {@link Result}
+ * instead of throwing. Prefer this at any boundary where the input is untrusted.
+ */
+export function tryParseEvmCaip10(
+  caip10: string,
+): Result<{ chainId: number; address: Address }, ParseEvmCaip10Error> {
   const parts = caip10.split(":");
   if (parts.length < 3) {
-    throw new Error(`Invalid CAIP-10 address: ${caip10}`);
+    return err({ kind: "malformed", input: caip10 });
   }
   const chainId = Number(parts[1]);
   const address = parts.slice(2).join(":") as Address;
   if (!Number.isInteger(chainId) || chainId <= 0) {
-    throw new Error(`Invalid chain ID in CAIP-10: ${caip10}`);
+    return err({ kind: "invalid_chain_id", input: caip10 });
   }
-  return { chainId, address };
+  return ok({ chainId, address });
+}
+
+/**
+ * Parse chain ID and address from a CAIP-10 string (e.g. `"eip155:8453:0x..."`).
+ * Throws on malformed input — prefer {@link tryParseEvmCaip10} for untrusted input.
+ */
+export function parseEvmCaip10(caip10: string): { chainId: number; address: Address } {
+  return tryParseEvmCaip10(caip10).match(
+    (parsed) => parsed,
+    (e) => {
+      const reason =
+        e.kind === "malformed" ? "Invalid CAIP-10 address" : "Invalid chain ID in CAIP-10";
+      throw new Error(`${reason}: ${e.input}`);
+    },
+  );
 }
 
 /** Normalise a hex private key to have a 0x prefix */
