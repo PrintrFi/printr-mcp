@@ -87,7 +87,7 @@ const parseChain = (chain: string) => {
   return meta ? { ...parsed, meta } : null;
 };
 
-const sendNative = (params: SendNativeParams): ResultAsync<TransferResult, TransferError> => {
+function sendNative(params: SendNativeParams): ResultAsync<TransferResult, TransferError> {
   const resolved = parseChain(params.chain);
   if (!resolved) {
     return errAsync({ message: `Unsupported or malformed chain: ${params.chain}` });
@@ -101,9 +101,9 @@ const sendNative = (params: SendNativeParams): ResultAsync<TransferResult, Trans
     resolved.meta,
     params.rpcUrl,
   );
-};
+}
 
-const sendToken = (params: SendTokenParams): ResultAsync<TransferResult, TransferError> => {
+function sendToken(params: SendTokenParams): ResultAsync<TransferResult, TransferError> {
   const resolved = parseChain(params.chain);
   if (!resolved) {
     return errAsync({ message: `Unsupported or malformed chain: ${params.chain}` });
@@ -118,11 +118,11 @@ const sendToken = (params: SendTokenParams): ResultAsync<TransferResult, Transfe
     resolved.meta,
     params.rpcUrl,
   );
-};
+}
 
-const getNativeBalance = (
+function getNativeBalance(
   params: GetNativeBalanceParams,
-): ResultAsync<SimpleBalanceResult, BalanceError> => {
+): ResultAsync<SimpleBalanceResult, BalanceError> {
   const resolved = parseChain(params.chain);
   if (!resolved) {
     return errAsync("no_rpc");
@@ -134,11 +134,11 @@ const getNativeBalance = (
     resolved.meta,
     params.rpcUrl,
   );
-};
+}
 
-const getTokenBalance = (
+function getTokenBalance(
   params: GetTokenBalanceParams,
-): ResultAsync<SimpleBalanceResult, BalanceError> => {
+): ResultAsync<SimpleBalanceResult, BalanceError> {
   const resolved = parseChain(params.chain);
   if (!resolved) {
     return errAsync("no_rpc");
@@ -155,7 +155,7 @@ const getTokenBalance = (
     resolved.meta,
     params.rpcUrl,
   );
-};
+}
 
 /** Signing / broadcasting operations grouped by asset kind. */
 export const tx = {
