@@ -11,9 +11,12 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
+import { errAsync, ResultAsync } from "neverthrow";
 import { sleep } from "./async.js";
 import { getRpcUrl, getRpcUrls } from "./chains.js";
 import { type RpcInput, withRpcFallback } from "./rpc.js";
+
+const toMessage = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
 export const SOLANA_MAINNET_CAIP2 = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 
@@ -188,12 +191,35 @@ type SvmBroadcastResult = {
   lastValidBlockHeight: number;
 };
 
+/** Discriminated error union returned by {@link signAndSubmitSvm}. */
+export type SvmSubmitError =
+  | { kind: "signing_failed"; message: string }
+  | { kind: "broadcast_failed"; message: string }
+  | { kind: "confirmation_failed"; signature: string; message: string };
+
+/** Render an {@link SvmSubmitError} into a human-readable message. */
+export function formatSvmSubmitError(e: SvmSubmitError): string {
+  switch (e.kind) {
+    case "signing_failed":
+      return `Solana signing failed: ${e.message}`;
+    case "broadcast_failed":
+      return `Solana broadcast failed: ${e.message}`;
+    case "confirmation_failed":
+      return `Solana confirmation failed (signature ${e.signature}): ${e.message}`;
+  }
+}
+
 /**
  * Sign a Solana versioned transaction (with optional address lookup table),
  * broadcast it, and wait for `confirmed` status.
+ *
  * `privateKey` is the base58-encoded secret key. `rpcUrlOverride` may be a
  * single URL or an ordered priority list — on transport-level failures the
  * call retries against the next URL (see {@link withRpcFallback}).
+ *
+ * Returns a {@link ResultAsync} with a discriminated {@link SvmSubmitError}
+ * so callers can branch on the failure mode (signing vs broadcast vs
+ * confirmation) without inspecting an error message string.
  *
  * Broadcast and confirmation are independent phases, each with its own
  * fallback pass over `urls`. The transaction is therefore broadcast at most
@@ -201,13 +227,19 @@ type SvmBroadcastResult = {
  * against subsequent URLs — the transaction is never re-signed with a fresh
  * blockhash or re-broadcast, which would risk a duplicate on-chain effect.
  */
-export async function signAndSubmitSvm(
+export function signAndSubmitSvm(
   payload: SvmPayload,
   privateKey: string,
   rpcUrlOverride?: RpcInput,
-): Promise<SvmSubmitResult> {
+): ResultAsync<SvmSubmitResult, SvmSubmitError> {
   const urls = getSvmRpcUrls(rpcUrlOverride);
-  const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
+
+  let keypair: Keypair;
+  try {
+    keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
+  } catch (e) {
+    return errAsync({ kind: "signing_failed", message: toMessage(e) });
+  }
 
   const instructions = payload.ixs.map(
     (ix) =>
@@ -265,14 +297,23 @@ export async function signAndSubmitSvm(
         "confirmed",
       );
 
-  const broadcasted = await withRpcFallback(urls, broadcast);
-  const { slot, confirmationStatus } = await withRpcFallback(urls, confirm(broadcasted));
-
-  return {
-    signature: broadcasted.signature,
-    slot,
-    confirmation_status: confirmationStatus,
-  };
+  return ResultAsync.fromPromise(
+    withRpcFallback(urls, broadcast),
+    (e): SvmSubmitError => ({ kind: "broadcast_failed", message: toMessage(e) }),
+  ).andThen((broadcasted) =>
+    ResultAsync.fromPromise(
+      withRpcFallback(urls, confirm(broadcasted)),
+      (e): SvmSubmitError => ({
+        kind: "confirmation_failed",
+        signature: broadcasted.signature,
+        message: toMessage(e),
+      }),
+    ).map(({ slot, confirmationStatus }) => ({
+      signature: broadcasted.signature,
+      slot,
+      confirmation_status: confirmationStatus,
+    })),
+  );
 }
 
 /**

@@ -16,18 +16,11 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import { errAsync, ResultAsync } from "neverthrow";
-import {
-  createPublicClient,
-  createWalletClient,
-  defineChain,
-  erc20Abi,
-  http,
-  parseUnits,
-} from "viem";
+import { createPublicClient, createWalletClient, erc20Abi, http, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { parseCaip10, toCaip2 } from "./caip.js";
 import type { ChainMeta } from "./chains.js";
-import { getRpcUrl } from "./chains.js";
+import { createViemChain, getRpcUrl } from "./chains.js";
 import { normalisePrivateKey } from "./evm.js";
 import { getSvmRpcUrl, sendAndConfirmSvmTransaction } from "./svm.js";
 
@@ -47,14 +40,6 @@ export type SvmTransferResult = {
 
 export type TransferResult = EvmTransferResult | SvmTransferResult;
 
-const createViemChain = (chainId: number, meta: ChainMeta, rpcUrl: string) =>
-  defineChain({
-    id: chainId,
-    name: meta.name,
-    nativeCurrency: { name: meta.name, symbol: meta.symbol, decimals: meta.decimals },
-    rpcUrls: { default: { http: [rpcUrl] } },
-  });
-
 /**
  * Send the native gas token on an EVM chain. `amount` is in atomic units (wei).
  * Throws if the RPC call fails. Use {@link executeTransfer} for namespace-agnostic transfers.
@@ -67,7 +52,7 @@ export const transferEvm = async (
   rpcUrl: string,
   meta: ChainMeta,
 ): Promise<EvmTransferResult> => {
-  const chain = createViemChain(chainId, meta, rpcUrl);
+  const chain = createViemChain(chainId, rpcUrl, meta);
   const account = privateKeyToAccount(normalisePrivateKey(privateKey));
   const walletClient = createWalletClient({ account, chain, transport: http(rpcUrl) });
 
@@ -172,7 +157,7 @@ export const transferErc20 = async (
   rpcUrl: string,
   meta: ChainMeta,
 ): Promise<EvmTransferResult> => {
-  const chain = createViemChain(chainId, meta, rpcUrl);
+  const chain = createViemChain(chainId, rpcUrl, meta);
   const account = privateKeyToAccount(normalisePrivateKey(privateKey));
   const walletClient = createWalletClient({ account, chain, transport: http(rpcUrl) });
 
@@ -294,7 +279,7 @@ const fetchErc20Decimals = async (
   rpcUrl: string,
   meta: ChainMeta,
 ): Promise<number> => {
-  const chain = createViemChain(chainId, meta, rpcUrl);
+  const chain = createViemChain(chainId, rpcUrl, meta);
   const client = createPublicClient({ chain, transport: http(rpcUrl) });
   return client.readContract({
     address: tokenAddress,

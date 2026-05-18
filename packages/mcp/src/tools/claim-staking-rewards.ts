@@ -5,6 +5,8 @@ import {
   chainTypeFromCaip2,
   claimStakingRewards,
   type EvmPayload,
+  formatEvmSubmitError,
+  formatSvmSubmitError,
   getSvmRpcUrl,
   parseStakingCaip10,
   type SimpleTxPayload,
@@ -149,7 +151,7 @@ function submitClaim(
   if (txPayload.case === "evm") {
     return buildEvmPayload(positionAccount.chainId, txPayload.value)
       .asyncAndThen((evmPayload) =>
-        ResultAsync.fromPromise(signAndSubmitEvm(evmPayload, treasuryKey), mapErr),
+        signAndSubmitEvm(evmPayload, treasuryKey).mapErr((e) => claimErr(formatEvmSubmitError(e))),
       )
       .map(({ tx_hash }) => ({
         position,
@@ -163,7 +165,9 @@ function submitClaim(
     const rpc = getSvmRpcUrl();
     return buildSvmPayload(txPayload.value)
       .asyncAndThen((svmPayload) =>
-        ResultAsync.fromPromise(signAndSubmitSvm(svmPayload, treasuryKey, rpc), mapErr),
+        signAndSubmitSvm(svmPayload, treasuryKey, rpc).mapErr((e) =>
+          claimErr(formatSvmSubmitError(e)),
+        ),
       )
       .map(({ signature }) => ({
         position,

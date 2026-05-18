@@ -1,5 +1,6 @@
 /** Minimal CAIP-2 chain metadata derived from printr/web/app/stores/chains/defs.ts */
 
+import { type Chain, defineChain } from "viem";
 import { compact, dedupe } from "./array.js";
 import { parseCaip2 } from "./caip.js";
 import { ALCHEMY_RPC_TEMPLATES, env } from "./env.js";
@@ -242,4 +243,30 @@ export function getEvmConfig(chain: string, rpcOverride?: string): EvmConfigResu
   }
 
   return { chainId, rpc };
+}
+
+/**
+ * Build a viem {@link Chain} definition from a numeric chain id and RPC URL,
+ * using {@link ChainMeta} for the name/native-currency when available and safe
+ * defaults (`Ether`/`ETH`/18) when not.
+ *
+ * Consolidates three previously-duplicated `createViemChain` / `buildChain`
+ * helpers from `balance.ts`, `transfer.ts`, and `evm.ts`.
+ */
+export function createViemChain(
+  chainId: number,
+  rpcUrl: string,
+  meta?: ChainMeta,
+  caip2Fallback?: string,
+): Chain {
+  return defineChain({
+    id: chainId,
+    name: meta?.name ?? caip2Fallback ?? `chain-${chainId}`,
+    nativeCurrency: {
+      name: meta?.name ?? "Ether",
+      symbol: meta?.symbol ?? "ETH",
+      decimals: meta?.decimals ?? 18,
+    },
+    rpcUrls: { default: { http: [rpcUrl] } },
+  });
 }

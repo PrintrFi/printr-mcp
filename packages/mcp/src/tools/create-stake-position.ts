@@ -5,6 +5,8 @@ import {
   chainTypeFromCaip2,
   createStakePosition,
   type EvmPayload,
+  formatEvmSubmitError,
+  formatSvmSubmitError,
   getSvmRpcUrl,
   parseLockPeriod,
   parseStakingCaip10,
@@ -183,7 +185,9 @@ function submitCreate(
   if (txPayload.case === "evm") {
     return buildEvmPayload(ctx.chainId, txPayload.value)
       .asyncAndThen((evmPayload) =>
-        ResultAsync.fromPromise(signAndSubmitEvm(evmPayload, ctx.treasuryKey), mapErr),
+        signAndSubmitEvm(evmPayload, ctx.treasuryKey).mapErr((e) =>
+          createErr(formatEvmSubmitError(e)),
+        ),
       )
       .map(({ tx_hash }) => ({
         ...base,
@@ -196,7 +200,9 @@ function submitCreate(
     const rpc = getSvmRpcUrl();
     return buildSvmPayload(txPayload.value)
       .asyncAndThen((svmPayload) =>
-        ResultAsync.fromPromise(signAndSubmitSvm(svmPayload, ctx.treasuryKey, rpc), mapErr),
+        signAndSubmitSvm(svmPayload, ctx.treasuryKey, rpc).mapErr((e) =>
+          createErr(formatSvmSubmitError(e)),
+        ),
       )
       .map(({ signature }) => ({
         ...base,
