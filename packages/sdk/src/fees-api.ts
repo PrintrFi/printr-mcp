@@ -5,6 +5,7 @@
  * and claiming creator fees.
  */
 
+import { match, P } from "ts-pattern";
 import type {
   ChainProtocolFees as ProtoChainProtocolFees,
   Payload as ProtoPayload,
@@ -175,30 +176,29 @@ function toSimplePayload(payload: ProtoPayload | undefined): Payload | undefined
   }
 
   const targetChain = payload.targetChain || "";
-  const p = payload.payload;
 
-  if (p.case === "evm") {
-    return {
+  // Exhaustive match on the discriminator — when the proto adds a new variant
+  // here, `.exhaustive()` makes this a compile error instead of a silent
+  // fallthrough to `{ case: undefined }`.
+  return match(payload.payload)
+    .returnType<Payload>()
+    .with({ case: "evm" }, ({ value }) => ({
       targetChain,
-      payload: { case: "evm", value: toSimplePayloadEVM(p.value, targetChain) },
-    };
-  }
-
-  if (p.case === "svm") {
-    return {
+      payload: { case: "evm", value: toSimplePayloadEVM(value, targetChain) },
+    }))
+    .with({ case: "svm" }, ({ value }) => ({
       targetChain,
-      payload: { case: "svm", value: toSimplePayloadSolana(p.value, targetChain) },
-    };
-  }
-
-  if (p.case === "svmRaw") {
-    return {
+      payload: { case: "svm", value: toSimplePayloadSolana(value, targetChain) },
+    }))
+    .with({ case: "svmRaw" }, ({ value }) => ({
       targetChain,
-      payload: { case: "svmRaw", value: { calldata: p.value.calldata || "" } },
-    };
-  }
-
-  return { targetChain, payload: { case: undefined, value: undefined } };
+      payload: { case: "svmRaw", value: { calldata: value.calldata || "" } },
+    }))
+    .with({ case: P.optional(undefined) }, () => ({
+      targetChain,
+      payload: { case: undefined, value: undefined },
+    }))
+    .exhaustive();
 }
 
 /**
