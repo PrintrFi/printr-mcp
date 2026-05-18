@@ -11,7 +11,7 @@ export type ChainMeta = {
   defaultRpc?: string;
 };
 
-export const CHAIN_META: Record<string, ChainMeta> = {
+export const CHAIN_META = {
   "eip155:1": {
     name: "Ethereum",
     symbol: "ETH",
@@ -83,7 +83,15 @@ export const CHAIN_META: Record<string, ChainMeta> = {
     decimals: 9,
     defaultRpc: "https://api.mainnet-beta.solana.com",
   },
-};
+} as const satisfies Record<string, ChainMeta>;
+
+/** Union of CAIP-2 chain ids that ship in {@link CHAIN_META}. */
+export type SupportedCaip2 = keyof typeof CHAIN_META;
+
+/** Type guard for CAIP-2 ids that have shipped metadata. */
+export function isSupportedCaip2(caip2: string): caip2 is SupportedCaip2 {
+  return caip2 in CHAIN_META;
+}
 
 /** Additional aliases for chain names (lowercase) */
 const CHAIN_ALIASES: Record<string, string> = {
@@ -102,9 +110,14 @@ const CHAIN_NAME_TO_CAIP2: Record<string, string> = {
   ...CHAIN_ALIASES,
 };
 
-/** Look up name/symbol/decimals metadata for a CAIP-2 chain. */
+/**
+ * Look up name/symbol/decimals metadata for a CAIP-2 chain.
+ * Returns a non-undefined `ChainMeta` when called with a known {@link SupportedCaip2} literal.
+ */
+export function getChainMeta<K extends SupportedCaip2>(caip2: K): ChainMeta;
+export function getChainMeta(caip2: string): ChainMeta | undefined;
 export function getChainMeta(caip2: string): ChainMeta | undefined {
-  return CHAIN_META[caip2];
+  return CHAIN_META[caip2 as SupportedCaip2];
 }
 
 /** Construct a CAIP-2 ID from namespace and chain reference */
@@ -156,7 +169,7 @@ function getAlchemyRpc(caip2: string): string | undefined {
     return undefined;
   }
 
-  const meta = CHAIN_META[caip2];
+  const meta = CHAIN_META[caip2 as SupportedCaip2];
   if (!meta) {
     return undefined;
   }
@@ -190,7 +203,7 @@ export function getRpcUrl(caip2: string, rpcOverride?: string): string | undefin
   if (alchemyRpc) {
     return alchemyRpc;
   }
-  return CHAIN_META[caip2]?.defaultRpc;
+  return getChainMeta(caip2)?.defaultRpc;
 }
 
 export type EvmConfigResult = { error: string } | { chainId: number; rpc: string };

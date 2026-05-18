@@ -31,7 +31,7 @@ export function registerSupportedChainsTool(server: McpServer): void {
         name: meta.name,
         symbol: meta.symbol,
         decimals: meta.decimals,
-        has_rpc: !!meta.defaultRpc,
+        has_rpc: "defaultRpc" in meta && !!meta.defaultRpc,
       }));
 
       return toolOk({ chains });
