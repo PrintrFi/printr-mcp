@@ -182,6 +182,12 @@ export type SvmSubmitResult = {
   confirmation_status: "finalized" | "confirmed" | "processed";
 };
 
+type SvmBroadcastResult = {
+  signature: string;
+  blockhash: string;
+  lastValidBlockHeight: number;
+};
+
 /**
  * Sign a Solana versioned transaction (with optional address lookup table),
  * broadcast it, and wait for `confirmed` status.
@@ -189,10 +195,11 @@ export type SvmSubmitResult = {
  * single URL or an ordered priority list — on transport-level failures the
  * call retries against the next URL (see {@link withRpcFallback}).
  *
- * Broadcast happens at most once. Once a signature has been obtained, only
- * confirmation is retried against subsequent URLs — the transaction is NOT
- * re-signed with a fresh blockhash or re-broadcast, which would risk a
- * duplicate, non-idempotent on-chain effect.
+ * Broadcast and confirmation are independent phases, each with its own
+ * fallback pass over `urls`. The transaction is therefore broadcast at most
+ * once: once a signature has been obtained, only confirmation is retried
+ * against subsequent URLs — the transaction is never re-signed with a fresh
+ * blockhash or re-broadcast, which would risk a duplicate on-chain effect.
  */
 export async function signAndSubmitSvm(
   payload: SvmPayload,
@@ -215,55 +222,57 @@ export async function signAndSubmitSvm(
       }),
   );
 
-  let signature: string | undefined;
-  let blockhash: string | undefined;
-  let lastValidBlockHeight: number | undefined;
-
-  return withRpcFallback(urls, async (rpcUrl) => {
+  const broadcast = async (rpcUrl: string): Promise<SvmBroadcastResult> => {
     const connection = new Connection(rpcUrl, "confirmed");
 
-    if (signature === undefined) {
-      let altAccounts: AddressLookupTableAccount[] = [];
-      if (payload.lookup_table) {
-        const altResponse = await connection.getAddressLookupTable(
-          new PublicKey(payload.lookup_table),
-        );
-        if (altResponse.value) {
-          altAccounts = [altResponse.value];
-        }
+    const altAccounts: AddressLookupTableAccount[] = [];
+    if (payload.lookup_table) {
+      const altResponse = await connection.getAddressLookupTable(
+        new PublicKey(payload.lookup_table),
+      );
+      if (altResponse.value) {
+        altAccounts.push(altResponse.value);
       }
-
-      const latest = await connection.getLatestBlockhash();
-      blockhash = latest.blockhash;
-      lastValidBlockHeight = latest.lastValidBlockHeight;
-
-      const message = new TransactionMessage({
-        payerKey: keypair.publicKey,
-        recentBlockhash: blockhash,
-        instructions,
-      }).compileToV0Message(altAccounts);
-
-      const tx = new VersionedTransaction(message);
-      tx.sign([keypair]);
-
-      signature = await connection.sendRawTransaction(tx.serialize(), {
-        skipPreflight: false,
-        preflightCommitment: "confirmed",
-      });
     }
 
-    const { slot, confirmationStatus } = await confirmTransaction(
-      connection,
-      signature,
-      // biome-ignore lint/style/noNonNullAssertion: set in the same branch as signature
-      blockhash!,
-      // biome-ignore lint/style/noNonNullAssertion: set in the same branch as signature
-      lastValidBlockHeight!,
-      "confirmed",
-    );
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
-    return { signature, slot, confirmation_status: confirmationStatus };
-  });
+    const message = new TransactionMessage({
+      payerKey: keypair.publicKey,
+      recentBlockhash: blockhash,
+      instructions,
+    }).compileToV0Message(altAccounts);
+
+    const tx = new VersionedTransaction(message);
+    tx.sign([keypair]);
+
+    const signature = await connection.sendRawTransaction(tx.serialize(), {
+      skipPreflight: false,
+      preflightCommitment: "confirmed",
+    });
+
+    return { signature, blockhash, lastValidBlockHeight };
+  };
+
+  const confirm =
+    ({ signature, blockhash, lastValidBlockHeight }: SvmBroadcastResult) =>
+    (rpcUrl: string) =>
+      confirmTransaction(
+        new Connection(rpcUrl, "confirmed"),
+        signature,
+        blockhash,
+        lastValidBlockHeight,
+        "confirmed",
+      );
+
+  const broadcasted = await withRpcFallback(urls, broadcast);
+  const { slot, confirmationStatus } = await withRpcFallback(urls, confirm(broadcasted));
+
+  return {
+    signature: broadcasted.signature,
+    slot,
+    confirmation_status: confirmationStatus,
+  };
 }
 
 /**

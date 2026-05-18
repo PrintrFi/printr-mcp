@@ -2,7 +2,12 @@
 
 import { parseCaip2 } from "./caip.js";
 import { ALCHEMY_RPC_TEMPLATES, env } from "./env.js";
-import type { RpcInput } from "./rpc.js";
+import { type RpcInput, toRpcList } from "./rpc.js";
+
+const compact = <T>(arr: readonly (T | undefined | null)[]): readonly T[] =>
+  arr.filter((x): x is T => x != null);
+
+const dedupe = <T>(arr: readonly T[]): readonly T[] => [...new Set(arr)];
 
 export type ChainMeta = {
   name: string;
@@ -194,24 +199,14 @@ function getAlchemyRpc(caip2: string): string | undefined {
  * RPC is available — callers decide how to handle that.
  */
 export function getRpcUrls(caip2: string, rpcOverride?: RpcInput): readonly string[] {
-  const seen = new Set<string>();
-  const push = (url: string | undefined) => {
-    if (url && !seen.has(url)) {
-      seen.add(url);
-    }
-  };
-
-  if (rpcOverride) {
-    const overrides = typeof rpcOverride === "string" ? [rpcOverride] : rpcOverride;
-    for (const url of overrides) {
-      push(url);
-    }
-  }
-  push(getUserRpc(caip2));
-  push(getAlchemyRpc(caip2));
-  push(getChainMeta(caip2)?.defaultRpc);
-
-  return [...seen];
+  return dedupe(
+    compact([
+      ...toRpcList(rpcOverride),
+      getUserRpc(caip2),
+      getAlchemyRpc(caip2),
+      getChainMeta(caip2)?.defaultRpc,
+    ]),
+  );
 }
 
 /**

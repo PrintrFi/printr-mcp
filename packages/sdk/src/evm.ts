@@ -49,10 +49,10 @@ export type EvmSubmitResult = {
  * failures the call retries the next URL (see {@link withRpcFallback}). Resolves
  * RPC from chain metadata when omitted. Throws if no RPC is configured.
  *
- * Broadcast happens at most once. If a tx hash is obtained and the receipt-wait
- * fails with a retryable error, only the receipt-wait is retried against the
- * next URL — the transaction is NOT re-broadcast, which would risk nonce reuse
- * or a duplicate send.
+ * Broadcast and receipt-wait are independent phases, each with its own fallback
+ * pass over `urls`. The transaction is therefore broadcast at most once: once a
+ * hash is obtained, only the receipt-wait retries against subsequent URLs — the
+ * transaction is never re-sent, which would risk nonce reuse or a duplicate.
  */
 export async function signAndSubmitEvm(
   payload: EvmPayload,
@@ -81,28 +81,25 @@ export async function signAndSubmitEvm(
       rpcUrls: { default: { http: [rpc] } },
     });
 
-  let hash: Hex | undefined;
+  const broadcast = (rpc: string): Promise<Hex> =>
+    createWalletClient({ account, chain: buildChain(rpc), transport: http(rpc) }).sendTransaction({
+      to: toAddress,
+      data: ensureHex(payload.calldata),
+      value: BigInt(payload.value),
+      gas: BigInt(payload.gas_limit),
+    });
 
-  return withRpcFallback(urls, async (rpc) => {
-    const chain = buildChain(rpc);
+  const waitReceipt = (hash: Hex) => (rpc: string) =>
+    createPublicClient({ chain: buildChain(rpc), transport: http(rpc) }).waitForTransactionReceipt({
+      hash,
+    });
 
-    if (hash === undefined) {
-      const walletClient = createWalletClient({ account, chain, transport: http(rpc) });
-      hash = await walletClient.sendTransaction({
-        to: toAddress,
-        data: ensureHex(payload.calldata),
-        value: BigInt(payload.value),
-        gas: BigInt(payload.gas_limit),
-      });
-    }
+  const hash = await withRpcFallback(urls, broadcast);
+  const receipt = await withRpcFallback(urls, waitReceipt(hash));
 
-    const publicClient = createPublicClient({ chain, transport: http(rpc) });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-
-    return {
-      tx_hash: hash,
-      block_number: String(receipt.blockNumber),
-      status: receipt.status satisfies "success" | "reverted",
-    };
-  });
+  return {
+    tx_hash: hash,
+    block_number: String(receipt.blockNumber),
+    status: receipt.status satisfies "success" | "reverted",
+  };
 }
