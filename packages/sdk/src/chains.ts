@@ -1,13 +1,9 @@
 /** Minimal CAIP-2 chain metadata derived from printr/web/app/stores/chains/defs.ts */
 
+import { compact, dedupe } from "./array.js";
 import { parseCaip2 } from "./caip.js";
 import { ALCHEMY_RPC_TEMPLATES, env } from "./env.js";
 import { type RpcInput, toRpcList } from "./rpc.js";
-
-const compact = <T>(arr: readonly (T | undefined | null)[]): readonly T[] =>
-  arr.filter((x): x is T => x != null);
-
-const dedupe = <T>(arr: readonly T[]): readonly T[] => [...new Set(arr)];
 
 export type ChainMeta = {
   name: string;

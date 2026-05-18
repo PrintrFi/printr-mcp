@@ -23,6 +23,8 @@
  * ```
  */
 
+// Array utilities
+export { compact, dedupe } from "./array.js";
 export { sleep } from "./async.js";
 // Balance operations
 export {
