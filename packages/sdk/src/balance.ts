@@ -22,7 +22,7 @@ export type BalanceInfo = {
   requiredFormatted: string;
 };
 
-export type BalanceError = "no_rpc" | "fetch_failed";
+export type BalanceError = "no_rpc" | "fetch_failed" | "chain_mismatch";
 
 const MIN_SVM_LAMPORTS = 5_000n;
 const LAMPORTS_PER_SOL = 1_000_000_000n;

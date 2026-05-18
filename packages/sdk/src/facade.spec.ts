@@ -90,6 +90,19 @@ describe("balance.token.get", () => {
       expect(result.error).toBe("no_rpc");
     }
   });
+
+  it("returns chain_mismatch when the token's chain differs from params.chain", async () => {
+    const result = await balance.token.get({
+      chain: "eip155:8453",
+      address: "0xabc",
+      // Token CAIP-10 references a different chain (eip155:1) than `chain` above.
+      token: "eip155:1:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    });
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error).toBe("chain_mismatch");
+    }
+  });
 });
 
 describe("namespace shape", () => {
@@ -103,9 +116,10 @@ describe("namespace shape", () => {
     expect(typeof balance.token.get).toBe("function");
   });
 
-  it("namespaces are readonly (frozen by `as const`)", () => {
-    // Type-level assertion only — `as const` makes the const shape readonly.
-    // Runtime mutability is not blocked, but TS would reject reassignment.
+  it("namespaces have readonly type via `as const` (compile-time only)", () => {
+    // `as const` narrows the inferred type to readonly at compile time. It does
+    // NOT freeze the object at runtime — this test only checks the namespaces
+    // exist; the readonly guarantee is enforced by `tsc`, not at runtime.
     expect(tx).toBeDefined();
     expect(balance).toBeDefined();
   });

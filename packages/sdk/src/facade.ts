@@ -33,7 +33,7 @@ import {
   fetchTokenBalance,
   type SimpleBalanceResult,
 } from "./balance.js";
-import { parseCaip2, parseCaip10 } from "./caip.js";
+import { parseCaip2, parseCaip10, toCaip2 } from "./caip.js";
 import { getChainMeta } from "./chains.js";
 import {
   executeTokenTransfer,
@@ -146,6 +146,13 @@ function getTokenBalance(
   const tokenParts = parseCaip10(params.token);
   if (!tokenParts) {
     return errAsync("no_rpc");
+  }
+  // Reject tokens that don't live on `params.chain` — mirrors the validation
+  // that `executeTokenTransfer` already does on the write path, so the
+  // contract documented on `SendTokenParams.token` / `GetTokenBalanceParams.token`
+  // ("must match `chain`") is enforced consistently.
+  if (toCaip2(tokenParts) !== params.chain) {
+    return errAsync("chain_mismatch");
   }
   return fetchTokenBalance(
     resolved.namespace,
