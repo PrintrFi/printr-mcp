@@ -94,6 +94,15 @@ export {
   parseEvmCaip10,
   signAndSubmitEvm,
 } from "./evm.js";
+// Namespaced facade
+export {
+  balance,
+  type GetNativeBalanceParams,
+  type GetTokenBalanceParams,
+  type SendNativeParams,
+  type SendTokenParams,
+  tx,
+} from "./facade.js";
 // Fee API
 export {
   Account,
