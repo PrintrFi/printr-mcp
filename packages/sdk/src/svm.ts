@@ -188,6 +188,11 @@ export type SvmSubmitResult = {
  * `privateKey` is the base58-encoded secret key. `rpcUrlOverride` may be a
  * single URL or an ordered priority list — on transport-level failures the
  * call retries against the next URL (see {@link withRpcFallback}).
+ *
+ * Broadcast happens at most once. Once a signature has been obtained, only
+ * confirmation is retried against subsequent URLs — the transaction is NOT
+ * re-signed with a fresh blockhash or re-broadcast, which would risk a
+ * duplicate, non-idempotent on-chain effect.
  */
 export async function signAndSubmitSvm(
   payload: SvmPayload,
@@ -210,40 +215,50 @@ export async function signAndSubmitSvm(
       }),
   );
 
+  let signature: string | undefined;
+  let blockhash: string | undefined;
+  let lastValidBlockHeight: number | undefined;
+
   return withRpcFallback(urls, async (rpcUrl) => {
     const connection = new Connection(rpcUrl, "confirmed");
 
-    let altAccounts: AddressLookupTableAccount[] = [];
-    if (payload.lookup_table) {
-      const altResponse = await connection.getAddressLookupTable(
-        new PublicKey(payload.lookup_table),
-      );
-      if (altResponse.value) {
-        altAccounts = [altResponse.value];
+    if (signature === undefined) {
+      let altAccounts: AddressLookupTableAccount[] = [];
+      if (payload.lookup_table) {
+        const altResponse = await connection.getAddressLookupTable(
+          new PublicKey(payload.lookup_table),
+        );
+        if (altResponse.value) {
+          altAccounts = [altResponse.value];
+        }
       }
+
+      const latest = await connection.getLatestBlockhash();
+      blockhash = latest.blockhash;
+      lastValidBlockHeight = latest.lastValidBlockHeight;
+
+      const message = new TransactionMessage({
+        payerKey: keypair.publicKey,
+        recentBlockhash: blockhash,
+        instructions,
+      }).compileToV0Message(altAccounts);
+
+      const tx = new VersionedTransaction(message);
+      tx.sign([keypair]);
+
+      signature = await connection.sendRawTransaction(tx.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+      });
     }
-
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-
-    const message = new TransactionMessage({
-      payerKey: keypair.publicKey,
-      recentBlockhash: blockhash,
-      instructions,
-    }).compileToV0Message(altAccounts);
-
-    const tx = new VersionedTransaction(message);
-    tx.sign([keypair]);
-
-    const signature = await connection.sendRawTransaction(tx.serialize(), {
-      skipPreflight: false,
-      preflightCommitment: "confirmed",
-    });
 
     const { slot, confirmationStatus } = await confirmTransaction(
       connection,
       signature,
-      blockhash,
-      lastValidBlockHeight,
+      // biome-ignore lint/style/noNonNullAssertion: set in the same branch as signature
+      blockhash!,
+      // biome-ignore lint/style/noNonNullAssertion: set in the same branch as signature
+      lastValidBlockHeight!,
       "confirmed",
     );
 

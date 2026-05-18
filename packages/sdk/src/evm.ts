@@ -48,6 +48,11 @@ export type EvmSubmitResult = {
  * `rpcUrl` may be a single URL or an ordered priority list — on transport-level
  * failures the call retries the next URL (see {@link withRpcFallback}). Resolves
  * RPC from chain metadata when omitted. Throws if no RPC is configured.
+ *
+ * Broadcast happens at most once. If a tx hash is obtained and the receipt-wait
+ * fails with a retryable error, only the receipt-wait is retried against the
+ * next URL — the transaction is NOT re-broadcast, which would risk nonce reuse
+ * or a duplicate send.
  */
 export async function signAndSubmitEvm(
   payload: EvmPayload,
@@ -64,8 +69,8 @@ export async function signAndSubmitEvm(
 
   const account = privateKeyToAccount(normalisePrivateKey(privateKey));
 
-  return withRpcFallback(urls, async (rpc) => {
-    const chain = defineChain({
+  const buildChain = (rpc: string) =>
+    defineChain({
       id: chainId,
       name: meta?.name ?? caip2,
       nativeCurrency: {
@@ -76,16 +81,22 @@ export async function signAndSubmitEvm(
       rpcUrls: { default: { http: [rpc] } },
     });
 
-    const walletClient = createWalletClient({ account, chain, transport: http(rpc) });
+  let hash: Hex | undefined;
+
+  return withRpcFallback(urls, async (rpc) => {
+    const chain = buildChain(rpc);
+
+    if (hash === undefined) {
+      const walletClient = createWalletClient({ account, chain, transport: http(rpc) });
+      hash = await walletClient.sendTransaction({
+        to: toAddress,
+        data: ensureHex(payload.calldata),
+        value: BigInt(payload.value),
+        gas: BigInt(payload.gas_limit),
+      });
+    }
+
     const publicClient = createPublicClient({ chain, transport: http(rpc) });
-
-    const hash = await walletClient.sendTransaction({
-      to: toAddress,
-      data: ensureHex(payload.calldata),
-      value: BigInt(payload.value),
-      gas: BigInt(payload.gas_limit),
-    });
-
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
     return {

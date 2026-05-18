@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { CHAIN_META, caip10ToChainId, getChainMeta, getRpcUrl } from "./chains.js";
+import { CHAIN_META, caip10ToChainId, getChainMeta, getRpcUrl, getRpcUrls } from "./chains.js";
 import { env } from "./env.js";
 
 describe("getChainMeta", () => {
@@ -152,5 +152,84 @@ describe("getRpcUrl", () => {
     } finally {
       env.ALCHEMY_API_KEY = originalKey;
     }
+  });
+});
+
+describe("getRpcUrls", () => {
+  let originalRpcUrls: Record<string, string>;
+
+  beforeEach(() => {
+    originalRpcUrls = { ...env.RPC_URLS };
+  });
+
+  afterEach(() => {
+    for (const key of Object.keys(env.RPC_URLS)) {
+      delete env.RPC_URLS[key];
+    }
+    for (const [key, value] of Object.entries(originalRpcUrls)) {
+      env.RPC_URLS[key] = value;
+    }
+  });
+
+  test("orders sources: override → user → default", () => {
+    env.RPC_URLS.base = "https://user.example.com";
+    expect(getRpcUrls("eip155:8453", "https://override.example.com")).toEqual([
+      "https://override.example.com",
+      "https://user.example.com",
+      "https://mainnet.base.org",
+    ]);
+  });
+
+  test("accepts an array override and preserves its order", () => {
+    expect(
+      getRpcUrls("eip155:8453", [
+        "https://override-1.example.com",
+        "https://override-2.example.com",
+      ]),
+    ).toEqual([
+      "https://override-1.example.com",
+      "https://override-2.example.com",
+      "https://mainnet.base.org",
+    ]);
+  });
+
+  test("dedupes URLs that appear in multiple sources", () => {
+    env.RPC_URLS.base = "https://mainnet.base.org";
+    expect(getRpcUrls("eip155:8453")).toEqual(["https://mainnet.base.org"]);
+  });
+
+  test("returns only the default when nothing else is configured", () => {
+    expect(getRpcUrls("eip155:8453")).toEqual(["https://mainnet.base.org"]);
+  });
+
+  test("returns an empty array for unknown chain with no overrides", () => {
+    expect(getRpcUrls("eip155:99999")).toEqual([]);
+  });
+
+  test("returns just the override for unknown chain", () => {
+    expect(getRpcUrls("eip155:99999", "https://custom.example.com")).toEqual([
+      "https://custom.example.com",
+    ]);
+  });
+
+  test("includes Alchemy in the ordering between user RPC and default", () => {
+    const originalKey = env.ALCHEMY_API_KEY;
+    env.ALCHEMY_API_KEY = "test-key";
+    env.RPC_URLS.base = "https://user.example.com";
+    try {
+      expect(getRpcUrls("eip155:8453")).toEqual([
+        "https://user.example.com",
+        "https://base-mainnet.g.alchemy.com/v2/test-key",
+        "https://mainnet.base.org",
+      ]);
+    } finally {
+      env.ALCHEMY_API_KEY = originalKey;
+    }
+  });
+
+  test("returns empty array for chain without defaultRpc and no user config", () => {
+    // Plasma (eip155:9745) has no defaultRpc and no Alchemy template
+    expect(CHAIN_META["eip155:9745"]?.defaultRpc).toBeUndefined();
+    expect(getRpcUrls("eip155:9745")).toEqual([]);
   });
 });
