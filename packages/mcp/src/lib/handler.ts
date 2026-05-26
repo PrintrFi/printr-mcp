@@ -16,10 +16,7 @@ export type DepsHandler<I, D, T, E extends { message: string }> = (
 /**
  * Lift a `DepsHandler` into the `(input) => Promise<ToolResponse>` shape
  * `server.registerTool` expects. Wraps `logToolExecution` plus
- * `toToolResponseAsync` so each handler body returns a raw `ResultAsync`
- * instead of repeating the projection.
- *
- * Mirrors the `handler` HOF in `~/dev/printr-bot/src/commands/handler.ts`.
+ * `toToolResponseAsync` so handler bodies return raw `ResultAsync`.
  */
 export const handler =
   <I, D, T, E extends { message: string }>(toolName: string, fn: DepsHandler<I, D, T, E>) =>
