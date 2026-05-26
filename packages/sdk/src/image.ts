@@ -1,9 +1,42 @@
-import { readFile } from "node:fs/promises";
-import { isAbsolute, normalize } from "node:path";
 import { OpenRouter } from "@openrouter/sdk";
 import { err, errAsync, ok, okAsync, ResultAsync } from "neverthrow";
-import sharp from "sharp";
+import type SharpDefault from "sharp";
 import { env } from "./env.js";
+
+type SharpFactory = typeof SharpDefault;
+type FsPromisesModule = typeof import("node:fs/promises");
+type PathModule = typeof import("node:path");
+
+export type ImageError = { message: string };
+
+// Lazy loaders keep `sharp` / `node:fs` / `node:path` out of the module's
+// top-level imports so the SDK barrel can be evaluated in non-Node runtimes
+// (Cloudflare Workers, browsers). They only fail when the caller actually
+// invokes a code path that needs the missing module.
+
+function loadSharp(): ResultAsync<SharpFactory, ImageError> {
+  return ResultAsync.fromPromise(
+    import("sharp").then((m) => (m as unknown as { default: SharpFactory }).default),
+    () => ({
+      message:
+        "Image processing is unavailable in this runtime: 'sharp' could not be loaded. Requires Node.js.",
+    }),
+  );
+}
+
+function loadFsPromises(): ResultAsync<FsPromisesModule, ImageError> {
+  return ResultAsync.fromPromise(import("node:fs/promises"), () => ({
+    message:
+      "Filesystem access is unavailable in this runtime: 'node:fs/promises' could not be loaded. Requires Node.js.",
+  }));
+}
+
+function loadPath(): ResultAsync<PathModule, ImageError> {
+  return ResultAsync.fromPromise(import("node:path"), () => ({
+    message:
+      "Path utilities are unavailable in this runtime: 'node:path' could not be loaded. Requires Node.js.",
+  }));
+}
 
 /** Max base64 size the Printr API accepts (500 KB). */
 const MAX_BASE64_BYTES = 500 * 1024;
@@ -11,8 +44,6 @@ const MAX_BASE64_BYTES = 500 * 1024;
 const TARGET_SIZE = 512;
 /** JPEG quality used when compressing. */
 const JPEG_QUALITY = 80;
-
-export type ImageError = { message: string };
 
 /**
  * Style requirements appended to every image generation prompt to ensure
@@ -92,13 +123,15 @@ function callOpenRouterForImage(
     .andThen((base64) =>
       // Always run through sharp to normalise format (JPEG), dimensions, and
       // file size regardless of what the model returned.
-      ResultAsync.fromPromise(
-        sharp(Buffer.from(base64, "base64"))
-          .resize(TARGET_SIZE, TARGET_SIZE, { fit: "cover" })
-          .jpeg({ quality: JPEG_QUALITY })
-          .toBuffer(),
-        (e) => ({ message: `Image optimisation failed: ${String(e)}` }),
-      ).map((buf) => buf.toString("base64")),
+      loadSharp().andThen((sharp) =>
+        ResultAsync.fromPromise(
+          sharp(Buffer.from(base64, "base64"))
+            .resize(TARGET_SIZE, TARGET_SIZE, { fit: "cover" })
+            .jpeg({ quality: JPEG_QUALITY })
+            .toBuffer(),
+          (e) => ({ message: `Image optimisation failed: ${String(e)}` }),
+        ).map((buf) => buf.toString("base64")),
+      ),
     );
 }
 
@@ -145,23 +178,27 @@ export function generateImageFromPrompt(
 export function compressImageBuffer(buffer: Buffer): ResultAsync<Buffer, ImageError> {
   const b64Len = Math.ceil((buffer.byteLength / 3) * 4);
   if (b64Len <= MAX_BASE64_BYTES) {
-    return ResultAsync.fromSafePromise(Promise.resolve(buffer));
+    return okAsync(buffer);
   }
-  return ResultAsync.fromPromise(
-    sharp(buffer)
-      .resize(TARGET_SIZE, TARGET_SIZE, { fit: "cover" })
-      .jpeg({ quality: JPEG_QUALITY })
-      .toBuffer(),
-    (e) => ({ message: `Image compression failed: ${String(e)}` }),
-  ).andThen((compressed) => {
-    const compressedB64Len = Math.ceil((compressed.byteLength / 3) * 4);
-    if (compressedB64Len > MAX_BASE64_BYTES) {
-      return err({
-        message: `Image is too large even after compression (${compressedB64Len} bytes base64, limit ${MAX_BASE64_BYTES}). Please supply a smaller image.`,
-      });
-    }
-    return ok(compressed);
-  });
+  return loadSharp()
+    .andThen((sharp) =>
+      ResultAsync.fromPromise(
+        sharp(buffer)
+          .resize(TARGET_SIZE, TARGET_SIZE, { fit: "cover" })
+          .jpeg({ quality: JPEG_QUALITY })
+          .toBuffer(),
+        (e) => ({ message: `Image compression failed: ${String(e)}` }),
+      ),
+    )
+    .andThen((compressed) => {
+      const compressedB64Len = Math.ceil((compressed.byteLength / 3) * 4);
+      if (compressedB64Len > MAX_BASE64_BYTES) {
+        return err({
+          message: `Image is too large even after compression (${compressedB64Len} bytes base64, limit ${MAX_BASE64_BYTES}). Please supply a smaller image.`,
+        });
+      }
+      return ok(compressed);
+    });
 }
 
 /**
@@ -169,21 +206,27 @@ export function compressImageBuffer(buffer: Buffer): ResultAsync<Buffer, ImageEr
  * Rejects paths containing traversal sequences or non-absolute paths.
  */
 function validateImagePath(filePath: string): ResultAsync<string, ImageError> {
-  const normalizedPath = normalize(filePath);
-
-  // Match `..` as a path segment, not a substring — `foo..bar.jpg` is a valid filename.
+  // Path-segment check works without `node:path` (regex-only), so run it before
+  // attempting to load the module. This way Workers consumers passing relative
+  // / traversal paths still get a clear validation error rather than a
+  // misleading "node:path unavailable" message.
   const hasTraversalSegment = (p: string): boolean =>
     p.split(/[/\\]/).some((segment) => segment === "..");
 
-  if (hasTraversalSegment(filePath) || hasTraversalSegment(normalizedPath)) {
+  if (hasTraversalSegment(filePath)) {
     return errAsync({ message: "Invalid file path: directory traversal not allowed" });
   }
 
-  if (!isAbsolute(normalizedPath)) {
-    return errAsync({ message: "Invalid file path: must be an absolute path" });
-  }
-
-  return okAsync(normalizedPath);
+  return loadPath().andThen((path) => {
+    const normalizedPath = path.normalize(filePath);
+    if (hasTraversalSegment(normalizedPath)) {
+      return err({ message: "Invalid file path: directory traversal not allowed" });
+    }
+    if (!path.isAbsolute(normalizedPath)) {
+      return err({ message: "Invalid file path: must be an absolute path" });
+    }
+    return ok(normalizedPath);
+  });
 }
 
 /**
@@ -194,9 +237,11 @@ function validateImagePath(filePath: string): ResultAsync<string, ImageError> {
 export function processImagePath(filePath: string): ResultAsync<string, ImageError> {
   return validateImagePath(filePath)
     .andThen((validPath) =>
-      ResultAsync.fromPromise(readFile(validPath), (e) => ({
-        message: `Cannot read image file: ${validPath} — ${String(e)}`,
-      })),
+      loadFsPromises().andThen((fs) =>
+        ResultAsync.fromPromise(fs.readFile(validPath), (e) => ({
+          message: `Cannot read image file: ${validPath} — ${String(e)}`,
+        })),
+      ),
     )
     .andThen((buffer) => compressImageBuffer(buffer))
     .map((buffer) => buffer.toString("base64"));
