@@ -49,6 +49,9 @@
     "./image": {
       "types": "./dist/image.d.ts",
       "import": "./dist/image.js"
+    },
+    "./openapi": {
+      "types": "./dist/openapi.d.ts"
     }
   },
   "files": [
