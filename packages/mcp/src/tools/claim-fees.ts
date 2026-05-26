@@ -66,13 +66,7 @@ export type ClaimContext = {
   deploymentWallet?: DeploymentWallet | undefined;
 };
 
-/**
- * Translate a fees-API EVM payload into the SDK's `EvmPayload` shape used by
- * `signAndSubmitEvm`. Builds the CAIP-10 `to` from the chain id + `txTo`,
- * defaults `value` to `"0"` and `gas_limit` to 200000 when the source omits
- * them. Exported so a regression to "defaults to 0 gas" gets caught at unit
- * level rather than on chain.
- */
+/** Fees-API EVM payload → SDK `EvmPayload`. Defaults `value`/`gas_limit` when absent. */
 export function toEvmPayload(payload: PayloadEVM, chainId: string): EvmPayload {
   return {
     to: `${chainId}:${payload.txTo}`,
@@ -82,12 +76,7 @@ export function toEvmPayload(payload: PayloadEVM, chainId: string): EvmPayload {
   };
 }
 
-/**
- * Translate a fees-API Solana payload into the SDK's `SvmPayload` shape.
- * Optional address fields are coerced to `""` rather than dropped so the
- * downstream signer always sees a string. Exported for spec coverage of the
- * instruction / account / mint normalisation paths.
- */
+/** Fees-API Solana payload → SDK `SvmPayload`. Coerces optional addresses to `""`. */
 export function toSvmPayload(payload: PayloadSolana): SvmPayload {
   return {
     ixs: payload.ixs.map((ix) => ({
@@ -104,7 +93,6 @@ export function toSvmPayload(payload: PayloadSolana): SvmPayload {
   };
 }
 
-/** Resolve the treasury private key + derived address for the chain. */
 export function getTreasuryContext(
   chain: string,
 ): Result<{ treasuryKey: string; treasuryAddress: string }, ClaimError> {
@@ -166,11 +154,8 @@ function fetchChainFees(
   });
 }
 
-/**
- * Resolve the `ClaimContext` for a claim. If the chain's creator address
- * differs from the treasury, fees belong to a deployment wallet — re-fetch
- * with that wallet as payer to get the correct collection payload.
- */
+// If the creator address differs from treasury, fees belong to a deployment
+// wallet — re-fetch with that wallet as payer to get the correct payload.
 export function resolveClaimContext(
   tokenId: string,
   chain: string,
@@ -251,11 +236,6 @@ function claimSvm(
     });
 }
 
-/**
- * Run the claim against a resolved `ClaimContext`. Dispatches to the EVM /
- * SVM / svmRaw branch based on the collection payload discriminator and
- * returns the user-facing `ClaimOutput`.
- */
 export function executeClaim(
   ctx: ClaimContext,
   chain: string,
@@ -308,40 +288,22 @@ export function executeClaim(
     .otherwise(() => errAsync(claimErr(`Unknown payload type: ${String(payload.payload.case)}`)));
 }
 
-// ---------------------------------------------------------------------------
-// Deps + handler
-// ---------------------------------------------------------------------------
-
-/** Validated input shape passed to the registered tool handler. */
 export type ClaimFeesInput = z.infer<typeof inputSchema>;
 
 export type GetTreasuryContextFn = typeof getTreasuryContext;
 export type ResolveClaimContextFn = typeof resolveClaimContext;
 export type ExecuteClaimFn = typeof executeClaim;
 
-/**
- * Capability bundle for the `printr_claim_fees` handler. Each composable
- * step is a dep so tests can stub canned `Result` returns and exercise the
- * dispatch / error-surfacing branches without touching the protocol-fees
- * API, the keystore, or the signing primitives.
- */
 export type ClaimFeesDeps = {
   getTreasuryContext: GetTreasuryContextFn;
   resolveClaimContext: ResolveClaimContextFn;
   executeClaim: ExecuteClaimFn;
 };
 
-/** Build production-wired deps for {@link claimFeesHandler}. */
 export function createClaimFeesDeps(): ClaimFeesDeps {
   return { getTreasuryContext, resolveClaimContext, executeClaim };
 }
 
-/**
- * `printr_claim_fees` handler. Resolves the treasury for the chain, derives
- * the claim context (which re-fetches as the deployment-wallet payer when
- * the creator address differs from treasury), then dispatches to
- * `executeClaim`. Surfaces a `ToolResponse` end-to-end.
- */
 export function claimFeesHandler(
   input: ClaimFeesInput,
   deps: ClaimFeesDeps,

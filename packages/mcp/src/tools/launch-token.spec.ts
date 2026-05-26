@@ -136,12 +136,12 @@ function makeDeps(
   record: CallRecord,
   overrides: Partial<LaunchTokenDeps> = {},
 ): LaunchTokenDeps {
+  // Install the stub long enough for the client's constructor to see it; tests
+  // re-install the stub before invoking the handler.
   const originalFetch = globalThis.fetch;
   globalThis.fetch = fetch;
-  // Restore happens in afterEach below — we just install here so the client's
-  // constructor sees the stubbed fetch on the first POST.
   const client = createPrintrClient({ apiKey: "test-key", baseUrl: API_BASE });
-  globalThis.fetch = originalFetch; // client was created; tests re-install the stub before invoking the handler.
+  globalThis.fetch = originalFetch;
   return {
     client,
     activeWallets: new Map(),
@@ -215,7 +215,6 @@ describe("launchTokenHandler — signing-path branching", () => {
 
     expect(record.signWithKey).toHaveLength(1);
     expect(record.openWebSigner).toHaveLength(0);
-    // Drain is skipped because the caller supplied an explicit private_key.
     expect(record.autoDrain).toHaveLength(0);
     expect(
       (result as { structuredContent?: { drain_status?: string } }).structuredContent?.drain_status,
@@ -240,9 +239,7 @@ describe("launchTokenHandler — signing-path branching", () => {
     await launchTokenHandler(baseInput, deps);
 
     expect(record.signWithKey).toHaveLength(1);
-    // signWithKey was called with the fallback private key.
     expect(record.signWithKey[0]?.args[3]).toBe("0xfallback");
-    // Drain runs when we fell back to the tracked active wallet.
     expect(record.autoDrain).toHaveLength(1);
   });
 
@@ -261,7 +258,6 @@ describe("launchTokenHandler — signing-path branching", () => {
 
     expect(record.signWithKey).toHaveLength(0);
     expect(record.openWebSigner).toHaveLength(1);
-    // No active wallet → drain is skipped.
     expect(record.autoDrain).toHaveLength(0);
   });
 });
@@ -316,7 +312,6 @@ describe("launchTokenHandler — creator_accounts derivation", () => {
 describe("launchTokenHandler — drain gating", () => {
   it("skips drain when the launch fails (PrintrApiError surfaced as isError response)", async () => {
     const record: CallRecord = { signWithKey: [], openWebSigner: [], autoDrain: [] };
-    // 4xx response — buildToken surfaces a PrintrApiError, the chain short-circuits.
     const stub: typeof globalThis.fetch = async () =>
       new Response(JSON.stringify({ detail: "rejected" }), {
         status: 400,

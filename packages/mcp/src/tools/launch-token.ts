@@ -164,12 +164,7 @@ function mapErr(e: unknown): PrintrApiError {
   return new PrintrApiError(0, e instanceof Error ? e.message : String(e));
 }
 
-/**
- * Distinguish an EVM build response payload from an SVM one. EVM payloads
- * carry a `calldata` field; SVM payloads carry instructions. Exported so the
- * spec can lock in the discriminator a regression to "is SVM" would silently
- * route signing wrong otherwise.
- */
+/** Type guard for EVM build payloads (presence of `calldata`); SVM payloads carry `ixs`. */
 export function isEvmPayload(payload: unknown): payload is EvmPayload {
   return typeof payload === "object" && payload !== null && "calldata" in payload;
 }
@@ -247,13 +242,7 @@ export type DrainOutcome =
   | { status: "failed"; walletId: string; error: string }
   | { status: "skipped" };
 
-/**
- * Project a {@link DrainOutcome} into the subset of `printr_launch_token`
- * output fields it controls. `ok` and `failed` always include the wallet id
- * so the orchestrator can retry a failed drain manually; `skipped` drops the
- * id entirely. Exported for spec coverage so a regression to "always emit
- * drain_wallet_id" or "swallow drain_error" gets caught at the unit level.
- */
+/** Project a {@link DrainOutcome} into the `drain_*` subset of the tool output. */
 export function drainFields(outcome: DrainOutcome) {
   return match(outcome)
     .with({ status: "ok" }, ({ walletId }) => ({
@@ -343,10 +332,8 @@ async function autoDrain(
 
 type ActiveWallet = { privateKey: string; address: string };
 
-/** Validated input shape passed to the registered tool handler. */
 export type LaunchTokenInput = z.infer<typeof inputSchema>;
 
-/** Sign-with-key primitive shape (production default is the in-module `signWithKey`). */
 export type SignWithKeyFn = (
   token_id: string,
   payload: unknown,
@@ -355,7 +342,6 @@ export type SignWithKeyFn = (
   rpc_url: string | undefined,
 ) => ReturnType<typeof signWithKey>;
 
-/** Browser-signing primitive shape. */
 export type OpenWebSignerFn = (
   token_id: string,
   payload: unknown,
@@ -363,7 +349,6 @@ export type OpenWebSignerFn = (
   tokenParams: { name: string; symbol: string; description: string },
 ) => ReturnType<typeof openWebSigner>;
 
-/** Auto-drain primitive shape. */
 export type AutoDrainFn = (
   activeWallet: Omit<ResolvedWallet, "walletId">,
   chainType: ChainType,
@@ -371,12 +356,6 @@ export type AutoDrainFn = (
   rpcUrl?: string,
 ) => Promise<DrainOutcome>;
 
-/**
- * Capability bundle for the `printr_launch_token` handler. Production wires
- * the live primitives via {@link createLaunchTokenDeps}; specs substitute
- * fakes so they can drive the launch flow without making real RPC calls or
- * starting a session server.
- */
 export type LaunchTokenDeps = {
   client: PrintrClient;
   activeWallets: Map<ChainType, ActiveWallet>;
@@ -385,7 +364,6 @@ export type LaunchTokenDeps = {
   autoDrain: AutoDrainFn;
 };
 
-/** Build production-wired deps for {@link launchTokenHandler}. */
 export function createLaunchTokenDeps(client: PrintrClient): LaunchTokenDeps {
   return {
     client,
@@ -396,22 +374,6 @@ export function createLaunchTokenDeps(client: PrintrClient): LaunchTokenDeps {
   };
 }
 
-/**
- * `printr_launch_token` handler. Pure of registration plumbing — takes
- * already-validated input plus its dependency bundle and returns the MCP
- * tool response. The registered closure in {@link registerLaunchTokenTool}
- * is a thin wrapper; tests call this directly with stub deps.
- *
- * Branches the handler controls:
- * - active-wallet fallback: when no `private_key` is supplied, the session's
- *   active wallet (if any) is used both as the signing key and to derive
- *   `creator_accounts`
- * - signing path: `signWithKey` when a key is available, else `openWebSigner`
- * - auto-drain: runs only when the launch succeeded, the caller did NOT
- *   supply an explicit `private_key`, and an active wallet existed for the
- *   chain (so a tracked deployment wallet is actually in play). Otherwise
- *   skipped to avoid touching unrelated state
- */
 export async function launchTokenHandler(
   input: LaunchTokenInput,
   deps: LaunchTokenDeps,
@@ -421,7 +383,6 @@ export async function launchTokenHandler(
   const activeWallet = deps.activeWallets.get(chainType);
   const effectivePrivateKey = private_key ?? activeWallet?.privateKey;
 
-  // Derive creator_accounts from active wallet if not provided (one entry per chain)
   const effectiveParams = {
     ...tokenParams,
     creator_accounts:
@@ -439,15 +400,11 @@ export async function launchTokenHandler(
     ),
   );
 
-  // Auto-drain the deployment wallet only on success.
-  // On failure, keep the active wallet state intact so the agent can retry
-  // without re-funding. Failed deployments are drained by the orchestrator
-  // via printr_drain_deployment_wallet using the walletId from Step 1.
+  // Skip auto-drain when the caller supplied their own key — we'd be touching
+  // an unrelated active wallet. On failure, leave state intact for retry; the
+  // orchestrator drains via printr_drain_deployment_wallet using the walletId.
   const chain = tokenParams.chains[0];
   const launched = !("isError" in response);
-  // Only auto-drain when the signing key came from the tracked deployment wallet.
-  // If the caller supplied an explicit private_key, skip drain to avoid touching
-  // an unrelated active wallet that may be in memory.
   const drainOutcome: DrainOutcome =
     launched && !private_key && activeWallet && chain
       ? await deps.autoDrain(activeWallet, chainType, chain, rpc_url)

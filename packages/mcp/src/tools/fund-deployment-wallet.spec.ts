@@ -237,11 +237,9 @@ describe("fundDeploymentWalletHandler — happy path", () => {
     expect(sc?.["symbol"]).toBe("SOL");
     expect(sc?.["wallet_id"]).toBe("wallet-uuid-1");
     expect(sc?.["amount_funded"]).toBe("0.1");
-    // SVM transfer → only tx_signature, no tx_hash leakage.
     expect(sc?.["tx_signature"]).toBe("5K3treasurySig");
     expect("tx_hash" in (sc ?? {})).toBe(false);
 
-    // Active wallet record was populated for the chain.
     expect(activeWallets.get("svm")).toEqual({
       privateKey: "new-wallet-priv",
       address: "NewWalletAddr",
@@ -254,7 +252,7 @@ describe("fundDeploymentWalletHandler — happy path", () => {
 
     await fundDeploymentWalletHandler(baseInput, deps);
 
-    // executeTransfer args: (namespace, chainRef, recipientAddress, amount, treasuryKey, meta)
+    // args: (namespace, chainRef, recipientAddress, amount, treasuryKey, meta)
     expect(record.executeTransfer[0]?.args[2]).toBe("NewWalletAddr");
     expect(record.executeTransfer[0]?.args[3]).toBe("0.1");
     expect(record.executeTransfer[0]?.args[4]).toBe("treasury-key");
@@ -319,7 +317,6 @@ describe("fundDeploymentWalletHandler — best-effort state writes", () => {
 
     const result = await fundDeploymentWalletHandler(baseInput, deps);
 
-    // The transfer ran; the response carries structuredContent with no isError.
     expect(record.executeTransfer).toHaveLength(1);
     expect((result as { isError?: boolean }).isError).toBeUndefined();
     const sc = (result as { structuredContent?: Record<string, unknown> }).structuredContent;

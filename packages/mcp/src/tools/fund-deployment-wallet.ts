@@ -53,11 +53,6 @@ function getDeploymentPassword(): Result<string, FundError> {
   return ok(password);
 }
 
-/**
- * Pre-flight check that the keystore directory exists and is writable.
- * Exported so it can be substituted in specs (e.g. always-ok or always-err)
- * without touching the host filesystem.
- */
 export function verifyKeystoreWritable(): ResultAsync<void, FundError> {
   const path = keystorePath();
   const dir = dirname(path);
@@ -74,13 +69,6 @@ export function verifyKeystoreWritable(): ResultAsync<void, FundError> {
   }
 }
 
-/**
- * Generate a fresh wallet (private key + address) for the given chain family.
- * Uses `@solana/web3.js` `Keypair.generate()` for SVM and `viem`'s
- * `generatePrivateKey()` for EVM. Exported so specs can lock the per-chain
- * shape (address format, key length) without exercising the rest of the
- * funding pipeline.
- */
 export function generateWallet(type: ChainType): { privateKey: string; address: string } {
   return match(type)
     .with("svm", () => {
@@ -113,13 +101,7 @@ function saveToKeystore(
   return wallet_id;
 }
 
-/**
- * Project a transfer result into the chain-specific tx-id field used by the
- * `printr_fund_deployment_wallet` output schema. SVM transfers surface as
- * `tx_signature`, EVM transfers as `tx_hash`; only one is emitted at a time.
- * Exported so a regression to "always emit both" (which would leak a stale
- * field) gets caught at the unit level.
- */
+/** Project a transfer result into the chain-specific tx-id field. SVM → tx_signature, EVM → tx_hash. */
 export function buildTxField(
   result: { type: "svm"; signature: string } | { type: "evm"; tx_hash: string },
 ) {
@@ -132,12 +114,6 @@ export type PersistedWallet = {
   address: string;
 };
 
-/**
- * Generate a fresh wallet, save it to the encrypted keystore, and return the
- * persisted record. Exported so callers (and specs) can pre-stage a wallet
- * before funding — the production handler calls this before `executeTransfer`
- * so a keystore failure aborts before money moves.
- */
 export function persistWallet(
   masterPassword: string,
   chain: string,
@@ -179,12 +155,6 @@ const outputSchema = z.object({
   wallet_id: z.string().describe("Keystore wallet ID for the persisted wallet"),
 });
 
-/**
- * Resolve everything the funding pipeline needs from the chain identifier:
- * `ChainType`, treasury key, chain metadata, parsed CAIP-2, and the master
- * password. Exported so specs can stub canned inputs without touching env
- * or the treasury wallet store.
- */
 export function validateInputs(chain: string): Result<
   {
     type: ChainType;
@@ -219,11 +189,6 @@ export function validateInputs(chain: string): Result<
   });
 }
 
-// ---------------------------------------------------------------------------
-// Deps + handler
-// ---------------------------------------------------------------------------
-
-/** Validated input shape passed to the registered tool handler. */
 export type FundDeploymentWalletInput = z.infer<typeof inputSchema>;
 
 type ActiveWalletRecord = { privateKey: string; address: string };
@@ -233,26 +198,16 @@ export type ValidateInputsFn = typeof validateInputs;
 export type PersistWalletFn = typeof persistWallet;
 export type ExecuteTransferFn = typeof executeTransfer;
 
-/**
- * Capability bundle for the `printr_fund_deployment_wallet` handler. Each
- * I/O step is a dep so specs can fault-inject at the keystore / validation
- * / persistence / transfer / post-funding-state seams without touching real
- * disk, the keystore, or any RPC.
- */
 export type FundDeploymentWalletDeps = {
   verifyKeystoreWritable: VerifyKeystoreWritableFn;
   validateInputs: ValidateInputsFn;
   persistWallet: PersistWalletFn;
   executeTransfer: ExecuteTransferFn;
-  /** In-memory active wallet store (defaults to the session-wide map). */
   activeWallets: Map<ChainType, ActiveWalletRecord>;
-  /** Persist the active wallet id; best-effort, errors are logged not propagated. */
   setActiveWalletId: typeof setActiveWalletId;
-  /** Persist the last-deployment wallet id; best-effort, errors are logged not propagated. */
   setLastDeploymentWalletId: typeof setLastDeploymentWalletId;
 };
 
-/** Build production-wired deps for {@link fundDeploymentWalletHandler}. */
 export function createFundDeploymentWalletDeps(): FundDeploymentWalletDeps {
   return {
     verifyKeystoreWritable,
@@ -265,18 +220,6 @@ export function createFundDeploymentWalletDeps(): FundDeploymentWalletDeps {
   };
 }
 
-/**
- * `printr_fund_deployment_wallet` handler. Runs five gated steps:
- * 1. keystore is writable (else abort before generating any key)
- * 2. inputs validate (master password + treasury key + chain meta + parsed CAIP-2)
- * 3. fresh wallet persists to keystore (before any funds move)
- * 4. treasury → new wallet transfer executes
- * 5. active-wallet + last-deployment state writes (best-effort; failures logged)
- *
- * Steps 1-4 short-circuit on error so funds never move if any precondition
- * fails. The final output projects via {@link buildTxField} so only the
- * chain-specific tx id appears.
- */
 export function fundDeploymentWalletHandler(
   input: FundDeploymentWalletInput,
   deps: FundDeploymentWalletDeps,

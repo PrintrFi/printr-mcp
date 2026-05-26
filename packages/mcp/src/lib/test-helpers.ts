@@ -1,20 +1,12 @@
-// Shared test utilities for tool tests
-
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type ChainMeta, env, type PrintrClient } from "@printr/sdk";
 
-// ---------------------------------------------------------------------------
-// Chain metadata fixtures — shared by drain / fund / drain-deployment specs
-// ---------------------------------------------------------------------------
-
-/** Solana mainnet chain metadata, sized for unit-test reuse (9 decimals, SOL). */
 export const SOL_META: ChainMeta = {
   name: "Solana",
   symbol: "SOL",
   decimals: 9,
 };
 
-/** Base chain metadata, sized for unit-test reuse (18 decimals, ETH gas token). */
 export const BASE_META: ChainMeta = {
   name: "Base",
   symbol: "ETH",

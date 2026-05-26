@@ -27,7 +27,6 @@ function makeSvmWallet(): ActiveWallet {
 }
 
 afterEach(() => {
-  // Always restore module-level state so tests don't bleed.
   treasuryWallets.clear();
 });
 
