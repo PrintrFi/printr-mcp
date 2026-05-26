@@ -274,6 +274,20 @@ async function mergeResponse(
   return { ...response, structuredContent: merged };
 }
 
+/** Project a drain `ResultAsync` into a `DrainOutcome` and warn-log on failure. */
+async function projectDrainOutcome(
+  walletId: string,
+  result: ReturnType<typeof drainSvm> | ReturnType<typeof drainEvm>,
+): Promise<DrainOutcome> {
+  return (await result).match<DrainOutcome>(
+    () => ({ status: "ok", walletId }),
+    (e) => {
+      logger.warn({ error: e.message }, "Auto-drain after launch failed");
+      return { status: "failed", walletId, error: e.message };
+    },
+  );
+}
+
 async function autoDrain(
   activeWallet: Omit<ResolvedWallet, "walletId">,
   chainType: ChainType,
@@ -295,34 +309,16 @@ async function autoDrain(
   const wallet = { ...activeWallet, walletId };
 
   if (chainType === "svm") {
-    return (await drainSvm(wallet, treasuryResult.key, 0, meta, rpcUrl)).match(
-      () => ({ status: "ok" as const, walletId }),
-      (e) => {
-        logger.warn({ error: e.message }, "Auto-drain after launch failed");
-        return { status: "failed" as const, walletId, error: e.message };
-      },
-    );
+    return projectDrainOutcome(walletId, drainSvm(wallet, treasuryResult.key, 0, meta, rpcUrl));
   }
 
   const evmConfig = getEvmConfig(chain, rpcUrl);
   if ("error" in evmConfig) {
     return { status: "skipped" };
   }
-  return (
-    await drainEvm(
-      wallet,
-      treasuryResult.key,
-      "0",
-      meta,
-      evmConfig.chainId,
-      rpcUrl ?? evmConfig.rpc,
-    )
-  ).match(
-    () => ({ status: "ok" as const, walletId }),
-    (e) => {
-      logger.warn({ error: e.message }, "Auto-drain after launch failed");
-      return { status: "failed" as const, walletId, error: e.message };
-    },
+  return projectDrainOutcome(
+    walletId,
+    drainEvm(wallet, treasuryResult.key, "0", meta, evmConfig.chainId, rpcUrl ?? evmConfig.rpc),
   );
 }
 

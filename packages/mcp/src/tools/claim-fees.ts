@@ -199,6 +199,25 @@ export function resolveClaimContext(
   });
 }
 
+// Drains a deployment wallet back to treasury after a claim. Awaited so the
+// drain attempt completes (and any failure is logged) before the handler
+// resolves — earlier versions returned a floating ResultAsync whose
+// completion the runtime could drop.
+async function runPostClaimDrain(
+  deploymentWallet: DeploymentWallet,
+  treasuryKey: string,
+  chain: string,
+  rpc: string,
+): Promise<void> {
+  const meta = getChainMeta(chain);
+  if (!meta) {
+    return;
+  }
+  (await drainSvm(deploymentWallet, treasuryKey, 0, meta, rpc)).mapErr((e) =>
+    logger.warn(`Failed to drain deployment wallet after fee claim: ${e.message}`),
+  );
+}
+
 // If the signer is a drained deployment wallet, pre-fund it from treasury,
 // claim with the deployment key, then drain it back.
 function claimSvm(
@@ -223,17 +242,13 @@ function claimSvm(
         claimErr(formatSvmSubmitError(e)),
       ),
     )
-    .map(({ signature }) => {
-      if (deploymentWallet) {
-        const meta = getChainMeta(chain);
-        if (meta) {
-          drainSvm(deploymentWallet, treasuryKey, 0, meta, rpc).mapErr((e) =>
-            logger.warn(`Failed to drain deployment wallet after fee claim: ${e.message}`),
-          );
-        }
-      }
-      return signature;
-    });
+    .andThen(({ signature }) =>
+      ResultAsync.fromSafePromise(
+        deploymentWallet
+          ? runPostClaimDrain(deploymentWallet, treasuryKey, chain, rpc).then(() => signature)
+          : Promise.resolve(signature),
+      ),
+    );
 }
 
 export function executeClaim(

@@ -38,6 +38,30 @@ function getDeploymentPassword(): Result<string, DrainError> {
   return ok(password);
 }
 
+type KeystoreLookup = {
+  /** Label for the not-found error (e.g. "Wallet", "Previously active wallet"). */
+  notFoundLabel: string;
+  /** Message body for a decrypt-failure error. */
+  decryptFailMessage: string;
+};
+
+function decryptFromKeystore(
+  walletId: string,
+  labels: KeystoreLookup,
+): Result<ResolvedWallet, DrainError> {
+  return getDeploymentPassword().andThen((password) => {
+    const entry = getWallet(walletId);
+    if (!entry) {
+      return err({
+        message: `${labels.notFoundLabel} ${walletId} not found in keystore. It may have been removed.`,
+      });
+    }
+    return decryptKey(entry, password)
+      .map((privateKey) => ({ privateKey, address: entry.address, walletId: entry.id }))
+      .mapErr((): DrainError => ({ message: labels.decryptFailMessage }));
+  });
+}
+
 /**
  * Resolve which deployment wallet to drain. Priority:
  * 1. explicit `walletId` param (decrypted from keystore)
@@ -49,82 +73,39 @@ export function resolveWallet(
   type: ChainType,
   walletId?: string,
 ): Result<ResolvedWallet, DrainError> {
-  // Priority 1: Explicit wallet_id parameter
   if (walletId) {
-    return getDeploymentPassword().andThen((password) => {
-      const entry = getWallet(walletId);
-      if (!entry) {
-        return err({ message: `Wallet not found in keystore: ${walletId}` });
-      }
-      return decryptKey(entry, password)
-        .map((privateKey) => ({ privateKey, address: entry.address, walletId: entry.id }))
-        .mapErr(
-          () =>
-            ({
-              message:
-                "Failed to decrypt wallet. Check that PRINTR_DEPLOYMENT_PASSWORD matches " +
-                "the password used when the wallet was created.",
-            }) as DrainError,
-        );
+    return decryptFromKeystore(walletId, {
+      notFoundLabel: "Wallet",
+      decryptFailMessage:
+        "Failed to decrypt wallet. Check that PRINTR_DEPLOYMENT_PASSWORD matches " +
+        "the password used when the wallet was created.",
     });
   }
 
-  // Priority 2: In-memory active wallet (current session)
   const memoryWallet = activeWallets.get(type);
   if (memoryWallet) {
-    const activeId = getActiveWalletId(type);
     return ok({
       privateKey: memoryWallet.privateKey,
       address: memoryWallet.address,
-      walletId: activeId ?? "unknown",
+      walletId: getActiveWalletId(type) ?? "unknown",
     });
   }
 
-  // Priority 3: Persisted active wallet ID (after restart recovery)
   const persistedActiveId = getActiveWalletId(type);
   if (persistedActiveId) {
-    return getDeploymentPassword().andThen((password) => {
-      const entry = getWallet(persistedActiveId);
-      if (!entry) {
-        return err({
-          message:
-            `Previously active wallet ${persistedActiveId} not found in keystore. ` +
-            "It may have been removed.",
-        });
-      }
-      return decryptKey(entry, password)
-        .map((privateKey) => ({ privateKey, address: entry.address, walletId: entry.id }))
-        .mapErr(
-          () =>
-            ({
-              message:
-                "Failed to decrypt previously active wallet. Check PRINTR_DEPLOYMENT_PASSWORD.",
-            }) as DrainError,
-        );
+    return decryptFromKeystore(persistedActiveId, {
+      notFoundLabel: "Previously active wallet",
+      decryptFailMessage:
+        "Failed to decrypt previously active wallet. Check PRINTR_DEPLOYMENT_PASSWORD.",
     });
   }
 
-  // Priority 4: Last deployment wallet ID (fallback recovery)
   const lastDeploymentId = getLastDeploymentWalletId();
   if (lastDeploymentId) {
-    return getDeploymentPassword().andThen((password) => {
-      const entry = getWallet(lastDeploymentId);
-      if (!entry) {
-        return err({
-          message:
-            `Last deployment wallet ${lastDeploymentId} not found in keystore. ` +
-            "It may have been removed.",
-        });
-      }
-      return decryptKey(entry, password)
-        .map((privateKey) => ({ privateKey, address: entry.address, walletId: entry.id }))
-        .mapErr(
-          () =>
-            ({
-              message:
-                "Failed to decrypt last deployment wallet. Check PRINTR_DEPLOYMENT_PASSWORD.",
-            }) as DrainError,
-        );
+    return decryptFromKeystore(lastDeploymentId, {
+      notFoundLabel: "Last deployment wallet",
+      decryptFailMessage:
+        "Failed to decrypt last deployment wallet. Check PRINTR_DEPLOYMENT_PASSWORD.",
     });
   }
 
