@@ -23,7 +23,6 @@ export type SimpleBalanceResult = {
 
 export type BalanceError = "no_rpc" | "fetch_failed" | "chain_mismatch";
 
-const SOLANA_MAINNET_CAIP2 = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 const DEFAULT_SVM_RPC = "https://api.mainnet-beta.solana.com";
 
 // ERC-20 ABI function selectors (first 4 bytes of keccak256(signature)).
@@ -193,10 +192,13 @@ export function getEvmTokenBalanceLite(
   rpcUrl: string,
   meta: ChainMeta,
 ): ResultAsync<SimpleBalanceResult, BalanceError> {
+  // `symbol()` is non-fatal: many older / proxy tokens revert it. Recover the
+  // symbol leg to "0x" before `combine` so a symbol-only revert still yields
+  // balance + decimals; the meta-driven fallback applies in `.map`.
   return ResultAsync.combine([
     ethCall(rpcUrl, tokenAddress, encodeBalanceOf(walletAddress)),
     ethCall(rpcUrl, tokenAddress, SELECTOR_DECIMALS),
-    ethCall(rpcUrl, tokenAddress, SELECTOR_SYMBOL),
+    ethCall(rpcUrl, tokenAddress, SELECTOR_SYMBOL).orElse(() => ok<string, BalanceError>("0x")),
   ]).map(([balanceHex, decimalsHex, symbolHex]) => {
     const balance = decodeUint(balanceHex);
     const decimals = Number(decodeUint(decimalsHex));
@@ -304,7 +306,7 @@ export function fetchNativeBalanceLite(
   meta: ChainMeta,
   rpcOverride?: string,
 ): ResultAsync<SimpleBalanceResult, BalanceError> {
-  const caip2 = namespace === "solana" ? SOLANA_MAINNET_CAIP2 : toCaip2(namespace, chainRef);
+  const caip2 = toCaip2(namespace, chainRef);
   const rpcResult = resolveRpcUrlLite(caip2, rpcOverride);
   if (rpcResult.isErr()) {
     return errAsync(rpcResult.error);
@@ -327,7 +329,7 @@ export function fetchTokenBalanceLite(
   meta: ChainMeta,
   rpcOverride?: string,
 ): ResultAsync<SimpleBalanceResult, BalanceError> {
-  const caip2 = namespace === "solana" ? SOLANA_MAINNET_CAIP2 : toCaip2(namespace, chainRef);
+  const caip2 = toCaip2(namespace, chainRef);
   const rpcResult = resolveRpcUrlLite(caip2, rpcOverride);
   if (rpcResult.isErr()) {
     return errAsync(rpcResult.error);

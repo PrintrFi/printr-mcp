@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import {
+  fetchNativeBalanceLite,
+  fetchTokenBalanceLite,
   formatUnits,
   getEvmNativeBalanceLite,
   getEvmTokenBalanceLite,
@@ -134,6 +136,104 @@ describe("getEvmTokenBalanceLite", () => {
     const result = await getEvmTokenBalanceLite("0xtoken", "0xwallet", "https://rpc.test", base);
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap().symbol).toBe(base.symbol);
+  });
+
+  it("falls back to chain meta symbol when symbol() RPC errors out", async () => {
+    // Older tokens (MKR, etc.) revert `symbol()` — keep balance + decimals
+    // available with a meta-driven symbol instead of failing the whole call.
+    const balanceHex = `0x${42n.toString(16).padStart(64, "0")}`;
+    const decimalsHex = `0x${(18).toString(16).padStart(64, "0")}`;
+    let call = 0;
+    const stub: typeof globalThis.fetch = async (_, init) => {
+      const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+      const responses = [balanceHex, decimalsHex];
+      const current = call++;
+      if (current === 2) {
+        return new Response(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            error: { code: -32000, message: "execution reverted" },
+          }),
+          { headers: { "content-type": "application/json" } },
+        );
+      }
+      return new Response(
+        JSON.stringify({ jsonrpc: "2.0", id: body?.id ?? 1, result: responses[current] }),
+        { headers: { "content-type": "application/json" } },
+      );
+    };
+    // Bun's `fetch` type requires a `preconnect` field; tests never exercise it.
+    stub.preconnect = () => undefined;
+    globalThis.fetch = stub;
+
+    const result = await getEvmTokenBalanceLite("0xtoken", "0xwallet", "https://rpc.test", base);
+    expect(result.isOk()).toBe(true);
+    const value = result._unsafeUnwrap();
+    expect(value.balance_atomic).toBe("42");
+    expect(value.decimals).toBe(18);
+    expect(value.symbol).toBe(base.symbol);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fetch* dispatch — caip2 routing
+// ---------------------------------------------------------------------------
+
+describe("fetchNativeBalanceLite", () => {
+  const base = getChainMeta("eip155:8453");
+  if (!base) {
+    throw new Error("Base chain meta missing");
+  }
+
+  it("routes EVM requests through the chainRef-derived RPC", async () => {
+    stubFetch(() => "0x01");
+    const result = await fetchNativeBalanceLite(
+      "eip155",
+      "8453",
+      "0xabc",
+      base,
+      "https://evm.test",
+    );
+    expect(result.isOk()).toBe(true);
+    expect(lastRequest?.url).toBe("https://evm.test");
+  });
+
+  it("uses the rpcOverride for solana regardless of chainRef", async () => {
+    // chainRef passes through toCaip2 → "solana:<chainRef>", and
+    // rpcOverride wins over any chains.ts mapping. The dispatcher must
+    // honor it instead of hardcoding a mainnet endpoint.
+    stubFetch(() => ({ context: { slot: 1 }, value: 1_000_000_000 }));
+    const result = await fetchNativeBalanceLite(
+      "solana",
+      "EtWTRABZaYq6iMfeYKouRu166VU2iUKtZ9aP1tfgexcq", // devnet genesis
+      "addr",
+      base,
+      "https://devnet.test",
+    );
+    expect(result.isOk()).toBe(true);
+    expect(lastRequest?.url).toBe("https://devnet.test");
+  });
+});
+
+describe("fetchTokenBalanceLite", () => {
+  const base = getChainMeta("eip155:8453");
+  if (!base) {
+    throw new Error("Base chain meta missing");
+  }
+
+  it("uses the rpcOverride for solana regardless of chainRef", async () => {
+    stubFetch(() => ({ context: { slot: 1 }, value: [] }));
+    const result = await fetchTokenBalanceLite(
+      "solana",
+      "EtWTRABZaYq6iMfeYKouRu166VU2iUKtZ9aP1tfgexcq",
+      "mint",
+      "wallet",
+      base,
+      "https://devnet.test",
+    );
+    expect(result.isOk()).toBe(true);
+    expect(lastRequest?.url).toBe("https://devnet.test");
   });
 });
 
