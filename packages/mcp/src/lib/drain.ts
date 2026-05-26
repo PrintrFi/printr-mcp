@@ -25,7 +25,13 @@ export type DrainError = { message: string };
 
 export type ResolvedWallet = { privateKey: string; address: string; walletId: string };
 
-function formatAmount(atomic: bigint, decimals: number): string {
+/**
+ * Format an atomic-units bigint as a human-readable decimal string using
+ * `Number()` division. Loses precision past ~2^53 atomic units — fine for
+ * native gas amounts but unsafe for max-value ERC-20 balances. Exported so
+ * specs lock the lossy-but-deliberate conversion contract.
+ */
+export function formatAmount(atomic: bigint, decimals: number): string {
   return (Number(atomic) / 10 ** decimals).toString();
 }
 
@@ -33,7 +39,13 @@ function formatError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function buildDrainResult(
+/**
+ * Build the `printr_drain_deployment_wallet` output object from raw drain
+ * data. Conditionally emits `tx_signature` (SVM) or `tx_hash` (EVM) — never
+ * both, never neither when a tx ran. Exported so specs lock the shape and
+ * the spread-conditional that gates the tx field.
+ */
+export function buildDrainResult(
   drainedAtomic: bigint,
   meta: ChainMeta,
   fromAddress: string,
