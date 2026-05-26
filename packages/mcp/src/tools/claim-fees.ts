@@ -16,6 +16,7 @@ import {
   type SvmPayload,
   signAndSubmitEvm,
   signAndSubmitSvm,
+  type ToolResponse,
   toToolResponseAsync,
   transferSvm,
 } from "@printr/sdk";
@@ -55,9 +56,9 @@ function mapErr(e: unknown): ClaimError {
   return claimErr(e instanceof Error ? e.message : String(e));
 }
 
-type DeploymentWallet = { privateKey: string; address: string; walletId: string };
+export type DeploymentWallet = { privateKey: string; address: string; walletId: string };
 
-type ClaimContext = {
+export type ClaimContext = {
   treasuryKey: string;
   signingKey: string;
   chainFees: ChainProtocolFeesSimple;
@@ -103,7 +104,8 @@ export function toSvmPayload(payload: PayloadSolana): SvmPayload {
   };
 }
 
-function getTreasuryContext(
+/** Resolve the treasury private key + derived address for the chain. */
+export function getTreasuryContext(
   chain: string,
 ): Result<{ treasuryKey: string; treasuryAddress: string }, ClaimError> {
   const chainType = chainTypeFromCaip2(chain);
@@ -164,9 +166,12 @@ function fetchChainFees(
   });
 }
 
-// If the creator address differs from treasury, fees belong to a deployment wallet.
-// Re-fetch with that wallet as payer to get the correct collection payload.
-function resolveClaimContext(
+/**
+ * Resolve the `ClaimContext` for a claim. If the chain's creator address
+ * differs from the treasury, fees belong to a deployment wallet — re-fetch
+ * with that wallet as payer to get the correct collection payload.
+ */
+export function resolveClaimContext(
   tokenId: string,
   chain: string,
   treasuryKey: string,
@@ -246,7 +251,15 @@ function claimSvm(
     });
 }
 
-function executeClaim(ctx: ClaimContext, chain: string): ResultAsync<ClaimOutput, ClaimError> {
+/**
+ * Run the claim against a resolved `ClaimContext`. Dispatches to the EVM /
+ * SVM / svmRaw branch based on the collection payload discriminator and
+ * returns the user-facing `ClaimOutput`.
+ */
+export function executeClaim(
+  ctx: ClaimContext,
+  chain: string,
+): ResultAsync<ClaimOutput, ClaimError> {
   const { chainFees, telecoinId, signingKey } = ctx;
 
   if (!chainFees.canCollect) {
@@ -295,7 +308,58 @@ function executeClaim(ctx: ClaimContext, chain: string): ResultAsync<ClaimOutput
     .otherwise(() => errAsync(claimErr(`Unknown payload type: ${String(payload.payload.case)}`)));
 }
 
+// ---------------------------------------------------------------------------
+// Deps + handler
+// ---------------------------------------------------------------------------
+
+/** Validated input shape passed to the registered tool handler. */
+export type ClaimFeesInput = z.infer<typeof inputSchema>;
+
+export type GetTreasuryContextFn = typeof getTreasuryContext;
+export type ResolveClaimContextFn = typeof resolveClaimContext;
+export type ExecuteClaimFn = typeof executeClaim;
+
+/**
+ * Capability bundle for the `printr_claim_fees` handler. Each composable
+ * step is a dep so tests can stub canned `Result` returns and exercise the
+ * dispatch / error-surfacing branches without touching the protocol-fees
+ * API, the keystore, or the signing primitives.
+ */
+export type ClaimFeesDeps = {
+  getTreasuryContext: GetTreasuryContextFn;
+  resolveClaimContext: ResolveClaimContextFn;
+  executeClaim: ExecuteClaimFn;
+};
+
+/** Build production-wired deps for {@link claimFeesHandler}. */
+export function createClaimFeesDeps(): ClaimFeesDeps {
+  return { getTreasuryContext, resolveClaimContext, executeClaim };
+}
+
+/**
+ * `printr_claim_fees` handler. Resolves the treasury for the chain, derives
+ * the claim context (which re-fetches as the deployment-wallet payer when
+ * the creator address differs from treasury), then dispatches to
+ * `executeClaim`. Surfaces a `ToolResponse` end-to-end.
+ */
+export function claimFeesHandler(
+  input: ClaimFeesInput,
+  deps: ClaimFeesDeps,
+): Promise<ToolResponse<Record<string, unknown>>> {
+  const { token_id, chain } = input;
+  return toToolResponseAsync(
+    deps
+      .getTreasuryContext(chain)
+      .asyncAndThen(({ treasuryKey, treasuryAddress }) =>
+        deps
+          .resolveClaimContext(token_id, chain, treasuryKey, treasuryAddress)
+          .andThen((ctx) => deps.executeClaim(ctx, chain)),
+      ),
+  );
+}
+
 export function registerClaimFeesTool(server: McpServer): void {
+  const deps = createClaimFeesDeps();
   server.registerTool(
     "printr_claim_fees",
     {
@@ -307,14 +371,8 @@ export function registerClaimFeesTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_claim_fees", ({ token_id, chain }) =>
-      toToolResponseAsync(
-        getTreasuryContext(chain).asyncAndThen(({ treasuryKey, treasuryAddress }) =>
-          resolveClaimContext(token_id, chain, treasuryKey, treasuryAddress).andThen((ctx) =>
-            executeClaim(ctx, chain),
-          ),
-        ),
-      ),
+    logToolExecution("printr_claim_fees", (input) =>
+      claimFeesHandler(input as ClaimFeesInput, deps),
     ),
   );
 }
