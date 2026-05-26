@@ -68,7 +68,14 @@ function verifyKeystoreWritable(): ResultAsync<void, FundError> {
   }
 }
 
-function generateWallet(type: ChainType): { privateKey: string; address: string } {
+/**
+ * Generate a fresh wallet (private key + address) for the given chain family.
+ * Uses `@solana/web3.js` `Keypair.generate()` for SVM and `viem`'s
+ * `generatePrivateKey()` for EVM. Exported so specs can lock the per-chain
+ * shape (address format, key length) without exercising the rest of the
+ * funding pipeline.
+ */
+export function generateWallet(type: ChainType): { privateKey: string; address: string } {
   return match(type)
     .with("svm", () => {
       const kp = Keypair.generate();
@@ -100,7 +107,14 @@ function saveToKeystore(
   return wallet_id;
 }
 
-function buildTxField(
+/**
+ * Project a transfer result into the chain-specific tx-id field used by the
+ * `printr_fund_deployment_wallet` output schema. SVM transfers surface as
+ * `tx_signature`, EVM transfers as `tx_hash`; only one is emitted at a time.
+ * Exported so a regression to "always emit both" (which would leak a stale
+ * field) gets caught at the unit level.
+ */
+export function buildTxField(
   result: { type: "svm"; signature: string } | { type: "evm"; tx_hash: string },
 ) {
   return result.type === "svm" ? { tx_signature: result.signature } : { tx_hash: result.tx_hash };
