@@ -1,7 +1,7 @@
 import { describe, expect, it, test } from "bun:test";
 import type { ChainType } from "@printr/sdk";
 import { err, errAsync, ok, okAsync } from "neverthrow";
-import { createMockServer } from "../lib/test-helpers.js";
+import { createMockServer, SOL_META } from "../lib/test-helpers.js";
 import {
   buildTxField,
   type FundDeploymentWalletDeps,
@@ -148,13 +148,6 @@ type DepsRecord = {
   executeTransfer: { args: unknown[] }[];
   setActiveWalletId: { args: unknown[] }[];
   setLastDeploymentWalletId: { args: unknown[] }[];
-};
-
-const SOL_META = {
-  name: "Solana",
-  symbol: "SOL",
-  decimals: 9,
-  type: "svm" as const,
 };
 
 function emptyRecord(): DepsRecord {

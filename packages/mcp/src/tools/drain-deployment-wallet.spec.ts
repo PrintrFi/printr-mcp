@@ -1,6 +1,6 @@
 import { describe, expect, it, test } from "bun:test";
 import { err, errAsync, ok, okAsync } from "neverthrow";
-import { createMockServer } from "../lib/test-helpers.js";
+import { BASE_META, createMockServer, SOL_META } from "../lib/test-helpers.js";
 import {
   type DrainDeploymentWalletDeps,
   drainDeploymentWalletHandler,
@@ -58,20 +58,6 @@ describe("printr_drain_deployment_wallet", () => {
 // ---------------------------------------------------------------------------
 // drainDeploymentWalletHandler — full handler with stubbed deps
 // ---------------------------------------------------------------------------
-
-const SOL_META = {
-  name: "Solana",
-  symbol: "SOL",
-  decimals: 9,
-  type: "svm" as const,
-};
-
-const BASE_META = {
-  name: "Base",
-  symbol: "ETH",
-  decimals: 18,
-  type: "evm" as const,
-};
 
 const FAKE_WALLET = {
   privateKey: "wallet-priv",
