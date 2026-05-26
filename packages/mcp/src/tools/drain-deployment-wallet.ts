@@ -8,10 +8,8 @@ import {
   getEvmConfig,
   getLastDeploymentWalletId,
   getWallet,
-  toolError,
-  toolOk,
 } from "@printr/sdk";
-import { err, errAsync, ok, type Result } from "neverthrow";
+import { err, errAsync, ok, type Result, type ResultAsync } from "neverthrow";
 import { match } from "ts-pattern";
 import { z } from "zod";
 import {
@@ -22,7 +20,7 @@ import {
   type ResolvedWallet,
 } from "~/lib/drain.js";
 import { env } from "~/lib/env.js";
-import { logToolExecution } from "~/lib/logging.js";
+import { type HandlerCtx, handler } from "~/lib/handler.js";
 import { getTreasuryKeyOrError } from "~/lib/treasury.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
@@ -177,53 +175,49 @@ export function createDrainDeploymentWalletDeps(): DrainDeploymentWalletDeps {
   };
 }
 
-export function drainDeploymentWalletHandler(
-  input: DrainDeploymentWalletInput,
-  deps: DrainDeploymentWalletDeps,
-) {
+export function drainDeploymentWalletHandler({
+  input,
+  deps,
+}: HandlerCtx<DrainDeploymentWalletInput, DrainDeploymentWalletDeps>): ResultAsync<
+  DrainResult,
+  DrainError
+> {
   const { chain, keep_minimum, wallet_id } = input;
   const chainType = chainTypeFromCaip2(chain);
   const keepMin = keep_minimum ?? "0";
 
-  return deps
-    .resolveWallet(chainType, wallet_id)
-    .asyncAndThen((wallet) => {
-      const treasuryResult = deps.getTreasuryKeyOrError(chainType);
-      if ("error" in treasuryResult) {
-        return errAsync<DrainResult, DrainError>({ message: treasuryResult.error });
-      }
+  return deps.resolveWallet(chainType, wallet_id).asyncAndThen((wallet) => {
+    const treasuryResult = deps.getTreasuryKeyOrError(chainType);
+    if ("error" in treasuryResult) {
+      return errAsync<DrainResult, DrainError>({ message: treasuryResult.error });
+    }
 
-      const meta = deps.getChainMeta(chain);
-      if (!meta) {
-        return errAsync<DrainResult, DrainError>({ message: `Unsupported chain: ${chain}` });
-      }
+    const meta = deps.getChainMeta(chain);
+    if (!meta) {
+      return errAsync<DrainResult, DrainError>({ message: `Unsupported chain: ${chain}` });
+    }
 
-      return match(chainType)
-        .with("svm", () => deps.drainSvm(wallet, treasuryResult.key, parseFloat(keepMin), meta))
-        .with("evm", () => {
-          const evmConfig = deps.getEvmConfig(chain);
-          if ("error" in evmConfig) {
-            return errAsync<DrainResult, DrainError>({ message: evmConfig.error });
-          }
-          return deps.drainEvm(
-            wallet,
-            treasuryResult.key,
-            keepMin,
-            meta,
-            evmConfig.chainId,
-            evmConfig.rpc,
-          );
-        })
-        .exhaustive();
-    })
-    .match(
-      (result: DrainResult) => toolOk(result),
-      (e: DrainError) => toolError(e.message),
-    );
+    return match(chainType)
+      .with("svm", () => deps.drainSvm(wallet, treasuryResult.key, parseFloat(keepMin), meta))
+      .with("evm", () => {
+        const evmConfig = deps.getEvmConfig(chain);
+        if ("error" in evmConfig) {
+          return errAsync<DrainResult, DrainError>({ message: evmConfig.error });
+        }
+        return deps.drainEvm(
+          wallet,
+          treasuryResult.key,
+          keepMin,
+          meta,
+          evmConfig.chainId,
+          evmConfig.rpc,
+        );
+      })
+      .exhaustive();
+  });
 }
 
 export function registerDrainDeploymentWalletTool(server: McpServer): void {
-  const deps = createDrainDeploymentWalletDeps();
   server.registerTool(
     "printr_drain_deployment_wallet",
     {
@@ -236,8 +230,9 @@ export function registerDrainDeploymentWalletTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_drain_deployment_wallet", (input) =>
-      drainDeploymentWalletHandler(input as DrainDeploymentWalletInput, deps),
-    ),
+    handler(
+      "printr_drain_deployment_wallet",
+      drainDeploymentWalletHandler,
+    )(createDrainDeploymentWalletDeps()),
   );
 }

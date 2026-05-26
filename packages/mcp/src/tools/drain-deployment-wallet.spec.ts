@@ -158,10 +158,10 @@ describe("drainDeploymentWalletHandler — SVM dispatch", () => {
     const record = emptyRecord();
     const deps = makeDeps(record);
 
-    const result = await drainDeploymentWalletHandler(
-      { ...SOLANA_INPUT, keep_minimum: "0.05" },
+    const result = await drainDeploymentWalletHandler({
+      input: { ...SOLANA_INPUT, keep_minimum: "0.05" },
       deps,
-    );
+    });
 
     expect(record.drainSvm).toHaveLength(1);
     expect(record.drainEvm).toHaveLength(0);
@@ -171,11 +171,8 @@ describe("drainDeploymentWalletHandler — SVM dispatch", () => {
     expect(treasuryArg).toBe("treasury-key");
     expect(keepArg).toBe(0.05);
     expect(metaArg).toBe(SOL_META);
-    expect(
-      (result as { structuredContent?: Record<string, unknown> }).structuredContent?.[
-        "tx_signature"
-      ],
-    ).toBe("5K3sig");
+    expect(result.isOk()).toBe(true);
+    expect(result._unsafeUnwrap().tx_signature).toBe("5K3sig");
   });
 });
 
@@ -184,10 +181,10 @@ describe("drainDeploymentWalletHandler — EVM dispatch", () => {
     const record = emptyRecord();
     const deps = makeDeps(record);
 
-    const result = await drainDeploymentWalletHandler(
-      { ...BASE_INPUT, keep_minimum: "0.01" },
+    const result = await drainDeploymentWalletHandler({
+      input: { ...BASE_INPUT, keep_minimum: "0.01" },
       deps,
-    );
+    });
 
     expect(record.drainEvm).toHaveLength(1);
     expect(record.drainSvm).toHaveLength(0);
@@ -201,9 +198,8 @@ describe("drainDeploymentWalletHandler — EVM dispatch", () => {
     expect(metaArg).toBe(BASE_META);
     expect(chainIdArg).toBe(8453);
     expect(rpcArg).toBe("https://evm.test");
-    expect(
-      (result as { structuredContent?: Record<string, unknown> }).structuredContent?.["tx_hash"],
-    ).toBe("0xabc");
+    expect(result.isOk()).toBe(true);
+    expect(result._unsafeUnwrap().tx_hash).toBe("0xabc");
   });
 
   it("surfaces getEvmConfig's error without calling drainEvm", async () => {
@@ -215,10 +211,10 @@ describe("drainDeploymentWalletHandler — EVM dispatch", () => {
       },
     });
 
-    const result = await drainDeploymentWalletHandler(BASE_INPUT, deps);
+    const result = await drainDeploymentWalletHandler({ input: BASE_INPUT, deps });
 
     expect(record.drainEvm).toHaveLength(0);
-    expect((result as { isError?: boolean }).isError).toBe(true);
+    expect(result.isErr()).toBe(true);
   });
 });
 
@@ -232,11 +228,11 @@ describe("drainDeploymentWalletHandler — pre-drain gates", () => {
       },
     });
 
-    const result = await drainDeploymentWalletHandler(SOLANA_INPUT, deps);
+    const result = await drainDeploymentWalletHandler({ input: SOLANA_INPUT, deps });
 
     expect(record.getTreasuryKeyOrError).toHaveLength(0);
     expect(record.drainSvm).toHaveLength(0);
-    expect((result as { isError?: boolean }).isError).toBe(true);
+    expect(result.isErr()).toBe(true);
   });
 
   it("surfaces the treasury error without calling drainSvm / drainEvm", async () => {
@@ -250,10 +246,10 @@ describe("drainDeploymentWalletHandler — pre-drain gates", () => {
       },
     });
 
-    const result = await drainDeploymentWalletHandler(SOLANA_INPUT, deps);
+    const result = await drainDeploymentWalletHandler({ input: SOLANA_INPUT, deps });
 
     expect(record.drainSvm).toHaveLength(0);
-    expect((result as { isError?: boolean }).isError).toBe(true);
+    expect(result.isErr()).toBe(true);
   });
 
   it("surfaces an 'Unsupported chain' error when getChainMeta returns undefined", async () => {
@@ -265,10 +261,10 @@ describe("drainDeploymentWalletHandler — pre-drain gates", () => {
       }) as DrainDeploymentWalletDeps["getChainMeta"],
     });
 
-    const result = await drainDeploymentWalletHandler(SOLANA_INPUT, deps);
+    const result = await drainDeploymentWalletHandler({ input: SOLANA_INPUT, deps });
 
     expect(record.drainSvm).toHaveLength(0);
-    expect((result as { isError?: boolean }).isError).toBe(true);
+    expect(result.isErr()).toBe(true);
   });
 
   it("surfaces drainSvm's error verbatim", async () => {
@@ -280,11 +276,10 @@ describe("drainDeploymentWalletHandler — pre-drain gates", () => {
       },
     });
 
-    const result = await drainDeploymentWalletHandler(SOLANA_INPUT, deps);
+    const result = await drainDeploymentWalletHandler({ input: SOLANA_INPUT, deps });
 
-    expect((result as { isError?: boolean }).isError).toBe(true);
-    const text = (result as { content: { text: string }[] }).content[0]?.text ?? "";
-    expect(text).toMatch(/Insufficient SOL/);
+    expect(result.isErr()).toBe(true);
+    expect(result._unsafeUnwrapErr().message).toMatch(/Insufficient SOL/);
   });
 });
 
@@ -293,7 +288,10 @@ describe("drainDeploymentWalletHandler — wallet_id passthrough", () => {
     const record = emptyRecord();
     const deps = makeDeps(record);
 
-    await drainDeploymentWalletHandler({ ...SOLANA_INPUT, wallet_id: "explicit-uuid" }, deps);
+    await drainDeploymentWalletHandler({
+      input: { ...SOLANA_INPUT, wallet_id: "explicit-uuid" },
+      deps,
+    });
 
     expect(record.resolveWallet[0]?.args).toEqual(["svm", "explicit-uuid"]);
   });
@@ -302,7 +300,7 @@ describe("drainDeploymentWalletHandler — wallet_id passthrough", () => {
     const record = emptyRecord();
     const deps = makeDeps(record);
 
-    await drainDeploymentWalletHandler(SOLANA_INPUT, deps);
+    await drainDeploymentWalletHandler({ input: SOLANA_INPUT, deps });
 
     expect(record.resolveWallet[0]?.args).toEqual(["svm", undefined]);
   });

@@ -16,8 +16,6 @@ import {
   type SvmPayload,
   signAndSubmitEvm,
   signAndSubmitSvm,
-  type ToolResponse,
-  toToolResponseAsync,
   transferSvm,
 } from "@printr/sdk";
 import { err, errAsync, ok, okAsync, type Result, ResultAsync } from "neverthrow";
@@ -25,7 +23,7 @@ import { match } from "ts-pattern";
 import { z } from "zod";
 import { drainSvm } from "~/lib/drain.js";
 import { env } from "~/lib/env.js";
-import { logToolExecution } from "~/lib/logging.js";
+import { type HandlerCtx, handler } from "~/lib/handler.js";
 import { getTreasuryAddress, getTreasuryKey } from "~/lib/treasury.js";
 
 const inputSchema = z.object({
@@ -319,24 +317,21 @@ export function createClaimFeesDeps(): ClaimFeesDeps {
   return { getTreasuryContext, resolveClaimContext, executeClaim };
 }
 
-export function claimFeesHandler(
-  input: ClaimFeesInput,
-  deps: ClaimFeesDeps,
-): Promise<ToolResponse<Record<string, unknown>>> {
+export function claimFeesHandler({
+  input,
+  deps,
+}: HandlerCtx<ClaimFeesInput, ClaimFeesDeps>): ResultAsync<ClaimOutput, ClaimError> {
   const { token_id, chain } = input;
-  return toToolResponseAsync(
-    deps
-      .getTreasuryContext(chain)
-      .asyncAndThen(({ treasuryKey, treasuryAddress }) =>
-        deps
-          .resolveClaimContext(token_id, chain, treasuryKey, treasuryAddress)
-          .andThen((ctx) => deps.executeClaim(ctx, chain)),
-      ),
-  );
+  return deps
+    .getTreasuryContext(chain)
+    .asyncAndThen(({ treasuryKey, treasuryAddress }) =>
+      deps
+        .resolveClaimContext(token_id, chain, treasuryKey, treasuryAddress)
+        .andThen((ctx) => deps.executeClaim(ctx, chain)),
+    );
 }
 
 export function registerClaimFeesTool(server: McpServer): void {
-  const deps = createClaimFeesDeps();
   server.registerTool(
     "printr_claim_fees",
     {
@@ -348,8 +343,6 @@ export function registerClaimFeesTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_claim_fees", (input) =>
-      claimFeesHandler(input as ClaimFeesInput, deps),
-    ),
+    handler("printr_claim_fees", claimFeesHandler)(createClaimFeesDeps()),
   );
 }

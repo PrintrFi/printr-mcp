@@ -197,7 +197,7 @@ describe("claimFeesHandler — happy path", () => {
     };
     const deps = makeDeps(record);
 
-    const result = await claimFeesHandler(baseInput, deps);
+    const result = await claimFeesHandler({ input: baseInput, deps });
 
     expect(record.getTreasuryContext).toHaveLength(1);
     expect(record.resolveClaimContext).toHaveLength(1);
@@ -210,9 +210,10 @@ describe("claimFeesHandler — happy path", () => {
       "treasury-key",
       "0xTreasury",
     ]);
-    const sc = (result as { structuredContent?: Record<string, unknown> }).structuredContent;
-    expect(sc?.["token_id"]).toBe("0xdeadbeef");
-    expect(sc?.["tx_hash"]).toBe("0xtxhash");
+    expect(result.isOk()).toBe(true);
+    const value = result._unsafeUnwrap();
+    expect(value.token_id).toBe("0xdeadbeef");
+    expect(value.tx_hash).toBe("0xtxhash");
   });
 });
 
@@ -224,19 +225,18 @@ describe("claimFeesHandler — error short-circuits", () => {
       executeClaim: [],
     };
     const deps = makeDeps(record, {
-      getTreasuryContext: (...args) => {
+      getTreasuryContext: (...args: Parameters<ClaimFeesDeps["getTreasuryContext"]>) => {
         record.getTreasuryContext.push({ args });
         return err({ message: "Treasury wallet not configured for EVM" });
       },
     });
 
-    const result = await claimFeesHandler(baseInput, deps);
+    const result = await claimFeesHandler({ input: baseInput, deps });
 
     expect(record.resolveClaimContext).toHaveLength(0);
     expect(record.executeClaim).toHaveLength(0);
-    expect((result as { isError?: boolean }).isError).toBe(true);
-    const text = (result as { content: { text: string }[] }).content[0]?.text ?? "";
-    expect(text).toMatch(/Treasury wallet not configured/);
+    expect(result.isErr()).toBe(true);
+    expect(result._unsafeUnwrapErr().message).toMatch(/Treasury wallet not configured/);
   });
 
   it("surfaces a resolveClaimContext error without calling execute", async () => {
@@ -246,18 +246,18 @@ describe("claimFeesHandler — error short-circuits", () => {
       executeClaim: [],
     };
     const deps = makeDeps(record, {
-      resolveClaimContext: (...args) => {
+      resolveClaimContext: (...args: Parameters<ClaimFeesDeps["resolveClaimContext"]>) => {
         record.resolveClaimContext.push({ args });
         return errAsync({ message: "No fee data returned for chain eip155:8453" });
       },
     });
 
-    const result = await claimFeesHandler(baseInput, deps);
+    const result = await claimFeesHandler({ input: baseInput, deps });
 
     expect(record.getTreasuryContext).toHaveLength(1);
     expect(record.resolveClaimContext).toHaveLength(1);
     expect(record.executeClaim).toHaveLength(0);
-    expect((result as { isError?: boolean }).isError).toBe(true);
+    expect(result.isErr()).toBe(true);
   });
 
   it("surfaces an executeClaim error verbatim", async () => {
@@ -267,17 +267,16 @@ describe("claimFeesHandler — error short-circuits", () => {
       executeClaim: [],
     };
     const deps = makeDeps(record, {
-      executeClaim: (...args) => {
+      executeClaim: (...args: Parameters<ClaimFeesDeps["executeClaim"]>) => {
         record.executeClaim.push({ args });
         return errAsync({ message: "Signing failed: nonce too low" });
       },
     });
 
-    const result = await claimFeesHandler(baseInput, deps);
+    const result = await claimFeesHandler({ input: baseInput, deps });
 
     expect(record.executeClaim).toHaveLength(1);
-    expect((result as { isError?: boolean }).isError).toBe(true);
-    const text = (result as { content: { text: string }[] }).content[0]?.text ?? "";
-    expect(text).toMatch(/nonce too low/);
+    expect(result.isErr()).toBe(true);
+    expect(result._unsafeUnwrapErr().message).toMatch(/nonce too low/);
   });
 });

@@ -15,8 +15,6 @@ import {
   parseCaip2,
   setActiveWalletId,
   setLastDeploymentWalletId,
-  type ToolResponse,
-  toToolResponseAsync,
 } from "@printr/sdk";
 import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
@@ -25,7 +23,7 @@ import { match } from "ts-pattern";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
-import { logToolExecution } from "~/lib/logging.js";
+import { type HandlerCtx, handler } from "~/lib/handler.js";
 import { getTreasuryErrorMsg, getTreasuryKey } from "~/lib/treasury.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
@@ -220,66 +218,61 @@ export function createFundDeploymentWalletDeps(): FundDeploymentWalletDeps {
   };
 }
 
-export function fundDeploymentWalletHandler(
-  input: FundDeploymentWalletInput,
-  deps: FundDeploymentWalletDeps,
-): Promise<ToolResponse<Record<string, unknown>>> {
+export function fundDeploymentWalletHandler({
+  input,
+  deps,
+}: HandlerCtx<FundDeploymentWalletInput, FundDeploymentWalletDeps>) {
   const { chain, amount } = input;
-  return toToolResponseAsync(
-    deps
-      .verifyKeystoreWritable()
-      .andThen(() => deps.validateInputs(chain))
-      .andThen(({ type, treasuryKey, meta, parsed, masterPassword }) =>
-        deps.persistWallet(masterPassword, chain, type).map((wallet) => ({
-          type,
+  return deps
+    .verifyKeystoreWritable()
+    .andThen(() => deps.validateInputs(chain))
+    .andThen(({ type, treasuryKey, meta, parsed, masterPassword }) =>
+      deps.persistWallet(masterPassword, chain, type).map((wallet) => ({
+        type,
+        treasuryKey,
+        meta,
+        parsed,
+        wallet,
+      })),
+    )
+    .andThen(({ type, treasuryKey, meta, parsed, wallet }) =>
+      deps
+        .executeTransfer(
+          parsed.namespace,
+          parsed.chainRef,
+          wallet.address,
+          amount,
           treasuryKey,
           meta,
-          parsed,
-          wallet,
-        })),
-      )
-      .andThen(({ type, treasuryKey, meta, parsed, wallet }) =>
-        deps
-          .executeTransfer(
-            parsed.namespace,
-            parsed.chainRef,
-            wallet.address,
-            amount,
-            treasuryKey,
-            meta,
-          )
-          .map((result) => {
-            deps.activeWallets.set(type, {
-              privateKey: wallet.privateKey,
-              address: wallet.address,
-            });
-            deps
-              .setActiveWalletId(type, wallet.wallet_id)
-              .mapErr((e) =>
-                logger.warn({ error: e.message }, "Failed to persist active wallet ID"),
-              );
-            deps
-              .setLastDeploymentWalletId(wallet.wallet_id)
-              .mapErr((e) =>
-                logger.warn({ error: e.message }, "Failed to persist deployment wallet ID"),
-              );
-            return {
-              address: wallet.address,
-              chain,
-              chain_name: meta.name,
-              amount_funded: amount,
-              amount_atomic: result.amount_atomic,
-              symbol: meta.symbol,
-              ...buildTxField(result),
-              wallet_id: wallet.wallet_id,
-            };
-          }),
-      ),
-  );
+        )
+        .map((result) => {
+          deps.activeWallets.set(type, {
+            privateKey: wallet.privateKey,
+            address: wallet.address,
+          });
+          deps
+            .setActiveWalletId(type, wallet.wallet_id)
+            .mapErr((e) => logger.warn({ error: e.message }, "Failed to persist active wallet ID"));
+          deps
+            .setLastDeploymentWalletId(wallet.wallet_id)
+            .mapErr((e) =>
+              logger.warn({ error: e.message }, "Failed to persist deployment wallet ID"),
+            );
+          return {
+            address: wallet.address,
+            chain,
+            chain_name: meta.name,
+            amount_funded: amount,
+            amount_atomic: result.amount_atomic,
+            symbol: meta.symbol,
+            ...buildTxField(result),
+            wallet_id: wallet.wallet_id,
+          };
+        }),
+    );
 }
 
 export function registerFundDeploymentWalletTool(server: McpServer): void {
-  const deps = createFundDeploymentWalletDeps();
   server.registerTool(
     "printr_fund_deployment_wallet",
     {
@@ -292,8 +285,9 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_fund_deployment_wallet", (input) =>
-      fundDeploymentWalletHandler(input as FundDeploymentWalletInput, deps),
-    ),
+    handler(
+      "printr_fund_deployment_wallet",
+      fundDeploymentWalletHandler,
+    )(createFundDeploymentWalletDeps()),
   );
 }

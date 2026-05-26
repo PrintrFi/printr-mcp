@@ -222,7 +222,7 @@ describe("fundDeploymentWalletHandler — happy path", () => {
     const activeWallets = new Map<ChainType, { privateKey: string; address: string }>();
     const deps = makeDeps(record, activeWallets);
 
-    const result = await fundDeploymentWalletHandler(baseInput, deps);
+    const result = await fundDeploymentWalletHandler({ input: baseInput, deps });
 
     expect(record.verifyKeystoreWritable).toHaveLength(1);
     expect(record.validateInputs).toHaveLength(1);
@@ -231,14 +231,15 @@ describe("fundDeploymentWalletHandler — happy path", () => {
     expect(record.setActiveWalletId).toHaveLength(1);
     expect(record.setLastDeploymentWalletId).toHaveLength(1);
 
-    const sc = (result as { structuredContent?: Record<string, unknown> }).structuredContent;
-    expect(sc?.["address"]).toBe("NewWalletAddr");
-    expect(sc?.["chain_name"]).toBe("Solana");
-    expect(sc?.["symbol"]).toBe("SOL");
-    expect(sc?.["wallet_id"]).toBe("wallet-uuid-1");
-    expect(sc?.["amount_funded"]).toBe("0.1");
-    expect(sc?.["tx_signature"]).toBe("5K3treasurySig");
-    expect("tx_hash" in (sc ?? {})).toBe(false);
+    expect(result.isOk()).toBe(true);
+    const value = result._unsafeUnwrap();
+    expect(value.address).toBe("NewWalletAddr");
+    expect(value.chain_name).toBe("Solana");
+    expect(value.symbol).toBe("SOL");
+    expect(value.wallet_id).toBe("wallet-uuid-1");
+    expect(value.amount_funded).toBe("0.1");
+    expect(value.tx_signature).toBe("5K3treasurySig");
+    expect("tx_hash" in value).toBe(false);
 
     expect(activeWallets.get("svm")).toEqual({
       privateKey: "new-wallet-priv",
@@ -250,7 +251,7 @@ describe("fundDeploymentWalletHandler — happy path", () => {
     const record = emptyRecord();
     const deps = makeDeps(record, new Map());
 
-    await fundDeploymentWalletHandler(baseInput, deps);
+    await fundDeploymentWalletHandler({ input: baseInput, deps });
 
     // args: (namespace, chainRef, recipientAddress, amount, treasuryKey, meta)
     expect(record.executeTransfer[0]?.args[2]).toBe("NewWalletAddr");
@@ -266,12 +267,12 @@ describe("fundDeploymentWalletHandler — error short-circuits (fund-loss guards
       verifyKeystoreWritable: () => errAsync({ message: "Keystore directory not writable" }),
     });
 
-    const result = await fundDeploymentWalletHandler(baseInput, deps);
+    const result = await fundDeploymentWalletHandler({ input: baseInput, deps });
 
     expect(record.validateInputs).toHaveLength(0);
     expect(record.persistWallet).toHaveLength(0);
     expect(record.executeTransfer).toHaveLength(0);
-    expect((result as { isError?: boolean }).isError).toBe(true);
+    expect(result.isErr()).toBe(true);
   });
 
   it("aborts before transferring when validateInputs fails", async () => {
@@ -280,11 +281,11 @@ describe("fundDeploymentWalletHandler — error short-circuits (fund-loss guards
       validateInputs: () => err({ message: "PRINTR_DEPLOYMENT_PASSWORD is required" }),
     });
 
-    const result = await fundDeploymentWalletHandler(baseInput, deps);
+    const result = await fundDeploymentWalletHandler({ input: baseInput, deps });
 
     expect(record.persistWallet).toHaveLength(0);
     expect(record.executeTransfer).toHaveLength(0);
-    expect((result as { isError?: boolean }).isError).toBe(true);
+    expect(result.isErr()).toBe(true);
   });
 
   it("aborts before transferring when persistWallet fails (so funds never leave treasury)", async () => {
@@ -296,12 +297,12 @@ describe("fundDeploymentWalletHandler — error short-circuits (fund-loss guards
         }),
     });
 
-    const result = await fundDeploymentWalletHandler(baseInput, deps);
+    const result = await fundDeploymentWalletHandler({ input: baseInput, deps });
 
     expect(record.executeTransfer).toHaveLength(0);
     expect(record.setActiveWalletId).toHaveLength(0);
     expect(record.setLastDeploymentWalletId).toHaveLength(0);
-    expect((result as { isError?: boolean }).isError).toBe(true);
+    expect(result.isErr()).toBe(true);
   });
 });
 
@@ -315,11 +316,10 @@ describe("fundDeploymentWalletHandler — best-effort state writes", () => {
       },
     });
 
-    const result = await fundDeploymentWalletHandler(baseInput, deps);
+    const result = await fundDeploymentWalletHandler({ input: baseInput, deps });
 
     expect(record.executeTransfer).toHaveLength(1);
-    expect((result as { isError?: boolean }).isError).toBeUndefined();
-    const sc = (result as { structuredContent?: Record<string, unknown> }).structuredContent;
-    expect(sc?.["wallet_id"]).toBe("wallet-uuid-1");
+    expect(result.isOk()).toBe(true);
+    expect(result._unsafeUnwrap().wallet_id).toBe("wallet-uuid-1");
   });
 });
