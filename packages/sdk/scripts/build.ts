@@ -73,5 +73,15 @@ await $`${args}`;
 if (!isWatch) {
   console.log("Generating type declarations...");
   await $`bunx tsc --emitDeclarationOnly --outDir ./dist`;
+
+  // `tsc` skips re-emitting hand-written `.d.ts` files in src/, so the
+  // generated `src/api.gen.d.ts` never reaches dist/. `client.d.ts` and
+  // `openapi.d.ts` both `import type … from "./api.gen.js"`, which resolves
+  // to that declaration file — copy it across or installed consumers see a
+  // missing module and lose the strict OpenAPI types.
+  const apiGenSrc = `${import.meta.dir}/../src/api.gen.d.ts`;
+  const apiGenDst = `${import.meta.dir}/../dist/api.gen.d.ts`;
+  await Bun.write(apiGenDst, Bun.file(apiGenSrc));
+
   console.log("Type declarations generated.");
 }
