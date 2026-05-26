@@ -1,7 +1,11 @@
 import { describe, expect, it, test } from "bun:test";
+import type { ChainType } from "@printr/sdk";
+import { err, errAsync, ok, okAsync } from "neverthrow";
 import { createMockServer } from "../lib/test-helpers.js";
 import {
   buildTxField,
+  type FundDeploymentWalletDeps,
+  fundDeploymentWalletHandler,
   generateWallet,
   registerFundDeploymentWalletTool,
 } from "./fund-deployment-wallet.js";
@@ -130,5 +134,202 @@ describe("generateWallet", () => {
     const d = generateWallet("svm");
     expect(c.privateKey).not.toBe(d.privateKey);
     expect(c.address).not.toBe(d.address);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fundDeploymentWalletHandler — full handler with stubbed deps
+// ---------------------------------------------------------------------------
+
+type DepsRecord = {
+  verifyKeystoreWritable: { args: unknown[] }[];
+  validateInputs: { args: unknown[] }[];
+  persistWallet: { args: unknown[] }[];
+  executeTransfer: { args: unknown[] }[];
+  setActiveWalletId: { args: unknown[] }[];
+  setLastDeploymentWalletId: { args: unknown[] }[];
+};
+
+const SOL_META = {
+  name: "Solana",
+  symbol: "SOL",
+  decimals: 9,
+  type: "svm" as const,
+};
+
+function emptyRecord(): DepsRecord {
+  return {
+    verifyKeystoreWritable: [],
+    validateInputs: [],
+    persistWallet: [],
+    executeTransfer: [],
+    setActiveWalletId: [],
+    setLastDeploymentWalletId: [],
+  };
+}
+
+function makeDeps(
+  record: DepsRecord,
+  activeWallets: Map<ChainType, { privateKey: string; address: string }>,
+  overrides: Partial<FundDeploymentWalletDeps> = {},
+): FundDeploymentWalletDeps {
+  return {
+    verifyKeystoreWritable: (
+      ...args: Parameters<FundDeploymentWalletDeps["verifyKeystoreWritable"]>
+    ) => {
+      record.verifyKeystoreWritable.push({ args });
+      return okAsync(undefined);
+    },
+    validateInputs: (...args: Parameters<FundDeploymentWalletDeps["validateInputs"]>) => {
+      record.validateInputs.push({ args });
+      return ok({
+        type: "svm" as ChainType,
+        treasuryKey: "treasury-key",
+        meta: SOL_META,
+        parsed: { namespace: "solana", chainRef: "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" },
+        masterPassword: "master-pass",
+      });
+    },
+    persistWallet: (...args: Parameters<FundDeploymentWalletDeps["persistWallet"]>) => {
+      record.persistWallet.push({ args });
+      return ok({
+        wallet_id: "wallet-uuid-1",
+        privateKey: "new-wallet-priv",
+        address: "NewWalletAddr",
+      });
+    },
+    executeTransfer: (...args: Parameters<FundDeploymentWalletDeps["executeTransfer"]>) => {
+      record.executeTransfer.push({ args });
+      return okAsync({
+        type: "svm" as const,
+        signature: "5K3treasurySig",
+        amount_atomic: "100000000",
+      });
+    },
+    activeWallets,
+    setActiveWalletId: (...args: Parameters<FundDeploymentWalletDeps["setActiveWalletId"]>) => {
+      record.setActiveWalletId.push({ args });
+      return ok(undefined);
+    },
+    setLastDeploymentWalletId: (
+      ...args: Parameters<FundDeploymentWalletDeps["setLastDeploymentWalletId"]>
+    ) => {
+      record.setLastDeploymentWalletId.push({ args });
+      return ok(undefined);
+    },
+    ...overrides,
+  };
+}
+
+const baseInput = { chain: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", amount: "0.1" };
+
+describe("fundDeploymentWalletHandler — happy path", () => {
+  it("runs all five gated steps in order and surfaces the output shape", async () => {
+    const record = emptyRecord();
+    const activeWallets = new Map<ChainType, { privateKey: string; address: string }>();
+    const deps = makeDeps(record, activeWallets);
+
+    const result = await fundDeploymentWalletHandler(baseInput, deps);
+
+    expect(record.verifyKeystoreWritable).toHaveLength(1);
+    expect(record.validateInputs).toHaveLength(1);
+    expect(record.persistWallet).toHaveLength(1);
+    expect(record.executeTransfer).toHaveLength(1);
+    expect(record.setActiveWalletId).toHaveLength(1);
+    expect(record.setLastDeploymentWalletId).toHaveLength(1);
+
+    const sc = (result as { structuredContent?: Record<string, unknown> }).structuredContent;
+    expect(sc?.["address"]).toBe("NewWalletAddr");
+    expect(sc?.["chain_name"]).toBe("Solana");
+    expect(sc?.["symbol"]).toBe("SOL");
+    expect(sc?.["wallet_id"]).toBe("wallet-uuid-1");
+    expect(sc?.["amount_funded"]).toBe("0.1");
+    // SVM transfer → only tx_signature, no tx_hash leakage.
+    expect(sc?.["tx_signature"]).toBe("5K3treasurySig");
+    expect("tx_hash" in (sc ?? {})).toBe(false);
+
+    // Active wallet record was populated for the chain.
+    expect(activeWallets.get("svm")).toEqual({
+      privateKey: "new-wallet-priv",
+      address: "NewWalletAddr",
+    });
+  });
+
+  it("forwards the persisted wallet to executeTransfer (so funds go to the fresh address)", async () => {
+    const record = emptyRecord();
+    const deps = makeDeps(record, new Map());
+
+    await fundDeploymentWalletHandler(baseInput, deps);
+
+    // executeTransfer args: (namespace, chainRef, recipientAddress, amount, treasuryKey, meta)
+    expect(record.executeTransfer[0]?.args[2]).toBe("NewWalletAddr");
+    expect(record.executeTransfer[0]?.args[3]).toBe("0.1");
+    expect(record.executeTransfer[0]?.args[4]).toBe("treasury-key");
+  });
+});
+
+describe("fundDeploymentWalletHandler — error short-circuits (fund-loss guards)", () => {
+  it("aborts before persisting or transferring when the keystore is unwritable", async () => {
+    const record = emptyRecord();
+    const deps = makeDeps(record, new Map(), {
+      verifyKeystoreWritable: () => errAsync({ message: "Keystore directory not writable" }),
+    });
+
+    const result = await fundDeploymentWalletHandler(baseInput, deps);
+
+    expect(record.validateInputs).toHaveLength(0);
+    expect(record.persistWallet).toHaveLength(0);
+    expect(record.executeTransfer).toHaveLength(0);
+    expect((result as { isError?: boolean }).isError).toBe(true);
+  });
+
+  it("aborts before transferring when validateInputs fails", async () => {
+    const record = emptyRecord();
+    const deps = makeDeps(record, new Map(), {
+      validateInputs: () => err({ message: "PRINTR_DEPLOYMENT_PASSWORD is required" }),
+    });
+
+    const result = await fundDeploymentWalletHandler(baseInput, deps);
+
+    expect(record.persistWallet).toHaveLength(0);
+    expect(record.executeTransfer).toHaveLength(0);
+    expect((result as { isError?: boolean }).isError).toBe(true);
+  });
+
+  it("aborts before transferring when persistWallet fails (so funds never leave treasury)", async () => {
+    const record = emptyRecord();
+    const deps = makeDeps(record, new Map(), {
+      persistWallet: () =>
+        err({
+          message: "Failed to persist wallet to keystore: ENOSPC. Aborting to prevent fund loss.",
+        }),
+    });
+
+    const result = await fundDeploymentWalletHandler(baseInput, deps);
+
+    expect(record.executeTransfer).toHaveLength(0);
+    expect(record.setActiveWalletId).toHaveLength(0);
+    expect(record.setLastDeploymentWalletId).toHaveLength(0);
+    expect((result as { isError?: boolean }).isError).toBe(true);
+  });
+});
+
+describe("fundDeploymentWalletHandler — best-effort state writes", () => {
+  it("still surfaces a successful response even if setActiveWalletId fails (failures are logged, not propagated)", async () => {
+    const record = emptyRecord();
+    const deps = makeDeps(record, new Map(), {
+      setActiveWalletId: (...args: Parameters<FundDeploymentWalletDeps["setActiveWalletId"]>) => {
+        record.setActiveWalletId.push({ args });
+        return err({ message: "EACCES" });
+      },
+    });
+
+    const result = await fundDeploymentWalletHandler(baseInput, deps);
+
+    // The transfer ran; the response carries structuredContent with no isError.
+    expect(record.executeTransfer).toHaveLength(1);
+    expect((result as { isError?: boolean }).isError).toBeUndefined();
+    const sc = (result as { structuredContent?: Record<string, unknown> }).structuredContent;
+    expect(sc?.["wallet_id"]).toBe("wallet-uuid-1");
   });
 });

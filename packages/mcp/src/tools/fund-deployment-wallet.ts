@@ -15,6 +15,7 @@ import {
   parseCaip2,
   setActiveWalletId,
   setLastDeploymentWalletId,
+  type ToolResponse,
   toToolResponseAsync,
 } from "@printr/sdk";
 import { Keypair } from "@solana/web3.js";
@@ -52,7 +53,12 @@ function getDeploymentPassword(): Result<string, FundError> {
   return ok(password);
 }
 
-function verifyKeystoreWritable(): ResultAsync<void, FundError> {
+/**
+ * Pre-flight check that the keystore directory exists and is writable.
+ * Exported so it can be substituted in specs (e.g. always-ok or always-err)
+ * without touching the host filesystem.
+ */
+export function verifyKeystoreWritable(): ResultAsync<void, FundError> {
   const path = keystorePath();
   const dir = dirname(path);
   try {
@@ -120,13 +126,19 @@ export function buildTxField(
   return result.type === "svm" ? { tx_signature: result.signature } : { tx_hash: result.tx_hash };
 }
 
-type PersistedWallet = {
+export type PersistedWallet = {
   wallet_id: string;
   privateKey: string;
   address: string;
 };
 
-function persistWallet(
+/**
+ * Generate a fresh wallet, save it to the encrypted keystore, and return the
+ * persisted record. Exported so callers (and specs) can pre-stage a wallet
+ * before funding — the production handler calls this before `executeTransfer`
+ * so a keystore failure aborts before money moves.
+ */
+export function persistWallet(
   masterPassword: string,
   chain: string,
   type: ChainType,
@@ -167,7 +179,13 @@ const outputSchema = z.object({
   wallet_id: z.string().describe("Keystore wallet ID for the persisted wallet"),
 });
 
-function validateInputs(chain: string): Result<
+/**
+ * Resolve everything the funding pipeline needs from the chain identifier:
+ * `ChainType`, treasury key, chain metadata, parsed CAIP-2, and the master
+ * password. Exported so specs can stub canned inputs without touching env
+ * or the treasury wallet store.
+ */
+export function validateInputs(chain: string): Result<
   {
     type: ChainType;
     treasuryKey: string;
@@ -201,7 +219,124 @@ function validateInputs(chain: string): Result<
   });
 }
 
+// ---------------------------------------------------------------------------
+// Deps + handler
+// ---------------------------------------------------------------------------
+
+/** Validated input shape passed to the registered tool handler. */
+export type FundDeploymentWalletInput = z.infer<typeof inputSchema>;
+
+type ActiveWalletRecord = { privateKey: string; address: string };
+
+export type VerifyKeystoreWritableFn = typeof verifyKeystoreWritable;
+export type ValidateInputsFn = typeof validateInputs;
+export type PersistWalletFn = typeof persistWallet;
+export type ExecuteTransferFn = typeof executeTransfer;
+
+/**
+ * Capability bundle for the `printr_fund_deployment_wallet` handler. Each
+ * I/O step is a dep so specs can fault-inject at the keystore / validation
+ * / persistence / transfer / post-funding-state seams without touching real
+ * disk, the keystore, or any RPC.
+ */
+export type FundDeploymentWalletDeps = {
+  verifyKeystoreWritable: VerifyKeystoreWritableFn;
+  validateInputs: ValidateInputsFn;
+  persistWallet: PersistWalletFn;
+  executeTransfer: ExecuteTransferFn;
+  /** In-memory active wallet store (defaults to the session-wide map). */
+  activeWallets: Map<ChainType, ActiveWalletRecord>;
+  /** Persist the active wallet id; best-effort, errors are logged not propagated. */
+  setActiveWalletId: typeof setActiveWalletId;
+  /** Persist the last-deployment wallet id; best-effort, errors are logged not propagated. */
+  setLastDeploymentWalletId: typeof setLastDeploymentWalletId;
+};
+
+/** Build production-wired deps for {@link fundDeploymentWalletHandler}. */
+export function createFundDeploymentWalletDeps(): FundDeploymentWalletDeps {
+  return {
+    verifyKeystoreWritable,
+    validateInputs,
+    persistWallet,
+    executeTransfer,
+    activeWallets,
+    setActiveWalletId,
+    setLastDeploymentWalletId,
+  };
+}
+
+/**
+ * `printr_fund_deployment_wallet` handler. Runs five gated steps:
+ * 1. keystore is writable (else abort before generating any key)
+ * 2. inputs validate (master password + treasury key + chain meta + parsed CAIP-2)
+ * 3. fresh wallet persists to keystore (before any funds move)
+ * 4. treasury → new wallet transfer executes
+ * 5. active-wallet + last-deployment state writes (best-effort; failures logged)
+ *
+ * Steps 1-4 short-circuit on error so funds never move if any precondition
+ * fails. The final output projects via {@link buildTxField} so only the
+ * chain-specific tx id appears.
+ */
+export function fundDeploymentWalletHandler(
+  input: FundDeploymentWalletInput,
+  deps: FundDeploymentWalletDeps,
+): Promise<ToolResponse<Record<string, unknown>>> {
+  const { chain, amount } = input;
+  return toToolResponseAsync(
+    deps
+      .verifyKeystoreWritable()
+      .andThen(() => deps.validateInputs(chain))
+      .andThen(({ type, treasuryKey, meta, parsed, masterPassword }) =>
+        deps.persistWallet(masterPassword, chain, type).map((wallet) => ({
+          type,
+          treasuryKey,
+          meta,
+          parsed,
+          wallet,
+        })),
+      )
+      .andThen(({ type, treasuryKey, meta, parsed, wallet }) =>
+        deps
+          .executeTransfer(
+            parsed.namespace,
+            parsed.chainRef,
+            wallet.address,
+            amount,
+            treasuryKey,
+            meta,
+          )
+          .map((result) => {
+            deps.activeWallets.set(type, {
+              privateKey: wallet.privateKey,
+              address: wallet.address,
+            });
+            deps
+              .setActiveWalletId(type, wallet.wallet_id)
+              .mapErr((e) =>
+                logger.warn({ error: e.message }, "Failed to persist active wallet ID"),
+              );
+            deps
+              .setLastDeploymentWalletId(wallet.wallet_id)
+              .mapErr((e) =>
+                logger.warn({ error: e.message }, "Failed to persist deployment wallet ID"),
+              );
+            return {
+              address: wallet.address,
+              chain,
+              chain_name: meta.name,
+              amount_funded: amount,
+              amount_atomic: result.amount_atomic,
+              symbol: meta.symbol,
+              ...buildTxField(result),
+              wallet_id: wallet.wallet_id,
+            };
+          }),
+      ),
+  );
+}
+
 export function registerFundDeploymentWalletTool(server: McpServer): void {
+  const deps = createFundDeploymentWalletDeps();
   server.registerTool(
     "printr_fund_deployment_wallet",
     {
@@ -214,54 +349,8 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_fund_deployment_wallet", ({ chain, amount }) =>
-      toToolResponseAsync(
-        // 1. Validate keystore is writable (prevents fund loss)
-        verifyKeystoreWritable()
-          // 2. Validate all inputs including master password
-          .andThen(() => validateInputs(chain))
-          // 3. Persist wallet BEFORE funding (prevents fund loss if persistence fails)
-          .andThen(({ type, treasuryKey, meta, parsed, masterPassword }) =>
-            persistWallet(masterPassword, chain, type).map((wallet) => ({
-              type,
-              treasuryKey,
-              meta,
-              parsed,
-              wallet,
-            })),
-          )
-          // 4. Transfer funds only AFTER wallet is safely persisted
-          .andThen(({ type, treasuryKey, meta, parsed, wallet }) =>
-            executeTransfer(
-              parsed.namespace,
-              parsed.chainRef,
-              wallet.address,
-              amount,
-              treasuryKey,
-              meta,
-            ).map((result) => {
-              // 5. Set as active wallet for immediate use (in-memory)
-              activeWallets.set(type, { privateKey: wallet.privateKey, address: wallet.address });
-              // 6. Persist active wallet ID and deployment wallet ID for recovery (best effort)
-              setActiveWalletId(type, wallet.wallet_id).mapErr((e) =>
-                logger.warn({ error: e.message }, "Failed to persist active wallet ID"),
-              );
-              setLastDeploymentWalletId(wallet.wallet_id).mapErr((e) =>
-                logger.warn({ error: e.message }, "Failed to persist deployment wallet ID"),
-              );
-              return {
-                address: wallet.address,
-                chain,
-                chain_name: meta.name,
-                amount_funded: amount,
-                amount_atomic: result.amount_atomic,
-                symbol: meta.symbol,
-                ...buildTxField(result),
-                wallet_id: wallet.wallet_id,
-              };
-            }),
-          ),
-      ),
+    logToolExecution("printr_fund_deployment_wallet", (input) =>
+      fundDeploymentWalletHandler(input as FundDeploymentWalletInput, deps),
     ),
   );
 }
