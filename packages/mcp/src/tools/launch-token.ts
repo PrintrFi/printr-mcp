@@ -163,7 +163,13 @@ function mapErr(e: unknown): PrintrApiError {
   return new PrintrApiError(0, e instanceof Error ? e.message : String(e));
 }
 
-function isEvmPayload(payload: unknown): payload is EvmPayload {
+/**
+ * Distinguish an EVM build response payload from an SVM one. EVM payloads
+ * carry a `calldata` field; SVM payloads carry instructions. Exported so the
+ * spec can lock in the discriminator a regression to "is SVM" would silently
+ * route signing wrong otherwise.
+ */
+export function isEvmPayload(payload: unknown): payload is EvmPayload {
   return typeof payload === "object" && payload !== null && "calldata" in payload;
 }
 
@@ -235,12 +241,19 @@ function openWebSigner(
   );
 }
 
-type DrainOutcome =
+export type DrainOutcome =
   | { status: "ok"; walletId: string }
   | { status: "failed"; walletId: string; error: string }
   | { status: "skipped" };
 
-function drainFields(outcome: DrainOutcome) {
+/**
+ * Project a {@link DrainOutcome} into the subset of `printr_launch_token`
+ * output fields it controls. `ok` and `failed` always include the wallet id
+ * so the orchestrator can retry a failed drain manually; `skipped` drops the
+ * id entirely. Exported for spec coverage so a regression to "always emit
+ * drain_wallet_id" or "swallow drain_error" gets caught at the unit level.
+ */
+export function drainFields(outcome: DrainOutcome) {
   return match(outcome)
     .with({ status: "ok" }, ({ walletId }) => ({
       drain_status: "ok" as const,
