@@ -38,6 +38,10 @@
       "types": "./dist/balance.d.ts",
       "import": "./dist/balance.js"
     },
+    "./balance-lite": {
+      "types": "./dist/balance-lite.d.ts",
+      "import": "./dist/balance-lite.js"
+    },
     "./transfer": {
       "types": "./dist/transfer.d.ts",
       "import": "./dist/transfer.js"
