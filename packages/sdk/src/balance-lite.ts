@@ -69,7 +69,9 @@ function rpcCall(rpcUrl: string, method: string, params: readonly unknown[]) {
  * care about without pulling viem into the bundle.
  */
 export function formatUnits(value: bigint, decimals: number): string {
-  if (decimals === 0) return value.toString();
+  if (decimals === 0) {
+    return value.toString();
+  }
   const s = value.toString();
   const negative = s.startsWith("-");
   const digits = negative ? s.slice(1) : s;
@@ -105,7 +107,9 @@ function decodeUint(hex: string): bigint {
  */
 function decodeAbiString(hex: string): string {
   const data = stripHexPrefix(hex);
-  if (data.length === 0) return "";
+  if (data.length === 0) {
+    return "";
+  }
 
   // Dynamic string: offset (32 bytes) + length (32 bytes) + UTF-8 payload.
   if (data.length >= 128) {
@@ -126,7 +130,9 @@ function decodeAbiString(hex: string): string {
     const bytes: number[] = [];
     for (let i = 0; i < 64; i += 2) {
       const byte = Number.parseInt(data.slice(i, i + 2), 16);
-      if (byte === 0) break;
+      if (byte === 0) {
+        break;
+      }
       bytes.push(byte);
     }
     return String.fromCharCode(...bytes);
@@ -236,7 +242,9 @@ export function getSvmNativeBalanceLite(
 ): ResultAsync<SimpleBalanceResult, BalanceError> {
   return rpcCall(rpcUrl, "getBalance", [address]).andThen((raw) => {
     const parsed = SvmGetBalanceSchema.safeParse(raw);
-    if (!parsed.success) return err<SimpleBalanceResult, BalanceError>("fetch_failed");
+    if (!parsed.success) {
+      return err<SimpleBalanceResult, BalanceError>("fetch_failed");
+    }
     const lamports = BigInt(parsed.data.value);
     return ok({
       balance_atomic: lamports.toString(),
@@ -263,7 +271,9 @@ export function getSplTokenBalanceLite(
     { encoding: "jsonParsed" },
   ]).andThen((raw) => {
     const parsed = SvmTokenAccountsSchema.safeParse(raw);
-    if (!parsed.success) return err<SimpleBalanceResult, BalanceError>("fetch_failed");
+    if (!parsed.success) {
+      return err<SimpleBalanceResult, BalanceError>("fetch_failed");
+    }
     const first = parsed.data.value[0];
     if (!first) {
       return ok({ balance_atomic: "0", balance_formatted: "0", symbol: "SPL", decimals: 0 });
@@ -296,7 +306,9 @@ export function fetchNativeBalanceLite(
 ): ResultAsync<SimpleBalanceResult, BalanceError> {
   const caip2 = namespace === "solana" ? SOLANA_MAINNET_CAIP2 : toCaip2(namespace, chainRef);
   const rpcResult = resolveRpcUrlLite(caip2, rpcOverride);
-  if (rpcResult.isErr()) return errAsync(rpcResult.error);
+  if (rpcResult.isErr()) {
+    return errAsync(rpcResult.error);
+  }
   return namespace === "solana"
     ? getSvmNativeBalanceLite(address, rpcResult.value)
     : getEvmNativeBalanceLite(address as `0x${string}`, rpcResult.value, meta);
@@ -317,7 +329,9 @@ export function fetchTokenBalanceLite(
 ): ResultAsync<SimpleBalanceResult, BalanceError> {
   const caip2 = namespace === "solana" ? SOLANA_MAINNET_CAIP2 : toCaip2(namespace, chainRef);
   const rpcResult = resolveRpcUrlLite(caip2, rpcOverride);
-  if (rpcResult.isErr()) return errAsync(rpcResult.error);
+  if (rpcResult.isErr()) {
+    return errAsync(rpcResult.error);
+  }
   return namespace === "solana"
     ? getSplTokenBalanceLite(tokenAddress, walletAddress, rpcResult.value)
     : getEvmTokenBalanceLite(

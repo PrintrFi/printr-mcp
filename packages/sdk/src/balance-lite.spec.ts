@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { getChainMeta } from "./chains.js";
 import {
   formatUnits,
   getEvmNativeBalanceLite,
@@ -7,6 +6,7 @@ import {
   getSplTokenBalanceLite,
   getSvmNativeBalanceLite,
 } from "./balance-lite.js";
+import { getChainMeta } from "./chains.js";
 
 // ---------------------------------------------------------------------------
 // fetch stub
@@ -63,7 +63,9 @@ describe("formatUnits", () => {
 
 describe("getEvmNativeBalanceLite", () => {
   const base = getChainMeta("eip155:8453");
-  if (!base) throw new Error("Base chain meta missing");
+  if (!base) {
+    throw new Error("Base chain meta missing");
+  }
 
   it("decodes hex balance and formats with chain decimals", async () => {
     stubFetch(() => "0x0de0b6b3a7640000"); // 1e18 wei
@@ -96,7 +98,9 @@ describe("getEvmNativeBalanceLite", () => {
 
 describe("getEvmTokenBalanceLite", () => {
   const base = getChainMeta("eip155:8453");
-  if (!base) throw new Error("Base chain meta missing");
+  if (!base) {
+    throw new Error("Base chain meta missing");
+  }
 
   it("decodes balance, decimals, and symbol from three eth_call results", async () => {
     // 100.5 USDC at 6 decimals = 100_500_000 atomic
