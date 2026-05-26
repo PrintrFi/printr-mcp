@@ -38,7 +38,25 @@ function getDeploymentPassword(): Result<string, DrainError> {
   return ok(password);
 }
 
-function resolveWallet(type: ChainType, walletId?: string): Result<ResolvedWallet, DrainError> {
+/**
+ * Resolve which deployment wallet to drain. Priority chain:
+ * 1. `walletId` parameter — explicit caller-supplied wallet id is decrypted
+ *    from the keystore
+ * 2. In-memory active wallet — set by `printr_fund_deployment_wallet` in the
+ *    current session; passes through without keystore access
+ * 3. Persisted active wallet id — recovered after MCP restart from the
+ *    on-disk state; decrypted via `PRINTR_DEPLOYMENT_PASSWORD`
+ * 4. Last-deployment wallet id — final fallback for orphan recovery when
+ *    the active wallet was cleared but a deployment remained pending
+ *
+ * Exported so specs can drive each priority branch in isolation by stubbing
+ * the priority-relevant primitive (param, `activeWallets` map, persisted
+ * state, etc.).
+ */
+export function resolveWallet(
+  type: ChainType,
+  walletId?: string,
+): Result<ResolvedWallet, DrainError> {
   // Priority 1: Explicit wallet_id parameter
   if (walletId) {
     return getDeploymentPassword().andThen((password) => {
@@ -157,7 +175,102 @@ const outputSchema = z.object({
   wallet_id: z.string().describe("Keystore wallet ID that was drained"),
 });
 
+// ---------------------------------------------------------------------------
+// Deps + handler
+// ---------------------------------------------------------------------------
+
+/** Validated input shape passed to the registered tool handler. */
+export type DrainDeploymentWalletInput = z.infer<typeof inputSchema>;
+
+export type ResolveWalletFn = typeof resolveWallet;
+export type GetTreasuryKeyOrErrorFn = typeof getTreasuryKeyOrError;
+export type GetChainMetaFn = typeof getChainMeta;
+export type GetEvmConfigFn = typeof getEvmConfig;
+export type DrainSvmFn = typeof drainSvm;
+export type DrainEvmFn = typeof drainEvm;
+
+/**
+ * Capability bundle for the `printr_drain_deployment_wallet` handler. Each
+ * I/O step is a dep so specs can drive the priority chain in `resolveWallet`
+ * and the treasury / chain-config / drain dispatch independently of the
+ * keystore, in-memory state, and real signing.
+ */
+export type DrainDeploymentWalletDeps = {
+  resolveWallet: ResolveWalletFn;
+  getTreasuryKeyOrError: GetTreasuryKeyOrErrorFn;
+  getChainMeta: GetChainMetaFn;
+  getEvmConfig: GetEvmConfigFn;
+  drainSvm: DrainSvmFn;
+  drainEvm: DrainEvmFn;
+};
+
+/** Build production-wired deps for {@link drainDeploymentWalletHandler}. */
+export function createDrainDeploymentWalletDeps(): DrainDeploymentWalletDeps {
+  return {
+    resolveWallet,
+    getTreasuryKeyOrError,
+    getChainMeta,
+    getEvmConfig,
+    drainSvm,
+    drainEvm,
+  };
+}
+
+/**
+ * `printr_drain_deployment_wallet` handler. Dispatch order:
+ * 1. resolve the wallet via the four-tier priority chain
+ * 2. require a treasury key for the chain (else surface the treasury error)
+ * 3. require known chain metadata
+ * 4. dispatch SVM directly to `drainSvm`; EVM resolves an `EvmConfig` first
+ *    (chainId + rpc) and dispatches to `drainEvm`
+ */
+export function drainDeploymentWalletHandler(
+  input: DrainDeploymentWalletInput,
+  deps: DrainDeploymentWalletDeps,
+) {
+  const { chain, keep_minimum, wallet_id } = input;
+  const chainType = chainTypeFromCaip2(chain);
+  const keepMin = keep_minimum ?? "0";
+
+  return deps
+    .resolveWallet(chainType, wallet_id)
+    .asyncAndThen((wallet) => {
+      const treasuryResult = deps.getTreasuryKeyOrError(chainType);
+      if ("error" in treasuryResult) {
+        return errAsync<DrainResult, DrainError>({ message: treasuryResult.error });
+      }
+
+      const meta = deps.getChainMeta(chain);
+      if (!meta) {
+        return errAsync<DrainResult, DrainError>({ message: `Unsupported chain: ${chain}` });
+      }
+
+      return match(chainType)
+        .with("svm", () => deps.drainSvm(wallet, treasuryResult.key, parseFloat(keepMin), meta))
+        .with("evm", () => {
+          const evmConfig = deps.getEvmConfig(chain);
+          if ("error" in evmConfig) {
+            return errAsync<DrainResult, DrainError>({ message: evmConfig.error });
+          }
+          return deps.drainEvm(
+            wallet,
+            treasuryResult.key,
+            keepMin,
+            meta,
+            evmConfig.chainId,
+            evmConfig.rpc,
+          );
+        })
+        .exhaustive();
+    })
+    .match(
+      (result: DrainResult) => toolOk(result),
+      (e: DrainError) => toolError(e.message),
+    );
+}
+
 export function registerDrainDeploymentWalletTool(server: McpServer): void {
+  const deps = createDrainDeploymentWalletDeps();
   server.registerTool(
     "printr_drain_deployment_wallet",
     {
@@ -170,44 +283,8 @@ export function registerDrainDeploymentWalletTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_drain_deployment_wallet", ({ chain, keep_minimum, wallet_id }) => {
-      const chainType = chainTypeFromCaip2(chain);
-      const keepMin = keep_minimum ?? "0";
-
-      return resolveWallet(chainType, wallet_id)
-        .asyncAndThen((wallet) => {
-          const treasuryResult = getTreasuryKeyOrError(chainType);
-          if ("error" in treasuryResult) {
-            return errAsync<DrainResult, DrainError>({ message: treasuryResult.error });
-          }
-
-          const meta = getChainMeta(chain);
-          if (!meta) {
-            return errAsync<DrainResult, DrainError>({ message: `Unsupported chain: ${chain}` });
-          }
-
-          return match(chainType)
-            .with("svm", () => drainSvm(wallet, treasuryResult.key, parseFloat(keepMin), meta))
-            .with("evm", () => {
-              const evmConfig = getEvmConfig(chain);
-              if ("error" in evmConfig) {
-                return errAsync<DrainResult, DrainError>({ message: evmConfig.error });
-              }
-              return drainEvm(
-                wallet,
-                treasuryResult.key,
-                keepMin,
-                meta,
-                evmConfig.chainId,
-                evmConfig.rpc,
-              );
-            })
-            .exhaustive();
-        })
-        .match(
-          (result: DrainResult) => toolOk(result),
-          (e: DrainError) => toolError(e.message),
-        );
-    }),
+    logToolExecution("printr_drain_deployment_wallet", (input) =>
+      drainDeploymentWalletHandler(input as DrainDeploymentWalletInput, deps),
+    ),
   );
 }
