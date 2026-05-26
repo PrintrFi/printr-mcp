@@ -65,7 +65,14 @@ type ClaimContext = {
   deploymentWallet?: DeploymentWallet | undefined;
 };
 
-function toEvmPayload(payload: PayloadEVM, chainId: string): EvmPayload {
+/**
+ * Translate a fees-API EVM payload into the SDK's `EvmPayload` shape used by
+ * `signAndSubmitEvm`. Builds the CAIP-10 `to` from the chain id + `txTo`,
+ * defaults `value` to `"0"` and `gas_limit` to 200000 when the source omits
+ * them. Exported so a regression to "defaults to 0 gas" gets caught at unit
+ * level rather than on chain.
+ */
+export function toEvmPayload(payload: PayloadEVM, chainId: string): EvmPayload {
   return {
     to: `${chainId}:${payload.txTo}`,
     calldata: payload.calldata,
@@ -74,7 +81,13 @@ function toEvmPayload(payload: PayloadEVM, chainId: string): EvmPayload {
   };
 }
 
-function toSvmPayload(payload: PayloadSolana): SvmPayload {
+/**
+ * Translate a fees-API Solana payload into the SDK's `SvmPayload` shape.
+ * Optional address fields are coerced to `""` rather than dropped so the
+ * downstream signer always sees a string. Exported for spec coverage of the
+ * instruction / account / mint normalisation paths.
+ */
+export function toSvmPayload(payload: PayloadSolana): SvmPayload {
   return {
     ixs: payload.ixs.map((ix) => ({
       program_id: ix.programId?.address || "",
