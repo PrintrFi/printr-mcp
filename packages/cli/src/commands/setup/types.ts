@@ -1,3 +1,5 @@
+import type { ClientId } from "./lib/clients.js";
+
 export type Runtime = "bun" | "node";
 export type StepStatus = "running" | "ok" | "warn" | "skip" | "error";
 
@@ -17,7 +19,7 @@ export interface McpEntry {
 export type ConfigureResult = "configured" | "already_configured" | "not_detected" | "failed";
 
 export interface ClientDef {
-  id: string;
+  id: ClientId;
   label: string;
   detect(): boolean;
   configure(entry: McpEntry, runtime: Runtime): ConfigureResult;

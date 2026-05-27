@@ -1,20 +1,45 @@
 import { render } from "ink";
 import { createElement } from "react";
+import { z } from "zod";
 import { SkillApp } from "./app.js";
-import { ALL_AGENT_IDS } from "./lib/agents.js";
+import { type AgentId, AgentIdSchema } from "./lib/agents.js";
 
-function parseSkillArgs(args: string[]): string[] | null {
-  const agentIds: string[] = [];
+const RawSkillArgsSchema = z.object({
+  agents: z.array(z.string()).default([]),
+});
+
+type RawSkillArgs = z.infer<typeof RawSkillArgsSchema>;
+
+function tokenize(args: string[]): RawSkillArgs {
+  const agents: string[] = [];
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === "--agent" || arg === "-a") {
       const value = args[++i];
-      if (value && ALL_AGENT_IDS.includes(value)) {
-        agentIds.push(value);
+      if (value) {
+        agents.push(value);
       }
+    } else if (arg?.startsWith("--agent=")) {
+      agents.push(arg.slice("--agent=".length));
     }
   }
-  return agentIds.length > 0 ? agentIds : null;
+  return { agents };
+}
+
+function parseSkillArgs(args: string[]): AgentId[] | null {
+  const raw = tokenize(args);
+  const valid: AgentId[] = [];
+  for (const candidate of raw.agents) {
+    const parsed = AgentIdSchema.safeParse(candidate);
+    if (parsed.success) {
+      valid.push(parsed.data);
+    } else {
+      process.stderr.write(
+        `Warning: ignoring unknown --agent "${candidate}". Valid: ${AgentIdSchema.options.join(", ")}\n`,
+      );
+    }
+  }
+  return valid.length > 0 ? valid : null;
 }
 
 export async function runSkillInstall(args: string[]): Promise<void> {

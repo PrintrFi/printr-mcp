@@ -1,17 +1,27 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { err, ok, type Result } from "neverthrow";
+import { z } from "zod";
 import { commandExists } from "../../setup/lib/clients.js";
 
+export const AGENT_IDS = ["claude-code", "cursor", "gemini", "local"] as const;
+
+export const AgentIdSchema = z.enum(AGENT_IDS);
+
+export type AgentId = z.infer<typeof AgentIdSchema>;
+
 export type AgentDef = {
-  id: string;
+  id: AgentId;
   label: string;
   detect: () => boolean;
   /** Path to SKILL.md inside the skill directory */
   skillPath: () => string;
 };
 
-export type InstallResult = "installed" | "already_exists" | "failed";
+export type InstallSuccess = { kind: "installed" | "already_exists"; path: string };
+
+export type InstallFailure = { kind: "write_failed"; path: string; cause: unknown };
 
 /**
  * Agent Skills standard locations:
@@ -48,18 +58,24 @@ export const AGENTS: AgentDef[] = [
   },
 ];
 
-export const ALL_AGENT_IDS = AGENTS.map((a) => a.id);
-
-export function installSkill(agent: AgentDef, content: string): InstallResult {
+/**
+ * Write SKILL.md to the agent's expected location. Returns the resolved path
+ * alongside a discriminated `kind`, or a `write_failed` failure preserving
+ * the underlying cause so callers can render a precise error.
+ */
+export function installSkill(
+  agent: AgentDef,
+  content: string,
+): Result<InstallSuccess, InstallFailure> {
+  const path = agent.skillPath();
+  if (existsSync(path)) {
+    return ok({ kind: "already_exists", path });
+  }
   try {
-    const path = agent.skillPath();
-    if (existsSync(path)) {
-      return "already_exists";
-    }
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, content);
-    return "installed";
-  } catch {
-    return "failed";
+    return ok({ kind: "installed", path });
+  } catch (cause) {
+    return err({ kind: "write_failed", path, cause });
   }
 }
