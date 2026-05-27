@@ -8,10 +8,8 @@ import {
   getEvmConfig,
   getLastDeploymentWalletId,
   getWallet,
-  toolError,
-  toolOk,
 } from "@printr/sdk";
-import { err, errAsync, ok, type Result } from "neverthrow";
+import { err, errAsync, ok, type Result, type ResultAsync } from "neverthrow";
 import { match } from "ts-pattern";
 import { z } from "zod";
 import {
@@ -22,7 +20,7 @@ import {
   type ResolvedWallet,
 } from "~/lib/drain.js";
 import { env } from "~/lib/env.js";
-import { logToolExecution } from "~/lib/logging.js";
+import { type HandlerCtx, handler } from "~/lib/handler.js";
 import { getTreasuryKeyOrError } from "~/lib/treasury.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
@@ -38,83 +36,74 @@ function getDeploymentPassword(): Result<string, DrainError> {
   return ok(password);
 }
 
-function resolveWallet(type: ChainType, walletId?: string): Result<ResolvedWallet, DrainError> {
-  // Priority 1: Explicit wallet_id parameter
+type KeystoreLookup = {
+  /** Label for the not-found error (e.g. "Wallet", "Previously active wallet"). */
+  notFoundLabel: string;
+  /** Message body for a decrypt-failure error. */
+  decryptFailMessage: string;
+};
+
+function decryptFromKeystore(
+  walletId: string,
+  labels: KeystoreLookup,
+): Result<ResolvedWallet, DrainError> {
+  return getDeploymentPassword().andThen((password) => {
+    const entry = getWallet(walletId);
+    if (!entry) {
+      return err({
+        message: `${labels.notFoundLabel} ${walletId} not found in keystore. It may have been removed.`,
+      });
+    }
+    return decryptKey(entry, password)
+      .map((privateKey) => ({ privateKey, address: entry.address, walletId: entry.id }))
+      .mapErr((): DrainError => ({ message: labels.decryptFailMessage }));
+  });
+}
+
+/**
+ * Resolve which deployment wallet to drain. Priority:
+ * 1. explicit `walletId` param (decrypted from keystore)
+ * 2. in-memory active wallet (set by `printr_fund_deployment_wallet`)
+ * 3. persisted active wallet id (post-restart recovery)
+ * 4. last-deployment wallet id (orphan recovery)
+ */
+export function resolveWallet(
+  type: ChainType,
+  walletId?: string,
+): Result<ResolvedWallet, DrainError> {
   if (walletId) {
-    return getDeploymentPassword().andThen((password) => {
-      const entry = getWallet(walletId);
-      if (!entry) {
-        return err({ message: `Wallet not found in keystore: ${walletId}` });
-      }
-      return decryptKey(entry, password)
-        .map((privateKey) => ({ privateKey, address: entry.address, walletId: entry.id }))
-        .mapErr(
-          () =>
-            ({
-              message:
-                "Failed to decrypt wallet. Check that PRINTR_DEPLOYMENT_PASSWORD matches " +
-                "the password used when the wallet was created.",
-            }) as DrainError,
-        );
+    return decryptFromKeystore(walletId, {
+      notFoundLabel: "Wallet",
+      decryptFailMessage:
+        "Failed to decrypt wallet. Check that PRINTR_DEPLOYMENT_PASSWORD matches " +
+        "the password used when the wallet was created.",
     });
   }
 
-  // Priority 2: In-memory active wallet (current session)
   const memoryWallet = activeWallets.get(type);
   if (memoryWallet) {
-    const activeId = getActiveWalletId(type);
     return ok({
       privateKey: memoryWallet.privateKey,
       address: memoryWallet.address,
-      walletId: activeId ?? "unknown",
+      walletId: getActiveWalletId(type) ?? "unknown",
     });
   }
 
-  // Priority 3: Persisted active wallet ID (after restart recovery)
   const persistedActiveId = getActiveWalletId(type);
   if (persistedActiveId) {
-    return getDeploymentPassword().andThen((password) => {
-      const entry = getWallet(persistedActiveId);
-      if (!entry) {
-        return err({
-          message:
-            `Previously active wallet ${persistedActiveId} not found in keystore. ` +
-            "It may have been removed.",
-        });
-      }
-      return decryptKey(entry, password)
-        .map((privateKey) => ({ privateKey, address: entry.address, walletId: entry.id }))
-        .mapErr(
-          () =>
-            ({
-              message:
-                "Failed to decrypt previously active wallet. Check PRINTR_DEPLOYMENT_PASSWORD.",
-            }) as DrainError,
-        );
+    return decryptFromKeystore(persistedActiveId, {
+      notFoundLabel: "Previously active wallet",
+      decryptFailMessage:
+        "Failed to decrypt previously active wallet. Check PRINTR_DEPLOYMENT_PASSWORD.",
     });
   }
 
-  // Priority 4: Last deployment wallet ID (fallback recovery)
   const lastDeploymentId = getLastDeploymentWalletId();
   if (lastDeploymentId) {
-    return getDeploymentPassword().andThen((password) => {
-      const entry = getWallet(lastDeploymentId);
-      if (!entry) {
-        return err({
-          message:
-            `Last deployment wallet ${lastDeploymentId} not found in keystore. ` +
-            "It may have been removed.",
-        });
-      }
-      return decryptKey(entry, password)
-        .map((privateKey) => ({ privateKey, address: entry.address, walletId: entry.id }))
-        .mapErr(
-          () =>
-            ({
-              message:
-                "Failed to decrypt last deployment wallet. Check PRINTR_DEPLOYMENT_PASSWORD.",
-            }) as DrainError,
-        );
+    return decryptFromKeystore(lastDeploymentId, {
+      notFoundLabel: "Last deployment wallet",
+      decryptFailMessage:
+        "Failed to decrypt last deployment wallet. Check PRINTR_DEPLOYMENT_PASSWORD.",
     });
   }
 
@@ -157,6 +146,77 @@ const outputSchema = z.object({
   wallet_id: z.string().describe("Keystore wallet ID that was drained"),
 });
 
+export type DrainDeploymentWalletInput = z.infer<typeof inputSchema>;
+
+export type ResolveWalletFn = typeof resolveWallet;
+export type GetTreasuryKeyOrErrorFn = typeof getTreasuryKeyOrError;
+export type GetChainMetaFn = typeof getChainMeta;
+export type GetEvmConfigFn = typeof getEvmConfig;
+export type DrainSvmFn = typeof drainSvm;
+export type DrainEvmFn = typeof drainEvm;
+
+export type DrainDeploymentWalletDeps = {
+  resolveWallet: ResolveWalletFn;
+  getTreasuryKeyOrError: GetTreasuryKeyOrErrorFn;
+  getChainMeta: GetChainMetaFn;
+  getEvmConfig: GetEvmConfigFn;
+  drainSvm: DrainSvmFn;
+  drainEvm: DrainEvmFn;
+};
+
+export function createDrainDeploymentWalletDeps(): DrainDeploymentWalletDeps {
+  return {
+    resolveWallet,
+    getTreasuryKeyOrError,
+    getChainMeta,
+    getEvmConfig,
+    drainSvm,
+    drainEvm,
+  };
+}
+
+export function drainDeploymentWalletHandler({
+  input,
+  deps,
+}: HandlerCtx<DrainDeploymentWalletInput, DrainDeploymentWalletDeps>): ResultAsync<
+  DrainResult,
+  DrainError
+> {
+  const { chain, keep_minimum, wallet_id } = input;
+  const chainType = chainTypeFromCaip2(chain);
+  const keepMin = keep_minimum ?? "0";
+
+  return deps.resolveWallet(chainType, wallet_id).asyncAndThen((wallet) => {
+    const treasuryResult = deps.getTreasuryKeyOrError(chainType);
+    if ("error" in treasuryResult) {
+      return errAsync<DrainResult, DrainError>({ message: treasuryResult.error });
+    }
+
+    const meta = deps.getChainMeta(chain);
+    if (!meta) {
+      return errAsync<DrainResult, DrainError>({ message: `Unsupported chain: ${chain}` });
+    }
+
+    return match(chainType)
+      .with("svm", () => deps.drainSvm(wallet, treasuryResult.key, parseFloat(keepMin), meta))
+      .with("evm", () => {
+        const evmConfig = deps.getEvmConfig(chain);
+        if ("error" in evmConfig) {
+          return errAsync<DrainResult, DrainError>({ message: evmConfig.error });
+        }
+        return deps.drainEvm(
+          wallet,
+          treasuryResult.key,
+          keepMin,
+          meta,
+          evmConfig.chainId,
+          evmConfig.rpc,
+        );
+      })
+      .exhaustive();
+  });
+}
+
 export function registerDrainDeploymentWalletTool(server: McpServer): void {
   server.registerTool(
     "printr_drain_deployment_wallet",
@@ -170,44 +230,9 @@ export function registerDrainDeploymentWalletTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_drain_deployment_wallet", ({ chain, keep_minimum, wallet_id }) => {
-      const chainType = chainTypeFromCaip2(chain);
-      const keepMin = keep_minimum ?? "0";
-
-      return resolveWallet(chainType, wallet_id)
-        .asyncAndThen((wallet) => {
-          const treasuryResult = getTreasuryKeyOrError(chainType);
-          if ("error" in treasuryResult) {
-            return errAsync<DrainResult, DrainError>({ message: treasuryResult.error });
-          }
-
-          const meta = getChainMeta(chain);
-          if (!meta) {
-            return errAsync<DrainResult, DrainError>({ message: `Unsupported chain: ${chain}` });
-          }
-
-          return match(chainType)
-            .with("svm", () => drainSvm(wallet, treasuryResult.key, parseFloat(keepMin), meta))
-            .with("evm", () => {
-              const evmConfig = getEvmConfig(chain);
-              if ("error" in evmConfig) {
-                return errAsync<DrainResult, DrainError>({ message: evmConfig.error });
-              }
-              return drainEvm(
-                wallet,
-                treasuryResult.key,
-                keepMin,
-                meta,
-                evmConfig.chainId,
-                evmConfig.rpc,
-              );
-            })
-            .exhaustive();
-        })
-        .match(
-          (result: DrainResult) => toolOk(result),
-          (e: DrainError) => toolError(e.message),
-        );
-    }),
+    handler(
+      "printr_drain_deployment_wallet",
+      drainDeploymentWalletHandler,
+    )(createDrainDeploymentWalletDeps()),
   );
 }

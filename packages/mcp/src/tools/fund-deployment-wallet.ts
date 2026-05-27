@@ -15,7 +15,6 @@ import {
   parseCaip2,
   setActiveWalletId,
   setLastDeploymentWalletId,
-  toToolResponseAsync,
 } from "@printr/sdk";
 import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
@@ -24,7 +23,7 @@ import { match } from "ts-pattern";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
 import { env } from "~/lib/env.js";
-import { logToolExecution } from "~/lib/logging.js";
+import { type HandlerCtx, handler } from "~/lib/handler.js";
 import { getTreasuryErrorMsg, getTreasuryKey } from "~/lib/treasury.js";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
@@ -52,7 +51,7 @@ function getDeploymentPassword(): Result<string, FundError> {
   return ok(password);
 }
 
-function verifyKeystoreWritable(): ResultAsync<void, FundError> {
+export function verifyKeystoreWritable(): ResultAsync<void, FundError> {
   const path = keystorePath();
   const dir = dirname(path);
   try {
@@ -68,13 +67,6 @@ function verifyKeystoreWritable(): ResultAsync<void, FundError> {
   }
 }
 
-/**
- * Generate a fresh wallet (private key + address) for the given chain family.
- * Uses `@solana/web3.js` `Keypair.generate()` for SVM and `viem`'s
- * `generatePrivateKey()` for EVM. Exported so specs can lock the per-chain
- * shape (address format, key length) without exercising the rest of the
- * funding pipeline.
- */
 export function generateWallet(type: ChainType): { privateKey: string; address: string } {
   return match(type)
     .with("svm", () => {
@@ -107,26 +99,20 @@ function saveToKeystore(
   return wallet_id;
 }
 
-/**
- * Project a transfer result into the chain-specific tx-id field used by the
- * `printr_fund_deployment_wallet` output schema. SVM transfers surface as
- * `tx_signature`, EVM transfers as `tx_hash`; only one is emitted at a time.
- * Exported so a regression to "always emit both" (which would leak a stale
- * field) gets caught at the unit level.
- */
+/** Project a transfer result into the chain-specific tx-id field. SVM → tx_signature, EVM → tx_hash. */
 export function buildTxField(
   result: { type: "svm"; signature: string } | { type: "evm"; tx_hash: string },
 ) {
   return result.type === "svm" ? { tx_signature: result.signature } : { tx_hash: result.tx_hash };
 }
 
-type PersistedWallet = {
+export type PersistedWallet = {
   wallet_id: string;
   privateKey: string;
   address: string;
 };
 
-function persistWallet(
+export function persistWallet(
   masterPassword: string,
   chain: string,
   type: ChainType,
@@ -167,7 +153,7 @@ const outputSchema = z.object({
   wallet_id: z.string().describe("Keystore wallet ID for the persisted wallet"),
 });
 
-function validateInputs(chain: string): Result<
+export function validateInputs(chain: string): Result<
   {
     type: ChainType;
     treasuryKey: string;
@@ -201,6 +187,91 @@ function validateInputs(chain: string): Result<
   });
 }
 
+export type FundDeploymentWalletInput = z.infer<typeof inputSchema>;
+
+type ActiveWalletRecord = { privateKey: string; address: string };
+
+export type VerifyKeystoreWritableFn = typeof verifyKeystoreWritable;
+export type ValidateInputsFn = typeof validateInputs;
+export type PersistWalletFn = typeof persistWallet;
+export type ExecuteTransferFn = typeof executeTransfer;
+
+export type FundDeploymentWalletDeps = {
+  verifyKeystoreWritable: VerifyKeystoreWritableFn;
+  validateInputs: ValidateInputsFn;
+  persistWallet: PersistWalletFn;
+  executeTransfer: ExecuteTransferFn;
+  activeWallets: Map<ChainType, ActiveWalletRecord>;
+  setActiveWalletId: typeof setActiveWalletId;
+  setLastDeploymentWalletId: typeof setLastDeploymentWalletId;
+};
+
+export function createFundDeploymentWalletDeps(): FundDeploymentWalletDeps {
+  return {
+    verifyKeystoreWritable,
+    validateInputs,
+    persistWallet,
+    executeTransfer,
+    activeWallets,
+    setActiveWalletId,
+    setLastDeploymentWalletId,
+  };
+}
+
+export function fundDeploymentWalletHandler({
+  input,
+  deps,
+}: HandlerCtx<FundDeploymentWalletInput, FundDeploymentWalletDeps>) {
+  const { chain, amount } = input;
+  return deps
+    .verifyKeystoreWritable()
+    .andThen(() => deps.validateInputs(chain))
+    .andThen(({ type, treasuryKey, meta, parsed, masterPassword }) =>
+      deps.persistWallet(masterPassword, chain, type).map((wallet) => ({
+        type,
+        treasuryKey,
+        meta,
+        parsed,
+        wallet,
+      })),
+    )
+    .andThen(({ type, treasuryKey, meta, parsed, wallet }) =>
+      deps
+        .executeTransfer(
+          parsed.namespace,
+          parsed.chainRef,
+          wallet.address,
+          amount,
+          treasuryKey,
+          meta,
+        )
+        .map((result) => {
+          deps.activeWallets.set(type, {
+            privateKey: wallet.privateKey,
+            address: wallet.address,
+          });
+          deps
+            .setActiveWalletId(type, wallet.wallet_id)
+            .mapErr((e) => logger.warn({ error: e.message }, "Failed to persist active wallet ID"));
+          deps
+            .setLastDeploymentWalletId(wallet.wallet_id)
+            .mapErr((e) =>
+              logger.warn({ error: e.message }, "Failed to persist deployment wallet ID"),
+            );
+          return {
+            address: wallet.address,
+            chain,
+            chain_name: meta.name,
+            amount_funded: amount,
+            amount_atomic: result.amount_atomic,
+            symbol: meta.symbol,
+            ...buildTxField(result),
+            wallet_id: wallet.wallet_id,
+          };
+        }),
+    );
+}
+
 export function registerFundDeploymentWalletTool(server: McpServer): void {
   server.registerTool(
     "printr_fund_deployment_wallet",
@@ -214,54 +285,9 @@ export function registerFundDeploymentWalletTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_fund_deployment_wallet", ({ chain, amount }) =>
-      toToolResponseAsync(
-        // 1. Validate keystore is writable (prevents fund loss)
-        verifyKeystoreWritable()
-          // 2. Validate all inputs including master password
-          .andThen(() => validateInputs(chain))
-          // 3. Persist wallet BEFORE funding (prevents fund loss if persistence fails)
-          .andThen(({ type, treasuryKey, meta, parsed, masterPassword }) =>
-            persistWallet(masterPassword, chain, type).map((wallet) => ({
-              type,
-              treasuryKey,
-              meta,
-              parsed,
-              wallet,
-            })),
-          )
-          // 4. Transfer funds only AFTER wallet is safely persisted
-          .andThen(({ type, treasuryKey, meta, parsed, wallet }) =>
-            executeTransfer(
-              parsed.namespace,
-              parsed.chainRef,
-              wallet.address,
-              amount,
-              treasuryKey,
-              meta,
-            ).map((result) => {
-              // 5. Set as active wallet for immediate use (in-memory)
-              activeWallets.set(type, { privateKey: wallet.privateKey, address: wallet.address });
-              // 6. Persist active wallet ID and deployment wallet ID for recovery (best effort)
-              setActiveWalletId(type, wallet.wallet_id).mapErr((e) =>
-                logger.warn({ error: e.message }, "Failed to persist active wallet ID"),
-              );
-              setLastDeploymentWalletId(wallet.wallet_id).mapErr((e) =>
-                logger.warn({ error: e.message }, "Failed to persist deployment wallet ID"),
-              );
-              return {
-                address: wallet.address,
-                chain,
-                chain_name: meta.name,
-                amount_funded: amount,
-                amount_atomic: result.amount_atomic,
-                symbol: meta.symbol,
-                ...buildTxField(result),
-                wallet_id: wallet.wallet_id,
-              };
-            }),
-          ),
-      ),
-    ),
+    handler(
+      "printr_fund_deployment_wallet",
+      fundDeploymentWalletHandler,
+    )(createFundDeploymentWalletDeps()),
   );
 }

@@ -21,6 +21,7 @@ import {
   type SvmPayload,
   signAndSubmitEvm,
   signAndSubmitSvm,
+  type ToolResponse,
   toToolResponseAsync,
 } from "@printr/sdk";
 import { ResultAsync } from "neverthrow";
@@ -163,12 +164,7 @@ function mapErr(e: unknown): PrintrApiError {
   return new PrintrApiError(0, e instanceof Error ? e.message : String(e));
 }
 
-/**
- * Distinguish an EVM build response payload from an SVM one. EVM payloads
- * carry a `calldata` field; SVM payloads carry instructions. Exported so the
- * spec can lock in the discriminator a regression to "is SVM" would silently
- * route signing wrong otherwise.
- */
+/** Type guard for EVM build payloads (presence of `calldata`); SVM payloads carry `ixs`. */
 export function isEvmPayload(payload: unknown): payload is EvmPayload {
   return typeof payload === "object" && payload !== null && "calldata" in payload;
 }
@@ -246,13 +242,7 @@ export type DrainOutcome =
   | { status: "failed"; walletId: string; error: string }
   | { status: "skipped" };
 
-/**
- * Project a {@link DrainOutcome} into the subset of `printr_launch_token`
- * output fields it controls. `ok` and `failed` always include the wallet id
- * so the orchestrator can retry a failed drain manually; `skipped` drops the
- * id entirely. Exported for spec coverage so a regression to "always emit
- * drain_wallet_id" or "swallow drain_error" gets caught at the unit level.
- */
+/** Project a {@link DrainOutcome} into the `drain_*` subset of the tool output. */
 export function drainFields(outcome: DrainOutcome) {
   return match(outcome)
     .with({ status: "ok" }, ({ walletId }) => ({
@@ -284,6 +274,20 @@ async function mergeResponse(
   return { ...response, structuredContent: merged };
 }
 
+/** Project a drain `ResultAsync` into a `DrainOutcome` and warn-log on failure. */
+async function projectDrainOutcome(
+  walletId: string,
+  result: ReturnType<typeof drainSvm> | ReturnType<typeof drainEvm>,
+): Promise<DrainOutcome> {
+  return (await result).match<DrainOutcome>(
+    () => ({ status: "ok", walletId }),
+    (e) => {
+      logger.warn({ error: e.message }, "Auto-drain after launch failed");
+      return { status: "failed", walletId, error: e.message };
+    },
+  );
+}
+
 async function autoDrain(
   activeWallet: Omit<ResolvedWallet, "walletId">,
   chainType: ChainType,
@@ -305,38 +309,108 @@ async function autoDrain(
   const wallet = { ...activeWallet, walletId };
 
   if (chainType === "svm") {
-    return (await drainSvm(wallet, treasuryResult.key, 0, meta, rpcUrl)).match(
-      () => ({ status: "ok" as const, walletId }),
-      (e) => {
-        logger.warn({ error: e.message }, "Auto-drain after launch failed");
-        return { status: "failed" as const, walletId, error: e.message };
-      },
-    );
+    return projectDrainOutcome(walletId, drainSvm(wallet, treasuryResult.key, 0, meta, rpcUrl));
   }
 
   const evmConfig = getEvmConfig(chain, rpcUrl);
   if ("error" in evmConfig) {
     return { status: "skipped" };
   }
-  return (
-    await drainEvm(
-      wallet,
-      treasuryResult.key,
-      "0",
-      meta,
-      evmConfig.chainId,
-      rpcUrl ?? evmConfig.rpc,
-    )
-  ).match(
-    () => ({ status: "ok" as const, walletId }),
-    (e) => {
-      logger.warn({ error: e.message }, "Auto-drain after launch failed");
-      return { status: "failed" as const, walletId, error: e.message };
-    },
+  return projectDrainOutcome(
+    walletId,
+    drainEvm(wallet, treasuryResult.key, "0", meta, evmConfig.chainId, rpcUrl ?? evmConfig.rpc),
   );
 }
 
+// ---------------------------------------------------------------------------
+// Deps + handler
+// ---------------------------------------------------------------------------
+
+type ActiveWallet = { privateKey: string; address: string };
+
+export type LaunchTokenInput = z.infer<typeof inputSchema>;
+
+export type SignWithKeyFn = (
+  token_id: string,
+  payload: unknown,
+  quote: unknown,
+  privateKey: string,
+  rpc_url: string | undefined,
+) => ReturnType<typeof signWithKey>;
+
+export type OpenWebSignerFn = (
+  token_id: string,
+  payload: unknown,
+  quote: unknown,
+  tokenParams: { name: string; symbol: string; description: string },
+) => ReturnType<typeof openWebSigner>;
+
+export type AutoDrainFn = (
+  activeWallet: Omit<ResolvedWallet, "walletId">,
+  chainType: ChainType,
+  chain: string,
+  rpcUrl?: string,
+) => Promise<DrainOutcome>;
+
+export type LaunchTokenDeps = {
+  client: PrintrClient;
+  activeWallets: Map<ChainType, ActiveWallet>;
+  signWithKey: SignWithKeyFn;
+  openWebSigner: OpenWebSignerFn;
+  autoDrain: AutoDrainFn;
+};
+
+export function createLaunchTokenDeps(client: PrintrClient): LaunchTokenDeps {
+  return {
+    client,
+    activeWallets,
+    signWithKey,
+    openWebSigner,
+    autoDrain,
+  };
+}
+
+export async function launchTokenHandler(
+  input: LaunchTokenInput,
+  deps: LaunchTokenDeps,
+): Promise<ToolResponse<Record<string, unknown>>> {
+  const { private_key, rpc_url, ...tokenParams } = input;
+  const chainType = chainTypeFromCaip2(tokenParams.chains[0] ?? "");
+  const activeWallet = deps.activeWallets.get(chainType);
+  const effectivePrivateKey = private_key ?? activeWallet?.privateKey;
+
+  const effectiveParams = {
+    ...tokenParams,
+    creator_accounts:
+      tokenParams.creator_accounts ??
+      (activeWallet
+        ? tokenParams.chains.map((chain) => `${chain}:${activeWallet.address}`)
+        : undefined),
+  };
+
+  const response = await toToolResponseAsync(
+    buildToken(effectiveParams, deps.client).andThen(({ token_id, payload, quote }) =>
+      effectivePrivateKey
+        ? deps.signWithKey(token_id, payload, quote, effectivePrivateKey, rpc_url)
+        : deps.openWebSigner(token_id, payload, quote, tokenParams),
+    ),
+  );
+
+  // Skip auto-drain when the caller supplied their own key — we'd be touching
+  // an unrelated active wallet. On failure, leave state intact for retry; the
+  // orchestrator drains via printr_drain_deployment_wallet using the walletId.
+  const chain = tokenParams.chains[0];
+  const launched = !("isError" in response);
+  const drainOutcome: DrainOutcome =
+    launched && !private_key && activeWallet && chain
+      ? await deps.autoDrain(activeWallet, chainType, chain, rpc_url)
+      : { status: "skipped" };
+
+  return mergeResponse(response, drainOutcome);
+}
+
 export function registerLaunchTokenTool(server: McpServer, client: PrintrClient): void {
+  const deps = createLaunchTokenDeps(client);
   server.registerTool(
     "printr_launch_token",
     {
@@ -351,45 +425,8 @@ export function registerLaunchTokenTool(server: McpServer, client: PrintrClient)
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_launch_token", async ({ private_key, rpc_url, ...tokenParams }) => {
-      // Use active wallet (set by printr_fund_deployment_wallet) when no explicit key provided
-      const chainType = chainTypeFromCaip2(tokenParams.chains[0] ?? "");
-      const activeWallet = activeWallets.get(chainType);
-      const effectivePrivateKey = private_key ?? activeWallet?.privateKey;
-
-      // Derive creator_accounts from active wallet if not provided (one entry per chain)
-      const effectiveParams = {
-        ...tokenParams,
-        creator_accounts:
-          tokenParams.creator_accounts ??
-          (activeWallet
-            ? tokenParams.chains.map((chain) => `${chain}:${activeWallet.address}`)
-            : undefined),
-      };
-
-      const response = await toToolResponseAsync(
-        buildToken(effectiveParams, client).andThen(({ token_id, payload, quote }) =>
-          effectivePrivateKey
-            ? signWithKey(token_id, payload, quote, effectivePrivateKey, rpc_url)
-            : openWebSigner(token_id, payload, quote, tokenParams),
-        ),
-      );
-
-      // Auto-drain the deployment wallet only on success.
-      // On failure, keep the active wallet state intact so the agent can retry
-      // without re-funding. Failed deployments are drained by the orchestrator
-      // via printr_drain_deployment_wallet using the walletId from Step 1.
-      const chain = tokenParams.chains[0];
-      const launched = !("isError" in response);
-      // Only auto-drain when the signing key came from the tracked deployment wallet.
-      // If the caller supplied an explicit private_key, skip drain to avoid touching
-      // an unrelated active wallet that may be in memory.
-      const drainOutcome: DrainOutcome =
-        launched && !private_key && activeWallet && chain
-          ? await autoDrain(activeWallet, chainType, chain, rpc_url)
-          : { status: "skipped" };
-
-      return mergeResponse(response, drainOutcome);
-    }),
+    logToolExecution("printr_launch_token", (input) =>
+      launchTokenHandler(input as LaunchTokenInput, deps),
+    ),
   );
 }

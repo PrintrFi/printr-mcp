@@ -1,20 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import type { ChainMeta } from "@printr/sdk";
 import { buildDrainResult, formatAmount } from "./drain.js";
-
-const SOL_META: ChainMeta = {
-  name: "Solana",
-  symbol: "SOL",
-  decimals: 9,
-  type: "svm",
-};
-
-const BASE_META: ChainMeta = {
-  name: "Base",
-  symbol: "ETH",
-  decimals: 18,
-  type: "evm",
-};
+import { BASE_META, SOL_META } from "./test-helpers.js";
 
 // ---------------------------------------------------------------------------
 // formatAmount

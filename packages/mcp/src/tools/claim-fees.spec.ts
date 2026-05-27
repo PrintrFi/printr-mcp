@@ -1,6 +1,13 @@
 import { describe, expect, it } from "bun:test";
-import type { PayloadEVM, PayloadSolana } from "@printr/sdk";
-import { toEvmPayload, toSvmPayload } from "./claim-fees.js";
+import type { ChainProtocolFeesSimple, PayloadEVM, PayloadSolana } from "@printr/sdk";
+import { err, errAsync, ok, okAsync } from "neverthrow";
+import {
+  type ClaimContext,
+  type ClaimFeesDeps,
+  claimFeesHandler,
+  toEvmPayload,
+  toSvmPayload,
+} from "./claim-fees.js";
 
 // ---------------------------------------------------------------------------
 // toEvmPayload
@@ -133,5 +140,143 @@ describe("toSvmPayload", () => {
       telecoinMintAddress: undefined,
     };
     expect(toSvmPayload(payload).lookup_table).toBe(lookupTable);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// claimFeesHandler — full handler with stubbed deps
+// ---------------------------------------------------------------------------
+
+type DepsRecord = {
+  getTreasuryContext: { args: unknown[] }[];
+  resolveClaimContext: { args: unknown[] }[];
+  executeClaim: { args: unknown[] }[];
+};
+
+function makeDeps(record: DepsRecord, overrides: Partial<ClaimFeesDeps> = {}): ClaimFeesDeps {
+  return {
+    getTreasuryContext: (...args: Parameters<ClaimFeesDeps["getTreasuryContext"]>) => {
+      record.getTreasuryContext.push({ args });
+      return ok({ treasuryKey: "treasury-key", treasuryAddress: "0xTreasury" });
+    },
+    resolveClaimContext: (...args: Parameters<ClaimFeesDeps["resolveClaimContext"]>) => {
+      record.resolveClaimContext.push({ args });
+      const ctx: ClaimContext = {
+        treasuryKey: "treasury-key",
+        signingKey: "treasury-key",
+        telecoinId: "0xdeadbeef",
+        chainFees: {
+          canCollect: true,
+        } as unknown as ChainProtocolFeesSimple,
+      };
+      return okAsync(ctx);
+    },
+    executeClaim: (...args: Parameters<ClaimFeesDeps["executeClaim"]>) => {
+      record.executeClaim.push({ args });
+      return okAsync({
+        token_id: "0xdeadbeef",
+        chain: "eip155:8453",
+        claimed_amount_usd: 12.5,
+        claimed_amount_native: "1000000000000000000",
+        native_symbol: "ETH",
+        tx_hash: "0xtxhash",
+      });
+    },
+    ...overrides,
+  };
+}
+
+const baseInput = { token_id: "0xdeadbeef", chain: "eip155:8453" };
+
+describe("claimFeesHandler — happy path", () => {
+  it("wires treasury → resolve → execute and surfaces structuredContent", async () => {
+    const record: DepsRecord = {
+      getTreasuryContext: [],
+      resolveClaimContext: [],
+      executeClaim: [],
+    };
+    const deps = makeDeps(record);
+
+    const result = await claimFeesHandler({ input: baseInput, deps });
+
+    expect(record.getTreasuryContext).toHaveLength(1);
+    expect(record.resolveClaimContext).toHaveLength(1);
+    expect(record.executeClaim).toHaveLength(1);
+    expect(record.getTreasuryContext[0]?.args[0]).toBe(baseInput.chain);
+    // resolve receives (token_id, chain, treasuryKey, treasuryAddress).
+    expect(record.resolveClaimContext[0]?.args).toEqual([
+      baseInput.token_id,
+      baseInput.chain,
+      "treasury-key",
+      "0xTreasury",
+    ]);
+    expect(result.isOk()).toBe(true);
+    const value = result._unsafeUnwrap();
+    expect(value.token_id).toBe("0xdeadbeef");
+    expect(value.tx_hash).toBe("0xtxhash");
+  });
+});
+
+describe("claimFeesHandler — error short-circuits", () => {
+  it("surfaces the treasury error without calling resolve / execute", async () => {
+    const record: DepsRecord = {
+      getTreasuryContext: [],
+      resolveClaimContext: [],
+      executeClaim: [],
+    };
+    const deps = makeDeps(record, {
+      getTreasuryContext: (...args: Parameters<ClaimFeesDeps["getTreasuryContext"]>) => {
+        record.getTreasuryContext.push({ args });
+        return err({ message: "Treasury wallet not configured for EVM" });
+      },
+    });
+
+    const result = await claimFeesHandler({ input: baseInput, deps });
+
+    expect(record.resolveClaimContext).toHaveLength(0);
+    expect(record.executeClaim).toHaveLength(0);
+    expect(result.isErr()).toBe(true);
+    expect(result._unsafeUnwrapErr().message).toMatch(/Treasury wallet not configured/);
+  });
+
+  it("surfaces a resolveClaimContext error without calling execute", async () => {
+    const record: DepsRecord = {
+      getTreasuryContext: [],
+      resolveClaimContext: [],
+      executeClaim: [],
+    };
+    const deps = makeDeps(record, {
+      resolveClaimContext: (...args: Parameters<ClaimFeesDeps["resolveClaimContext"]>) => {
+        record.resolveClaimContext.push({ args });
+        return errAsync({ message: "No fee data returned for chain eip155:8453" });
+      },
+    });
+
+    const result = await claimFeesHandler({ input: baseInput, deps });
+
+    expect(record.getTreasuryContext).toHaveLength(1);
+    expect(record.resolveClaimContext).toHaveLength(1);
+    expect(record.executeClaim).toHaveLength(0);
+    expect(result.isErr()).toBe(true);
+  });
+
+  it("surfaces an executeClaim error verbatim", async () => {
+    const record: DepsRecord = {
+      getTreasuryContext: [],
+      resolveClaimContext: [],
+      executeClaim: [],
+    };
+    const deps = makeDeps(record, {
+      executeClaim: (...args: Parameters<ClaimFeesDeps["executeClaim"]>) => {
+        record.executeClaim.push({ args });
+        return errAsync({ message: "Signing failed: nonce too low" });
+      },
+    });
+
+    const result = await claimFeesHandler({ input: baseInput, deps });
+
+    expect(record.executeClaim).toHaveLength(1);
+    expect(result.isErr()).toBe(true);
+    expect(result._unsafeUnwrapErr().message).toMatch(/nonce too low/);
   });
 });

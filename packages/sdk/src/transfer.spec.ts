@@ -178,11 +178,8 @@ describe("executeTransfer — RPC resolution", () => {
   });
 
   it("accepts an rpcOverride and routes the EVM transfer to it", async () => {
-    // viem's sendTransaction performs several reads (chainId, estimateGas, fee
-    // info, nonce) before signing + broadcasting. We don't care which methods
-    // it picks — only that it talks to the override URL. As soon as the first
-    // request lands on the stub we capture the URL and bail out with an error
-    // so we don't have to drive the full viem state machine.
+    // Bail on the first request — we only care that some viem read lands on
+    // the override URL, not which RPC method it happens to pick.
     stubFetch(() => {
       throw new Error("simulated rpc disconnect");
     });

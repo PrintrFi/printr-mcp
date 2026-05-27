@@ -16,6 +16,7 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import { errAsync, ResultAsync } from "neverthrow";
+import { match } from "ts-pattern";
 import { createPublicClient, createWalletClient, erc20Abi, http, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { parseCaip10, toCaip2 } from "./caip.js";
@@ -105,31 +106,37 @@ export const executeTransfer = (
   privateKey: string,
   meta: ChainMeta,
   rpcOverride?: string,
-): ResultAsync<TransferResult, TransferError> => {
-  const caip2 = namespace === "solana" ? `solana:${chainRef}` : `eip155:${chainRef}`;
-
-  if (namespace === "solana") {
-    const rpc = getSvmRpcUrl(rpcOverride);
-    const lamports = BigInt(Math.floor(Number.parseFloat(amount) * LAMPORTS_PER_SOL));
-    return ResultAsync.fromPromise(
-      transferSvm(toAddress, lamports, privateKey, rpc),
-      toTransferError,
-    );
-  }
-
-  const rpc = getRpcUrl(caip2, rpcOverride);
-  if (!rpc) {
-    return errAsync({
-      message: `No RPC URL for chain ${caip2}. Pass rpc_url explicitly or set RPC_URLS.`,
+): ResultAsync<TransferResult, TransferError> =>
+  match(namespace)
+    .with("solana", () => {
+      const rpc = getSvmRpcUrl(rpcOverride);
+      const lamports = BigInt(Math.floor(Number.parseFloat(amount) * LAMPORTS_PER_SOL));
+      return ResultAsync.fromPromise(
+        transferSvm(toAddress, lamports, privateKey, rpc),
+        toTransferError,
+      );
+    })
+    .otherwise(() => {
+      const caip2 = `eip155:${chainRef}`;
+      const rpc = getRpcUrl(caip2, rpcOverride);
+      if (!rpc) {
+        return errAsync({
+          message: `No RPC URL for chain ${caip2}. Pass rpc_url explicitly or set RPC_URLS.`,
+        });
+      }
+      const amountAtomic = parseUnits(amount, meta.decimals);
+      return ResultAsync.fromPromise(
+        transferEvm(
+          Number(chainRef),
+          toAddress as `0x${string}`,
+          amountAtomic,
+          privateKey,
+          rpc,
+          meta,
+        ),
+        toTransferError,
+      );
     });
-  }
-
-  const amountAtomic = parseUnits(amount, meta.decimals);
-  return ResultAsync.fromPromise(
-    transferEvm(Number(chainRef), toAddress as `0x${string}`, amountAtomic, privateKey, rpc, meta),
-    toTransferError,
-  );
-};
 
 /**
  * Transfer an ERC20 token on an EVM chain.
@@ -334,48 +341,49 @@ export const executeTokenTransfer = (
   }
   const tokenAddress = tokenParsed.address;
 
-  if (namespace === "solana") {
-    const rpc = getSvmRpcUrl(rpcOverride);
-    const connection = new Connection(rpc, "confirmed");
-    const mint = new PublicKey(tokenAddress);
-    return ResultAsync.fromPromise(fetchSplMintInfo(connection, mint), toTransferError).andThen(
-      (mintInfo) =>
+  return match(namespace)
+    .with("solana", () => {
+      const rpc = getSvmRpcUrl(rpcOverride);
+      const connection = new Connection(rpc, "confirmed");
+      const mint = new PublicKey(tokenAddress);
+      return ResultAsync.fromPromise(fetchSplMintInfo(connection, mint), toTransferError).andThen(
+        (mintInfo) =>
+          ResultAsync.fromPromise(
+            transferSplToken(
+              toAddress,
+              tokenAddress,
+              parseUnits(amount, mintInfo.decimals),
+              privateKey,
+              rpc,
+              mintInfo,
+            ),
+            toTransferError,
+          ),
+      );
+    })
+    .otherwise(() => {
+      const rpc = getRpcUrl(expectedChain, rpcOverride);
+      if (!rpc) {
+        return errAsync({
+          message: `No RPC URL for chain ${expectedChain}. Pass rpc_url explicitly or set RPC_URLS.`,
+        });
+      }
+      return ResultAsync.fromPromise(
+        fetchErc20Decimals(Number(chainRef), tokenAddress as `0x${string}`, rpc, meta),
+        toTransferError,
+      ).andThen((decimals) =>
         ResultAsync.fromPromise(
-          transferSplToken(
-            toAddress,
-            tokenAddress,
-            parseUnits(amount, mintInfo.decimals),
+          transferErc20(
+            Number(chainRef),
+            toAddress as `0x${string}`,
+            tokenAddress as `0x${string}`,
+            parseUnits(amount, decimals),
             privateKey,
             rpc,
-            mintInfo,
+            meta,
           ),
           toTransferError,
         ),
-    );
-  }
-
-  const rpc = getRpcUrl(expectedChain, rpcOverride);
-  if (!rpc) {
-    return errAsync({
-      message: `No RPC URL for chain ${expectedChain}. Pass rpc_url explicitly or set RPC_URLS.`,
+      );
     });
-  }
-
-  return ResultAsync.fromPromise(
-    fetchErc20Decimals(Number(chainRef), tokenAddress as `0x${string}`, rpc, meta),
-    toTransferError,
-  ).andThen((decimals) =>
-    ResultAsync.fromPromise(
-      transferErc20(
-        Number(chainRef),
-        toAddress as `0x${string}`,
-        tokenAddress as `0x${string}`,
-        parseUnits(amount, decimals),
-        privateKey,
-        rpc,
-        meta,
-      ),
-      toTransferError,
-    ),
-  );
 };

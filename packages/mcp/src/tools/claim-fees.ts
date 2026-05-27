@@ -16,7 +16,6 @@ import {
   type SvmPayload,
   signAndSubmitEvm,
   signAndSubmitSvm,
-  toToolResponseAsync,
   transferSvm,
 } from "@printr/sdk";
 import { err, errAsync, ok, okAsync, type Result, ResultAsync } from "neverthrow";
@@ -24,7 +23,7 @@ import { match } from "ts-pattern";
 import { z } from "zod";
 import { drainSvm } from "~/lib/drain.js";
 import { env } from "~/lib/env.js";
-import { logToolExecution } from "~/lib/logging.js";
+import { type HandlerCtx, handler } from "~/lib/handler.js";
 import { getTreasuryAddress, getTreasuryKey } from "~/lib/treasury.js";
 
 const inputSchema = z.object({
@@ -55,9 +54,9 @@ function mapErr(e: unknown): ClaimError {
   return claimErr(e instanceof Error ? e.message : String(e));
 }
 
-type DeploymentWallet = { privateKey: string; address: string; walletId: string };
+export type DeploymentWallet = { privateKey: string; address: string; walletId: string };
 
-type ClaimContext = {
+export type ClaimContext = {
   treasuryKey: string;
   signingKey: string;
   chainFees: ChainProtocolFeesSimple;
@@ -65,13 +64,7 @@ type ClaimContext = {
   deploymentWallet?: DeploymentWallet | undefined;
 };
 
-/**
- * Translate a fees-API EVM payload into the SDK's `EvmPayload` shape used by
- * `signAndSubmitEvm`. Builds the CAIP-10 `to` from the chain id + `txTo`,
- * defaults `value` to `"0"` and `gas_limit` to 200000 when the source omits
- * them. Exported so a regression to "defaults to 0 gas" gets caught at unit
- * level rather than on chain.
- */
+/** Fees-API EVM payload → SDK `EvmPayload`. Defaults `value`/`gas_limit` when absent. */
 export function toEvmPayload(payload: PayloadEVM, chainId: string): EvmPayload {
   return {
     to: `${chainId}:${payload.txTo}`,
@@ -81,12 +74,7 @@ export function toEvmPayload(payload: PayloadEVM, chainId: string): EvmPayload {
   };
 }
 
-/**
- * Translate a fees-API Solana payload into the SDK's `SvmPayload` shape.
- * Optional address fields are coerced to `""` rather than dropped so the
- * downstream signer always sees a string. Exported for spec coverage of the
- * instruction / account / mint normalisation paths.
- */
+/** Fees-API Solana payload → SDK `SvmPayload`. Coerces optional addresses to `""`. */
 export function toSvmPayload(payload: PayloadSolana): SvmPayload {
   return {
     ixs: payload.ixs.map((ix) => ({
@@ -103,7 +91,7 @@ export function toSvmPayload(payload: PayloadSolana): SvmPayload {
   };
 }
 
-function getTreasuryContext(
+export function getTreasuryContext(
   chain: string,
 ): Result<{ treasuryKey: string; treasuryAddress: string }, ClaimError> {
   const chainType = chainTypeFromCaip2(chain);
@@ -164,9 +152,9 @@ function fetchChainFees(
   });
 }
 
-// If the creator address differs from treasury, fees belong to a deployment wallet.
-// Re-fetch with that wallet as payer to get the correct collection payload.
-function resolveClaimContext(
+// If the creator address differs from treasury, fees belong to a deployment
+// wallet — re-fetch with that wallet as payer to get the correct payload.
+export function resolveClaimContext(
   tokenId: string,
   chain: string,
   treasuryKey: string,
@@ -209,6 +197,25 @@ function resolveClaimContext(
   });
 }
 
+// Drains a deployment wallet back to treasury after a claim. Awaited so the
+// drain attempt completes (and any failure is logged) before the handler
+// resolves — earlier versions returned a floating ResultAsync whose
+// completion the runtime could drop.
+async function runPostClaimDrain(
+  deploymentWallet: DeploymentWallet,
+  treasuryKey: string,
+  chain: string,
+  rpc: string,
+): Promise<void> {
+  const meta = getChainMeta(chain);
+  if (!meta) {
+    return;
+  }
+  (await drainSvm(deploymentWallet, treasuryKey, 0, meta, rpc)).mapErr((e) =>
+    logger.warn(`Failed to drain deployment wallet after fee claim: ${e.message}`),
+  );
+}
+
 // If the signer is a drained deployment wallet, pre-fund it from treasury,
 // claim with the deployment key, then drain it back.
 function claimSvm(
@@ -233,20 +240,19 @@ function claimSvm(
         claimErr(formatSvmSubmitError(e)),
       ),
     )
-    .map(({ signature }) => {
-      if (deploymentWallet) {
-        const meta = getChainMeta(chain);
-        if (meta) {
-          drainSvm(deploymentWallet, treasuryKey, 0, meta, rpc).mapErr((e) =>
-            logger.warn(`Failed to drain deployment wallet after fee claim: ${e.message}`),
-          );
-        }
-      }
-      return signature;
-    });
+    .andThen(({ signature }) =>
+      ResultAsync.fromSafePromise(
+        deploymentWallet
+          ? runPostClaimDrain(deploymentWallet, treasuryKey, chain, rpc).then(() => signature)
+          : Promise.resolve(signature),
+      ),
+    );
 }
 
-function executeClaim(ctx: ClaimContext, chain: string): ResultAsync<ClaimOutput, ClaimError> {
+export function executeClaim(
+  ctx: ClaimContext,
+  chain: string,
+): ResultAsync<ClaimOutput, ClaimError> {
   const { chainFees, telecoinId, signingKey } = ctx;
 
   if (!chainFees.canCollect) {
@@ -295,6 +301,36 @@ function executeClaim(ctx: ClaimContext, chain: string): ResultAsync<ClaimOutput
     .otherwise(() => errAsync(claimErr(`Unknown payload type: ${String(payload.payload.case)}`)));
 }
 
+export type ClaimFeesInput = z.infer<typeof inputSchema>;
+
+export type GetTreasuryContextFn = typeof getTreasuryContext;
+export type ResolveClaimContextFn = typeof resolveClaimContext;
+export type ExecuteClaimFn = typeof executeClaim;
+
+export type ClaimFeesDeps = {
+  getTreasuryContext: GetTreasuryContextFn;
+  resolveClaimContext: ResolveClaimContextFn;
+  executeClaim: ExecuteClaimFn;
+};
+
+export function createClaimFeesDeps(): ClaimFeesDeps {
+  return { getTreasuryContext, resolveClaimContext, executeClaim };
+}
+
+export function claimFeesHandler({
+  input,
+  deps,
+}: HandlerCtx<ClaimFeesInput, ClaimFeesDeps>): ResultAsync<ClaimOutput, ClaimError> {
+  const { token_id, chain } = input;
+  return deps
+    .getTreasuryContext(chain)
+    .asyncAndThen(({ treasuryKey, treasuryAddress }) =>
+      deps
+        .resolveClaimContext(token_id, chain, treasuryKey, treasuryAddress)
+        .andThen((ctx) => deps.executeClaim(ctx, chain)),
+    );
+}
+
 export function registerClaimFeesTool(server: McpServer): void {
   server.registerTool(
     "printr_claim_fees",
@@ -307,14 +343,6 @@ export function registerClaimFeesTool(server: McpServer): void {
       inputSchema,
       outputSchema,
     },
-    logToolExecution("printr_claim_fees", ({ token_id, chain }) =>
-      toToolResponseAsync(
-        getTreasuryContext(chain).asyncAndThen(({ treasuryKey, treasuryAddress }) =>
-          resolveClaimContext(token_id, chain, treasuryKey, treasuryAddress).andThen((ctx) =>
-            executeClaim(ctx, chain),
-          ),
-        ),
-      ),
-    ),
+    handler("printr_claim_fees", claimFeesHandler)(createClaimFeesDeps()),
   );
 }

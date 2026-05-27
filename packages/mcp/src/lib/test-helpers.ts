@@ -1,7 +1,17 @@
-// Shared test utilities for tool tests
-
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { env, type PrintrClient } from "@printr/sdk";
+import { type ChainMeta, env, type PrintrClient } from "@printr/sdk";
+
+export const SOL_META: ChainMeta = {
+  name: "Solana",
+  symbol: "SOL",
+  decimals: 9,
+};
+
+export const BASE_META: ChainMeta = {
+  name: "Base",
+  symbol: "ETH",
+  decimals: 18,
+};
 
 const verbose = env.VERBOSE === "1" || env.VERBOSE === "true";
 

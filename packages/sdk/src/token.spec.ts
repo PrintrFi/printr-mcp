@@ -86,9 +86,7 @@ describe("buildToken — pre-flight validation", () => {
   });
 
   it("rejects an empty creator_accounts array (still falsy via destructuring)", async () => {
-    // Pre-flight only fires for `undefined`; an empty array passes through and
-    // the API will reject — this test locks in the contract so a regression
-    // to "treat [] as missing" gets caught at the unit level.
+    // Pre-flight only fires for `undefined`; `[]` passes through to the API.
     stubFetch(
       () => ({
         deployment_id: "dep-1",
@@ -141,11 +139,8 @@ describe("buildToken — image resolution", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildToken — response normalisation", () => {
-  // The hot path: production API responses already include 0x-prefixed hex
-  // for EVM payloads. `ensureHex` short-circuits and returns the value
-  // unchanged — these tests lock that contract in so a regression to
-  // "always re-encode" (which would corrupt the value via the base64
-  // fallback in `ensureHex`) gets caught.
+  // Hot path is already-0x-prefixed hex — `ensureHex` short-circuits.
+  // A regression to "always re-encode" would corrupt via the base64 fallback.
   it("leaves an already-0x-prefixed calldata unchanged", async () => {
     stubFetch(() => ({
       deployment_id: "dep-1",
