@@ -85,7 +85,7 @@ async function main() {
 
   if (deploymentsResult.isOk()) {
     for (const d of deploymentsResult.value.deployments) {
-      console.log(`   ${d.chain_id}: ${d.status} @ ${d.contract_address.slice(0, 10)}...`);
+      console.log(`   ${d.chain_id}: ${d.status} @ ${d.contract_address?.slice(0, 10)}...`);
     }
   } else {
     console.log(`   Error: ${deploymentsResult.error.message}`);

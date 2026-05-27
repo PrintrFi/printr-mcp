@@ -41,8 +41,8 @@ async function main() {
 
     // 2. List available tools
     console.log("2. Available Tools:");
-    const tools = await client.listTools();
-    const toolNames = tools.tools.map((t) => t.name).sort();
+    const { tools } = await client.listTools();
+    const toolNames = tools.map((t) => t.name).sort();
     console.log(`   Found ${toolNames.length} tools:`);
     for (const name of toolNames.slice(0, 10)) {
       console.log(`   - ${name}`);
