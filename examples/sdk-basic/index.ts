@@ -18,8 +18,7 @@ import {
   env,
 } from "@printr/sdk";
 
-const KNOWN_TOKEN_ID =
-  "0x92a1814fd6f5315f3ac4f7b492afa80d427a202a5411eda2964cbf590be93ef2";
+const KNOWN_TOKEN_ID = "29CWsqH84TykHDDwA6DtETUtXQPuKbVgKCmxtkBsbrrr";
 
 async function main() {
   console.log("=== @printr/sdk Basic Example ===\n");
@@ -43,7 +42,9 @@ async function main() {
   const quoteResponse = await client.POST("/print/quote", {
     body: {
       chains: ["eip155:8453"],
-      initial_buy: { spend_usd: 10 },
+      initial_buy: {
+        spend_usd: 10
+      },
     },
   });
   const quoteResult = unwrapResult(quoteResponse);

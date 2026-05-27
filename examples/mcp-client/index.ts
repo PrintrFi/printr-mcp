@@ -86,7 +86,7 @@ async function main() {
     console.log();
 
     // 5. Call printr_get_token
-    const tokenId = "0x92a1814fd6f5315f3ac4f7b492afa80d427a202a5411eda2964cbf590be93ef2";
+    const tokenId = "29CWsqH84TykHDDwA6DtETUtXQPuKbVgKCmxtkBsbrrr";
     console.log(`5. Calling printr_get_token (${tokenId.slice(0, 10)}...):`);
     const tokenResult = await client.callTool({
       name: "printr_get_token",
