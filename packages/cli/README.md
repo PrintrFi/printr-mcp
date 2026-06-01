@@ -25,12 +25,22 @@ yarn global add @printr/cli
 ### Run without installing
 
 ```bash
-npx @printr/cli setup
+npx @printr/cli quickstart
 # or
-bunx @printr/cli setup
+bunx @printr/cli quickstart
 ```
 
 ## Commands
+
+### `printr quickstart`
+
+One-shot onboarding: configures Printr MCP for every detected AI client, installs the Printr agent skill, and points you at the connectivity check. Recommended for first-time users.
+
+```bash
+printr quickstart
+```
+
+The quickstart command runs `setup` followed by `skill`, then prints a next-step hint reminding you to restart your AI client and ask the agent to call `printr_supported_chains` to verify connectivity. Passes the same flags through to both stages, so options documented under `setup` and `skill` (`--client`, `--openrouter-api-key`, `--agent`) also work here.
 
 ### `printr setup`
 

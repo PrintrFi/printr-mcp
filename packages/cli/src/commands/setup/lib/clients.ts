@@ -2,7 +2,20 @@ import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { z } from "zod";
 import type { ClientDef, ConfigureResult, McpEntry, Runtime } from "../types.js";
+
+export const CLIENT_IDS = [
+  "claude-desktop",
+  "cursor",
+  "windsurf",
+  "gemini",
+  "claude-code",
+] as const;
+
+export const ClientIdSchema = z.enum(CLIENT_IDS);
+
+export type ClientId = z.infer<typeof ClientIdSchema>;
 
 export function commandExists(cmd: string): boolean {
   return spawnSync("which", [cmd], { stdio: "ignore", timeout: 3_000 }).status === 0;
@@ -117,7 +130,7 @@ export const CLIENTS: ClientDef[] = [
   },
 ];
 
-export const ALL_CLIENT_IDS = CLIENTS.map((c) => c.id);
+export const ALL_CLIENT_IDS: readonly ClientId[] = CLIENT_IDS;
 
 export const RESULT_STATUS: Record<ConfigureResult, import("../types.js").StepStatus> = {
   configured: "ok",

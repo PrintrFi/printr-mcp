@@ -1,45 +1,45 @@
+import { z } from "zod";
+import { type ClientId, ClientIdSchema } from "./clients.js";
+
 export interface SetupArgs {
   /** Explicit client IDs from --client flags; null means "show interactive selection". */
-  targetIds: string[] | null;
+  targetIds: ClientId[] | null;
   openrouterApiKey: string;
 }
 
-function getNextArg(args: string[], index: number): string | undefined {
-  return index + 1 < args.length ? args[index + 1] : undefined;
+const RawSetupArgsSchema = z.object({
+  clients: z.array(z.string()).default([]),
+  openrouterApiKey: z.string().default(""),
+});
+
+type RawSetupArgs = z.infer<typeof RawSetupArgsSchema>;
+
+interface FlagMatch {
+  value: string;
+  /** How many tokens this match consumed beyond `args[index]`. */
+  advance: number;
 }
 
-function handleClientArg(arg: string, args: string[], index: number, targetIds: string[]): number {
-  if (arg === "--client" || arg === "-c") {
-    const value = getNextArg(args, index);
-    if (value) {
-      targetIds.push(value);
-      return index + 1;
+function matchFlag(arg: string, flag: string, args: string[], index: number): FlagMatch | null {
+  if (arg === flag) {
+    const value = args[index + 1];
+    if (value === undefined) {
+      return null;
     }
-  } else if (arg.startsWith("--client=")) {
-    targetIds.push(arg.slice("--client=".length));
+    return { value, advance: 1 };
   }
-  return index;
+  const prefix = `${flag}=`;
+  if (arg.startsWith(prefix)) {
+    return { value: arg.slice(prefix.length), advance: 0 };
+  }
+  return null;
 }
 
-function handleApiKeyArg(
-  arg: string,
-  args: string[],
-  index: number,
-): { newIndex: number; value?: string } {
-  if (arg === "--openrouter-api-key") {
-    const value = getNextArg(args, index);
-    if (value) {
-      return { newIndex: index + 1, value };
-    }
-  } else if (arg.startsWith("--openrouter-api-key=")) {
-    return { newIndex: index, value: arg.slice("--openrouter-api-key=".length) };
-  }
-  return { newIndex: index };
-}
-
-export function parseSetupArgs(args: string[]): SetupArgs {
-  const targetIds: string[] = [];
-  let openrouterApiKey = process.env["OPENROUTER_API_KEY"] ?? "";
+function tokenize(args: string[]): RawSetupArgs {
+  const raw: RawSetupArgs = {
+    clients: [],
+    openrouterApiKey: process.env["OPENROUTER_API_KEY"] ?? "",
+  };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -47,18 +47,44 @@ export function parseSetupArgs(args: string[]): SetupArgs {
       continue;
     }
 
-    const newClientIndex = handleClientArg(arg, args, i, targetIds);
-    if (newClientIndex !== i) {
-      i = newClientIndex;
+    const clientMatch = matchFlag(arg, "--client", args, i) ?? matchFlag(arg, "-c", args, i);
+    if (clientMatch !== null) {
+      raw.clients.push(clientMatch.value);
+      i += clientMatch.advance;
       continue;
     }
 
-    const apiKeyResult = handleApiKeyArg(arg, args, i);
-    if (apiKeyResult.value !== undefined) {
-      openrouterApiKey = apiKeyResult.value;
-      i = apiKeyResult.newIndex;
+    const keyMatch = matchFlag(arg, "--openrouter-api-key", args, i);
+    if (keyMatch !== null) {
+      raw.openrouterApiKey = keyMatch.value;
+      i += keyMatch.advance;
     }
   }
 
-  return { targetIds: targetIds.length > 0 ? targetIds : null, openrouterApiKey };
+  return raw;
+}
+
+/**
+ * Parse the `setup` flag set. Unknown `--client` values are reported to stderr
+ * and skipped, so a typo fails loudly without aborting an otherwise valid run.
+ */
+export function parseSetupArgs(args: string[]): SetupArgs {
+  const raw = tokenize(args);
+
+  const validClients: ClientId[] = [];
+  for (const candidate of raw.clients) {
+    const parsed = ClientIdSchema.safeParse(candidate);
+    if (parsed.success) {
+      validClients.push(parsed.data);
+    } else {
+      process.stderr.write(
+        `Warning: ignoring unknown --client "${candidate}". Valid: ${ClientIdSchema.options.join(", ")}\n`,
+      );
+    }
+  }
+
+  return {
+    targetIds: validClients.length > 0 ? validClients : null,
+    openrouterApiKey: raw.openrouterApiKey,
+  };
 }
