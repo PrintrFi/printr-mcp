@@ -4,7 +4,6 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { err, ok, type Result } from "neverthrow";
 import { z } from "zod";
-import { env } from "./env.js";
 
 const WalletEntrySchema = z.object({
   id: z.string(),
@@ -46,9 +45,15 @@ const DEFAULT_KDF_PARAMS = { N: 131072, r: 8, p: 1, dkLen: 32 } as const;
 // 128 * N * r bytes required; default OpenSSL cap is 32 MB — raise it to 256 MB.
 const SCRYPT_MAXMEM = 256 * 1024 * 1024;
 
-/** Absolute path to the keystore JSON file (defaults to `~/.printr/wallets.json`). */
+/**
+ * Absolute path to the keystore JSON file (defaults to `~/.printr/wallets.json`).
+ * Reads `PRINTR_WALLET_STORE` live from `process.env` rather than the validated
+ * `env` snapshot, so a runtime override (e.g. a test setting it after `env` was
+ * already imported elsewhere) is always honoured instead of silently falling
+ * back to the real keystore.
+ */
 export function keystorePath(): string {
-  const dir = env.PRINTR_WALLET_STORE ?? join(homedir(), ".printr");
+  const dir = process.env["PRINTR_WALLET_STORE"] ?? join(homedir(), ".printr");
   return join(dir, "wallets.json");
 }
 

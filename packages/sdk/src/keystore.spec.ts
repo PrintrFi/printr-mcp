@@ -14,7 +14,8 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  rmSync(STORE, { force: true });
+  // STORE is used as a directory (keystorePath appends wallets.json), so removal needs recursive.
+  rmSync(STORE, { recursive: true, force: true });
 });
 
 // Lazily re-import after env var is set
