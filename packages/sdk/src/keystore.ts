@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { err, ok, type Result } from "neverthrow";
@@ -52,14 +52,32 @@ export function keystorePath(): string {
   return join(dir, "wallets.json");
 }
 
+/**
+ * Read and validate the keystore. A missing file yields an empty keystore (first
+ * run), but a file that exists and fails to parse throws rather than returning
+ * empty — otherwise the next `saveKeystore` would overwrite real encrypted keys
+ * with an empty store. The on-disk file is never modified by a failed read.
+ */
 function loadKeystore(): Keystore {
-  try {
-    const raw = readFileSync(keystorePath(), "utf-8");
-    const parsed = KeystoreSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? parsed.data : { version: 1, wallets: [] };
-  } catch {
+  const path = keystorePath();
+  if (!existsSync(path)) {
     return { version: 1, wallets: [] };
   }
+  let json: unknown;
+  try {
+    json = JSON.parse(readFileSync(path, "utf-8"));
+  } catch {
+    throw new Error(
+      `Keystore at ${path} is not valid JSON. Left untouched to protect encrypted keys; fix or move the file, then retry.`,
+    );
+  }
+  const parsed = KeystoreSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new Error(
+      `Keystore at ${path} does not match the expected schema. Left untouched to protect encrypted keys; fix or move the file, then retry. (${z.prettifyError(parsed.error)})`,
+    );
+  }
+  return parsed.data;
 }
 
 function saveKeystore(ks: Keystore): void {

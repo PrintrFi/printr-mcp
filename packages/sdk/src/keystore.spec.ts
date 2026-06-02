@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { randomUUID } from "node:crypto";
-import { rmSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Keypair } from "@solana/web3.js";
@@ -157,5 +157,28 @@ describe("removeWallet", () => {
   it("returns false for an unknown id", async () => {
     const { removeWallet } = await ks();
     expect(removeWallet(randomUUID())).toBe(false);
+  });
+});
+
+// Regression: an existing-but-unreadable keystore must never be silently treated
+// as empty — the next write would overwrite real encrypted keys with an empty store.
+describe("loadKeystore — non-destructive on an unreadable file", () => {
+  // keystorePath() treats PRINTR_WALLET_STORE as a directory; the real file lives inside it.
+  const file = join(STORE, "wallets.json");
+
+  it("throws on malformed JSON instead of returning an empty keystore", async () => {
+    const { listWallets } = await ks();
+    mkdirSync(STORE, { recursive: true });
+    writeFileSync(file, "{ not valid json", "utf-8");
+    expect(() => listWallets()).toThrow();
+    rmSync(file, { force: true });
+  });
+
+  it("throws on schema mismatch instead of overwriting real keys", async () => {
+    const { listWallets } = await ks();
+    mkdirSync(STORE, { recursive: true });
+    writeFileSync(file, JSON.stringify({ version: 2, wallets: [] }), "utf-8");
+    expect(() => listWallets()).toThrow();
+    rmSync(file, { force: true });
   });
 });
