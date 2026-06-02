@@ -51,10 +51,12 @@ export type StateRepo = {
   clearLastDeploymentWalletId(): Result<void, StateError>;
 };
 
-// Factory rather than a shared constant — `{ ...DEFAULT_STATE }` is a shallow
-// spread that leaks the inner `activeWalletIds` / `treasuryWalletIds` objects
-// by reference, so the first mutation poisons every subsequent missing-file
-// fallback in the same process.
+/**
+ * Factory rather than a shared constant — `{ ...DEFAULT_STATE }` is a shallow
+ * spread that leaks the inner `activeWalletIds` / `treasuryWalletIds` objects
+ * by reference, so the first mutation poisons every subsequent missing-file
+ * fallback in the same process.
+ */
 const makeDefaultState = (): PersistentState => ({
   version: 1,
   activeWalletIds: {},
