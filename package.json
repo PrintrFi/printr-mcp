@@ -27,6 +27,7 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "check": "bun typecheck && bun lint && bun test",
+    "check:tsdoc": "bun scripts/check-tsdoc.ts",
     "examples:test": "bun run --cwd examples/sdk-basic test && bun run --cwd examples/mcp-client test",
     "generate:api": "bash scripts/generate-api.sh",
     "generate:api:local": "PRINTR_REPO=$HOME/dev/printr bash scripts/generate-api.sh",

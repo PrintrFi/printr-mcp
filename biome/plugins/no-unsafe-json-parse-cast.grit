@@ -1,0 +1,12 @@
+// no-unsafe-json-parse-cast
+//
+// JSON.parse output must be validated with a Zod schema, not narrowed
+// with `as`. Suppress with: biome-ignore lint: <reason>
+
+engine biome(1.0)
+language js
+
+`$x as $T` as $node where {
+  $x <: `JSON.parse($_)`,
+  register_diagnostic(span=$node, message="Unsafe cast on JSON.parse — validate with a Zod schema instead.", severity="error")
+}
