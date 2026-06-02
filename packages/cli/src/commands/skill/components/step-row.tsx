@@ -17,7 +17,9 @@ const STATUS_COLORS: Record<StepStatus, string | undefined> = {
   skip: undefined,
 };
 
-export function StepRow({ step }: { step: StepResult }) {
+type StepRowProps = { step: StepResult };
+
+export function StepRow({ step }: StepRowProps) {
   const statusColor = STATUS_COLORS[step.status];
   return (
     <Box>

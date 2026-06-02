@@ -1,7 +1,9 @@
 import { Box, Text } from "ink";
 import { CLIENTS } from "../lib/clients.js";
 
-export function Summary({ configured }: { configured: number }) {
+type SummaryProps = { configured: number };
+
+export function Summary({ configured }: SummaryProps) {
   const s = configured !== 1 ? "s" : "";
 
   if (configured === 0) {

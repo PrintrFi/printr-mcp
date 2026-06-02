@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { getChainMeta } from "./chains.js";
+import type { FetchHandler } from "./test-support.js";
 import { executeTokenTransfer, executeTransfer } from "./transfer.js";
 
 // ---------------------------------------------------------------------------
@@ -25,8 +26,6 @@ const FAKE_SVM_KEY =
 // ---------------------------------------------------------------------------
 // fetch stub
 // ---------------------------------------------------------------------------
-
-type FetchHandler = (req: { url: string; body: unknown }) => unknown;
 
 let originalFetch: typeof globalThis.fetch;
 let lastRequest: { url: string; body: unknown } | undefined;

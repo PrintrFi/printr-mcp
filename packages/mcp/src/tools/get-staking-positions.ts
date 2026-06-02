@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
+  type CaipAccount,
   formatStakingCaip10,
   listStakePositionsWithRewards,
   parseStakingCaip10,
@@ -77,7 +78,6 @@ const outputSchema = z.object({
   message: z.string().describe("Status message"),
 });
 
-type CaipAccount = { chainId: string; address: string };
 type OutputPosition = z.infer<typeof positionSchema>;
 
 function defaultOwnersFromTreasury(): CaipAccount[] {
@@ -97,7 +97,9 @@ function defaultOwnersFromTreasury(): CaipAccount[] {
   return owners;
 }
 
-function hasPositiveAtomic(amount: { atomic: string } | undefined): boolean {
+type AtomicAmount = { atomic: string };
+
+function hasPositiveAtomic(amount: AtomicAmount | undefined): boolean {
   if (!amount) {
     return false;
   }

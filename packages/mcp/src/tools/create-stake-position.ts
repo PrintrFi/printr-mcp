@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
+  type CaipAccount,
   type ChainType,
   type CreateStakePositionResult,
   chainTypeFromCaip2,
@@ -10,7 +11,6 @@ import {
   getSvmRpcUrl,
   parseLockPeriod,
   parseStakingCaip10,
-  type SimpleTxPayload,
   type SvmPayload,
   signAndSubmitEvm,
   signAndSubmitSvm,
@@ -19,7 +19,8 @@ import {
 import { err, errAsync, ok, okAsync, Result, ResultAsync } from "neverthrow";
 import { z } from "zod";
 import { logToolExecution } from "~/lib/logging.js";
-import { getTreasuryAddress, getTreasuryKey } from "~/lib/treasury.js";
+import { getTreasuryAddress, getTreasuryKey, type TreasuryContext } from "~/lib/treasury.js";
+import type { EvmTxValue, SvmTxValue } from "~/lib/tx-payload.js";
 
 const LOCK_PERIODS = [
   "7_DAYS",
@@ -54,8 +55,6 @@ const outputSchema = z.object({
 
 type CreateOutput = z.infer<typeof outputSchema>;
 type CreateError = { message: string };
-type CaipAccount = { chainId: string; address: string };
-type TreasuryContext = { treasuryKey: string; treasuryAddress: string };
 
 const createErr = (message: string): CreateError => ({ message });
 const mapErr = (e: unknown): CreateError => createErr(e instanceof Error ? e.message : String(e));
@@ -86,10 +85,7 @@ function getTreasuryContext(chainType: ChainType): Result<TreasuryContext, Creat
   return ok({ treasuryKey, treasuryAddress });
 }
 
-function buildEvmPayload(
-  chainId: string,
-  evm: Extract<SimpleTxPayload, { case: "evm" }>["value"],
-): Result<EvmPayload, CreateError> {
+function buildEvmPayload(chainId: string, evm: EvmTxValue): Result<EvmPayload, CreateError> {
   const gasLimit = Number(evm.gasLimit);
   if (!Number.isFinite(gasLimit) || gasLimit <= 0) {
     return err(createErr(`Backend returned invalid gas limit: ${evm.gasLimit}`));
@@ -106,9 +102,7 @@ function buildEvmPayload(
   });
 }
 
-function buildSvmPayload(
-  svm: Extract<SimpleTxPayload, { case: "solana" }>["value"],
-): Result<SvmPayload, CreateError> {
+function buildSvmPayload(svm: SvmTxValue): Result<SvmPayload, CreateError> {
   if (svm.lookupTables.length > 1) {
     return err(
       createErr(

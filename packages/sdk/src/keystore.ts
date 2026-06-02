@@ -3,30 +3,44 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { err, ok, type Result } from "neverthrow";
+import { z } from "zod";
 import { env } from "./env.js";
 
-export type WalletEntry = {
-  id: string;
-  label: string;
+const WalletEntrySchema = z.object({
+  id: z.string(),
+  label: z.string(),
   /** CAIP-2 chain ID, e.g. "eip155:8453" */
-  chain: string;
+  chain: z.string(),
   /** Plaintext public address — safe to read without password */
-  address: string;
-  kdf: "scrypt";
-  kdfParams: { N: number; r: number; p: number; dkLen: number };
+  address: z.string(),
+  kdf: z.literal("scrypt"),
+  kdfParams: z.object({
+    N: z.number(),
+    r: z.number(),
+    p: z.number(),
+    dkLen: z.number(),
+  }),
   /** base64-encoded random salt */
-  salt: string;
+  salt: z.string(),
   /** base64-encoded GCM nonce */
-  iv: string;
+  iv: z.string(),
   /** base64-encoded AES-256-GCM ciphertext + 16-byte auth tag */
-  encryptedKey: string;
-  createdAt: number;
-};
+  encryptedKey: z.string(),
+  createdAt: z.number(),
+});
 
-type Keystore = {
-  version: 1;
-  wallets: WalletEntry[];
-};
+const KeystoreSchema = z.object({
+  version: z.literal(1),
+  wallets: z.array(WalletEntrySchema),
+});
+
+/**
+ * A single encrypted wallet record. Derived from {@link WalletEntrySchema} so
+ * the Zod schema remains the single source of truth for the on-disk shape.
+ */
+export type WalletEntry = z.infer<typeof WalletEntrySchema>;
+
+type Keystore = z.infer<typeof KeystoreSchema>;
 
 const DEFAULT_KDF_PARAMS = { N: 131072, r: 8, p: 1, dkLen: 32 } as const;
 // 128 * N * r bytes required; default OpenSSL cap is 32 MB — raise it to 256 MB.
@@ -41,7 +55,8 @@ export function keystorePath(): string {
 function loadKeystore(): Keystore {
   try {
     const raw = readFileSync(keystorePath(), "utf-8");
-    return JSON.parse(raw) as Keystore;
+    const parsed = KeystoreSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : { version: 1, wallets: [] };
   } catch {
     return { version: 1, wallets: [] };
   }

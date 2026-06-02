@@ -90,7 +90,7 @@ describe("signAndSubmitEvm", () => {
   it("returns invalid_caip10 for a malformed `to` address", async () => {
     const result = await signAndSubmitEvm(
       { to: "not-a-caip10", calldata: "0x", value: "0", gas_limit: 21000 },
-      "0x" + "0".repeat(64),
+      `0x${"0".repeat(64)}`,
     );
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -102,7 +102,7 @@ describe("signAndSubmitEvm", () => {
     // eip155:99999 is not in CHAIN_META and no env RPC is configured for it.
     const result = await signAndSubmitEvm(
       { to: "eip155:99999:0x0", calldata: "0x", value: "0", gas_limit: 21000 },
-      "0x" + "0".repeat(64),
+      `0x${"0".repeat(64)}`,
     );
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {

@@ -1,5 +1,5 @@
 import { logger } from "@printr/sdk";
-import { Hono } from "hono";
+import { type Context, Hono, type Next } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import {
@@ -10,30 +10,32 @@ import {
   type TxResult,
 } from "./sessions.js";
 
+/** Hono middleware that logs each HTTP request with its method, path, status, and duration. */
+async function logRequest(c: Context, next: Next): Promise<void> {
+  const start = Date.now();
+  const path = c.req.path;
+  const method = c.req.method;
+
+  await next();
+
+  const duration_ms = Date.now() - start;
+  const status = c.res.status;
+
+  logger.info(
+    {
+      method,
+      path,
+      status,
+      duration_ms,
+    },
+    "HTTP request",
+  );
+}
+
 export function buildApp() {
   const app = new Hono();
 
-  // Logging middleware
-  app.use("*", async (c, next) => {
-    const start = Date.now();
-    const path = c.req.path;
-    const method = c.req.method;
-
-    await next();
-
-    const duration_ms = Date.now() - start;
-    const status = c.res.status;
-
-    logger.info(
-      {
-        method,
-        path,
-        status,
-        duration_ms,
-      },
-      "HTTP request",
-    );
-  });
+  app.use("*", logRequest);
 
   // Allow specific HTTPS origins to fetch this localhost server.
   app.use("*", async (c, next) => {

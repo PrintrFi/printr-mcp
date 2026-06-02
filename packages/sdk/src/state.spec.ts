@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { z } from "zod";
 import { createStateRepo, type StateRepo } from "./state.js";
 
 // ---------------------------------------------------------------------------
@@ -116,7 +117,7 @@ describe("last deployment wallet", () => {
   it("removes the optional field entirely from the persisted JSON when cleared", () => {
     repo.setLastDeploymentWalletId("dep-7");
     repo.clearLastDeploymentWalletId();
-    const raw = JSON.parse(readFileSync(path, "utf-8")) as Record<string, unknown>;
+    const raw = z.record(z.string(), z.unknown()).parse(JSON.parse(readFileSync(path, "utf-8")));
     expect("lastDeploymentWalletId" in raw).toBe(false);
   });
 });
@@ -157,7 +158,7 @@ describe("persistence shape", () => {
     repo.setActiveWalletId("evm", "wallet-1");
     const raw = readFileSync(path, "utf-8");
     expect(raw.includes("\n")).toBe(true); // pretty-printed
-    const parsed = JSON.parse(raw) as { version: number };
+    const parsed = z.object({ version: z.number() }).parse(JSON.parse(raw));
     expect(parsed.version).toBe(1);
   });
 

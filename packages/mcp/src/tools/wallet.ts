@@ -29,7 +29,8 @@ function deriveAddress(privateKey: string, type: ChainType): string {
   return Keypair.fromSecretKey(bs58.decode(privateKey)).publicKey.toBase58();
 }
 
-export function registerWalletTools(server: McpServer): void {
+/** Register the printr_wallet_new tool: generate, encrypt, and store a new keypair. */
+function registerWalletNewTool(server: McpServer): void {
   server.registerTool(
     "printr_wallet_new",
     {
@@ -89,7 +90,10 @@ export function registerWalletTools(server: McpServer): void {
       }
     }),
   );
+}
 
+/** Register the printr_wallet_import tool: import a raw private key, optionally persisting it. */
+function registerWalletImportTool(server: McpServer): void {
   server.registerTool(
     "printr_wallet_import",
     {
@@ -148,7 +152,10 @@ export function registerWalletTools(server: McpServer): void {
       }
     }),
   );
+}
 
+/** Register the printr_wallet_list tool: list stored keystore wallets without private keys. */
+function registerWalletListTool(server: McpServer): void {
   server.registerTool(
     "printr_wallet_list",
     {
@@ -181,7 +188,10 @@ export function registerWalletTools(server: McpServer): void {
       return toolOk({ wallets });
     }),
   );
+}
 
+/** Register the printr_wallet_unlock tool: decrypt a stored wallet and set it active. */
+function registerWalletUnlockTool(server: McpServer): void {
   server.registerTool(
     "printr_wallet_unlock",
     {
@@ -213,7 +223,10 @@ export function registerWalletTools(server: McpServer): void {
       );
     }),
   );
+}
 
+/** Register the printr_wallet_remove tool: delete a single wallet from the keystore. */
+function registerWalletRemoveTool(server: McpServer): void {
   server.registerTool(
     "printr_wallet_remove",
     {
@@ -235,7 +248,10 @@ export function registerWalletTools(server: McpServer): void {
       return toolOk({ ok: true });
     }),
   );
+}
 
+/** Register the printr_wallet_bulk_remove tool: delete multiple wallets from the keystore. */
+function registerWalletBulkRemoveTool(server: McpServer): void {
   server.registerTool(
     "printr_wallet_bulk_remove",
     {
@@ -258,4 +274,14 @@ export function registerWalletTools(server: McpServer): void {
       }
     }),
   );
+}
+
+/** Register all keystore wallet management tools on the MCP server. */
+export function registerWalletTools(server: McpServer): void {
+  registerWalletNewTool(server);
+  registerWalletImportTool(server);
+  registerWalletListTool(server);
+  registerWalletUnlockTool(server);
+  registerWalletRemoveTool(server);
+  registerWalletBulkRemoveTool(server);
 }

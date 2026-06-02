@@ -18,7 +18,9 @@ const COLORS: Record<StepStatus, string | undefined> = {
   error: "red",
 };
 
-export function StepRow({ step }: { step: StepResult }) {
+type StepRowProps = { step: StepResult };
+
+export function StepRow({ step }: StepRowProps) {
   const statusColor = COLORS[step.status];
   if (step.status === "running") {
     return (

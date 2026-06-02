@@ -45,6 +45,13 @@ export function createPrintrClient(config: ClientConfig) {
   });
 }
 
+/** The shape of an openapi-fetch response: data on success, error on failure, plus the raw response. */
+export type OpenapiResult<T> = {
+  data?: T;
+  error?: unknown;
+  response: Response;
+};
+
 /**
  * Converts an openapi-fetch response into a neverthrow Result.
  *
@@ -57,11 +64,7 @@ export function createPrintrClient(config: ClientConfig) {
  * );
  * ```
  */
-export function unwrapResult<T>(result: {
-  data?: T;
-  error?: unknown;
-  response: Response;
-}): Result<T, PrintrApiError> {
+export function unwrapResult<T>(result: OpenapiResult<T>): Result<T, PrintrApiError> {
   if (result.error !== undefined || result.data === undefined) {
     const detail = extractErrorDetail(result.error, result.response);
     return err(new PrintrApiError(result.response.status, detail));
@@ -111,11 +114,7 @@ export function toToolResponse<T>(result: Result<T, PrintrApiError>) {
  * ResultAsync instead of Promise<Result>.
  */
 export function unwrapResultAsync<T>(
-  promise: Promise<{
-    data?: T;
-    error?: unknown;
-    response: Response;
-  }>,
+  promise: Promise<OpenapiResult<T>>,
 ): ResultAsync<T, PrintrApiError> {
   return ResultAsync.fromPromise(
     promise,

@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
+  type CaipAccount,
   type ChainType,
   type ClaimStakingRewardsResult,
   chainTypeFromCaip2,
@@ -9,7 +10,6 @@ import {
   formatSvmSubmitError,
   getSvmRpcUrl,
   parseStakingCaip10,
-  type SimpleTxPayload,
   type SvmPayload,
   signAndSubmitEvm,
   signAndSubmitSvm,
@@ -18,7 +18,8 @@ import {
 import { err, errAsync, ok, okAsync, Result, ResultAsync } from "neverthrow";
 import { z } from "zod";
 import { logToolExecution } from "~/lib/logging.js";
-import { getTreasuryAddress, getTreasuryKey } from "~/lib/treasury.js";
+import { getTreasuryAddress, getTreasuryKey, type TreasuryContext } from "~/lib/treasury.js";
+import type { EvmTxValue, SvmTxValue } from "~/lib/tx-payload.js";
 
 const inputSchema = z.object({
   position: z.string().describe("CAIP-10 address of the stake position to claim rewards from"),
@@ -35,8 +36,6 @@ const outputSchema = z.object({
 
 type ClaimOutput = z.infer<typeof outputSchema>;
 type ClaimError = { message: string };
-type CaipAccount = { chainId: string; address: string };
-type TreasuryContext = { treasuryKey: string; treasuryAddress: string };
 
 const claimErr = (message: string): ClaimError => ({ message });
 const mapErr = (e: unknown): ClaimError => claimErr(e instanceof Error ? e.message : String(e));
@@ -63,10 +62,7 @@ function getTreasuryContext(chainType: ChainType): Result<TreasuryContext, Claim
   return ok({ treasuryKey, treasuryAddress });
 }
 
-function buildEvmPayload(
-  positionChainId: string,
-  evm: Extract<SimpleTxPayload, { case: "evm" }>["value"],
-): Result<EvmPayload, ClaimError> {
+function buildEvmPayload(positionChainId: string, evm: EvmTxValue): Result<EvmPayload, ClaimError> {
   const gasLimit = Number(evm.gasLimit);
   if (!Number.isFinite(gasLimit) || gasLimit <= 0) {
     return err(claimErr(`Backend returned invalid gas limit: ${evm.gasLimit}`));
@@ -83,9 +79,7 @@ function buildEvmPayload(
   });
 }
 
-function buildSvmPayload(
-  svm: Extract<SimpleTxPayload, { case: "solana" }>["value"],
-): Result<SvmPayload, ClaimError> {
+function buildSvmPayload(svm: SvmTxValue): Result<SvmPayload, ClaimError> {
   // Validate lookup tables - we only support one
   if (svm.lookupTables.length > 1) {
     return err(

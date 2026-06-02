@@ -9,12 +9,11 @@ import {
   getSvmNativeBalanceLite,
 } from "./balance-lite.js";
 import { getChainMeta } from "./chains.js";
+import type { FetchHandler } from "./test-support.js";
 
 // ---------------------------------------------------------------------------
 // fetch stub
 // ---------------------------------------------------------------------------
-
-type FetchHandler = (req: { url: string; body: unknown }) => unknown;
 
 let originalFetch: typeof globalThis.fetch;
 let lastRequest: { url: string; body: unknown } | undefined;
