@@ -5,6 +5,9 @@ import { privateKeyToAccount } from "viem/accounts";
 import { env } from "~/lib/env.js";
 import { treasuryWallets } from "~/server/wallet-sessions.js";
 
+/** A resolved treasury wallet: its private key and derived public address. */
+export type TreasuryContext = { treasuryKey: string; treasuryAddress: string };
+
 /**
  * Get treasury private key - checks session wallet first, then env var fallback.
  */

@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fromThrowable, type Result } from "neverthrow";
+import { z } from "zod";
 import { env } from "./env.js";
 
 export type ChainTypeKey = "svm" | "evm";
@@ -50,10 +51,12 @@ export type StateRepo = {
   clearLastDeploymentWalletId(): Result<void, StateError>;
 };
 
-// Factory rather than a shared constant — `{ ...DEFAULT_STATE }` is a shallow
-// spread that leaks the inner `activeWalletIds` / `treasuryWalletIds` objects
-// by reference, so the first mutation poisons every subsequent missing-file
-// fallback in the same process.
+/**
+ * Factory rather than a shared constant — `{ ...DEFAULT_STATE }` is a shallow
+ * spread that leaks the inner `activeWalletIds` / `treasuryWalletIds` objects
+ * by reference, so the first mutation poisons every subsequent missing-file
+ * fallback in the same process.
+ */
 const makeDefaultState = (): PersistentState => ({
   version: 1,
   activeWalletIds: {},
@@ -70,10 +73,31 @@ const toStateError = (e: unknown): StateError => ({
   message: e instanceof Error ? e.message : String(e),
 });
 
+const walletIdsSchema = z.partialRecord(z.enum(["svm", "evm"]), z.string());
+
+const PersistentStateSchema = z.object({
+  version: z.literal(1),
+  activeWalletIds: walletIdsSchema,
+  treasuryWalletIds: walletIdsSchema,
+  lastDeploymentWalletId: z.string().optional(),
+});
+
+/** Build a {@link PersistentState} from validated data, omitting the optional marker when absent. */
+function toPersistentState(data: z.infer<typeof PersistentStateSchema>): PersistentState {
+  const base: PersistentState = {
+    version: data.version,
+    activeWalletIds: data.activeWalletIds,
+    treasuryWalletIds: data.treasuryWalletIds,
+  };
+  return data.lastDeploymentWalletId === undefined
+    ? base
+    : { ...base, lastDeploymentWalletId: data.lastDeploymentWalletId };
+}
+
 const safeReadFile = fromThrowable((path: string) => readFileSync(path, "utf-8"), toStateError);
 
 const safeParseJson = fromThrowable(
-  (raw: string) => JSON.parse(raw) as PersistentState,
+  (raw: string): PersistentState => toPersistentState(PersistentStateSchema.parse(JSON.parse(raw))),
   toStateError,
 );
 

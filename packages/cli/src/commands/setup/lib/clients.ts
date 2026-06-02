@@ -15,6 +15,8 @@ export const CLIENT_IDS = [
 
 export const ClientIdSchema = z.enum(CLIENT_IDS);
 
+const JsonObjectSchema = z.record(z.string(), z.unknown());
+
 export type ClientId = z.infer<typeof ClientIdSchema>;
 
 export function commandExists(cmd: string): boolean {
@@ -41,15 +43,25 @@ export function makeEntry(runtime: Runtime, openrouterApiKey: string): McpEntry 
   return entry;
 }
 
+/** Parse JSON text, returning `undefined` on malformed input instead of throwing. */
+function readJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
 export function mergeJsonConfig(
   cfgPath: string,
   entry: McpEntry,
 ): "configured" | "already_configured" {
   let cfg: Record<string, unknown> = {};
   if (existsSync(cfgPath)) {
-    try {
-      cfg = JSON.parse(readFileSync(cfgPath, "utf8")) as Record<string, unknown>;
-    } catch {
+    const parsed = JsonObjectSchema.safeParse(readJson(readFileSync(cfgPath, "utf8")));
+    if (parsed.success) {
+      cfg = parsed.data;
+    } else {
       copyFileSync(cfgPath, `${cfgPath}.bak`);
       cfg = {};
     }

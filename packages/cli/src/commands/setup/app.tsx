@@ -10,13 +10,12 @@ import type { StepResult } from "./types.js";
 
 type Phase = "selecting" | "running" | "done";
 
-export function SetupApp({
-  preselectedIds,
-  openrouterApiKey,
-}: {
+type SetupAppProps = {
   preselectedIds: string[] | null;
   openrouterApiKey: string;
-}) {
+};
+
+export function SetupApp({ preselectedIds, openrouterApiKey }: SetupAppProps) {
   const { exit } = useApp();
 
   // Detect which clients are installed once on mount (synchronous fs/process checks).

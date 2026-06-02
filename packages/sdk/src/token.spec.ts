@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { createPrintrClient } from "./client.js";
+import type { FetchHandler } from "./test-support.js";
 import { type BuildTokenInput, buildToken } from "./token.js";
 
 // ---------------------------------------------------------------------------
@@ -11,8 +12,6 @@ const API_BASE = "https://api.test";
 function makeClient() {
   return createPrintrClient({ apiKey: "test-key", baseUrl: API_BASE });
 }
-
-type FetchHandler = (req: { url: string; body: unknown }) => unknown;
 
 let originalFetch: typeof globalThis.fetch;
 let lastRequest: { url: string; body: unknown } | undefined;

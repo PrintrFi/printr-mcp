@@ -1,6 +1,8 @@
 import { Box, Text } from "ink";
 
-export function Summary({ installed }: { installed: number }) {
+type SummaryProps = { installed: number };
+
+export function Summary({ installed }: SummaryProps) {
   if (installed === 0) {
     return (
       <Box paddingTop={1} paddingLeft={2}>

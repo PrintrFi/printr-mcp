@@ -2,6 +2,7 @@ import { describe, expect, it, test } from "bun:test";
 import type { ChainType } from "@printr/sdk";
 import { err, errAsync, ok, okAsync } from "neverthrow";
 import { createMockServer, SOL_META } from "../lib/test-helpers.js";
+import type { ActiveWallet } from "../server/wallet-sessions.js";
 import {
   buildTxField,
   type FundDeploymentWalletDeps,
@@ -163,7 +164,7 @@ function emptyRecord(): DepsRecord {
 
 function makeDeps(
   record: DepsRecord,
-  activeWallets: Map<ChainType, { privateKey: string; address: string }>,
+  activeWallets: Map<ChainType, ActiveWallet>,
   overrides: Partial<FundDeploymentWalletDeps> = {},
 ): FundDeploymentWalletDeps {
   return {

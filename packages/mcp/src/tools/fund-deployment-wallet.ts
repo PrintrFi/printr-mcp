@@ -99,10 +99,12 @@ function saveToKeystore(
   return wallet_id;
 }
 
+export type TransferTxResult =
+  | { type: "svm"; signature: string }
+  | { type: "evm"; tx_hash: string };
+
 /** Project a transfer result into the chain-specific tx-id field. SVM → tx_signature, EVM → tx_hash. */
-export function buildTxField(
-  result: { type: "svm"; signature: string } | { type: "evm"; tx_hash: string },
-) {
+export function buildTxField(result: TransferTxResult) {
   return result.type === "svm" ? { tx_signature: result.signature } : { tx_hash: result.tx_hash };
 }
 

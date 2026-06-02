@@ -11,7 +11,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
-import { errAsync, ResultAsync } from "neverthrow";
+import { err, errAsync, ok, type Result, ResultAsync } from "neverthrow";
 import { sleep } from "./async.js";
 import { getRpcUrl, getRpcUrls } from "./chains.js";
 import { type RpcInput, withRpcFallback } from "./rpc.js";
@@ -227,18 +227,23 @@ export function formatSvmSubmitError(e: SvmSubmitError): string {
  * against subsequent URLs — the transaction is never re-signed with a fresh
  * blockhash or re-broadcast, which would risk a duplicate on-chain effect.
  */
-export function signAndSubmitSvm(
+type SvmSigningContext = {
+  keypair: Keypair;
+  instructions: TransactionInstruction[];
+};
+
+/**
+ * Decode the base58 secret key and parse the payload instructions into a
+ * {@link SvmSigningContext}, returning a `signing_failed` error on any
+ * malformed key, program ID, account pubkey, or instruction data.
+ */
+function buildSvmSigningContext(
   payload: SvmPayload,
   privateKey: string,
-  rpcUrlOverride?: RpcInput,
-): ResultAsync<SvmSubmitResult, SvmSubmitError> {
-  const urls = getSvmRpcUrls(rpcUrlOverride);
-
-  let keypair: Keypair;
-  let instructions: TransactionInstruction[];
+): Result<SvmSigningContext, SvmSubmitError> {
   try {
-    keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
-    instructions = payload.ixs.map(
+    const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
+    const instructions = payload.ixs.map(
       (ix) =>
         new TransactionInstruction({
           programId: new PublicKey(ix.program_id),
@@ -250,9 +255,24 @@ export function signAndSubmitSvm(
           data: Buffer.from(ix.data, "base64"),
         }),
     );
+    return ok({ keypair, instructions });
   } catch (e) {
-    return errAsync({ kind: "signing_failed", message: toMessage(e) });
+    return err({ kind: "signing_failed", message: toMessage(e) });
   }
+}
+
+export function signAndSubmitSvm(
+  payload: SvmPayload,
+  privateKey: string,
+  rpcUrlOverride?: RpcInput,
+): ResultAsync<SvmSubmitResult, SvmSubmitError> {
+  const urls = getSvmRpcUrls(rpcUrlOverride);
+
+  const contextResult = buildSvmSigningContext(payload, privateKey);
+  if (contextResult.isErr()) {
+    return errAsync(contextResult.error);
+  }
+  const { keypair, instructions } = contextResult.value;
 
   async function broadcast(rpcUrl: string): Promise<SvmBroadcastResult> {
     const connection = new Connection(rpcUrl, "confirmed");

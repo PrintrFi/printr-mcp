@@ -10,7 +10,9 @@ import type { StepResult } from "./types.js";
 
 type Phase = "selecting" | "running" | "done";
 
-export function SkillApp({ preselectedIds }: { preselectedIds: string[] | null }) {
+type SkillAppProps = { preselectedIds: string[] | null };
+
+export function SkillApp({ preselectedIds }: SkillAppProps) {
   const { exit } = useApp();
 
   const [detectedIds] = useState<Set<string>>(

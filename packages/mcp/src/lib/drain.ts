@@ -17,7 +17,7 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import { okAsync, ResultAsync } from "neverthrow";
-import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
+import { type Chain, createPublicClient, createWalletClient, http, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { activeWallets } from "~/server/wallet-sessions.js";
 
@@ -34,6 +34,8 @@ function formatError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+export type DrainTx = { type: "svm"; signature: string } | { type: "evm"; hash: string };
+
 export function buildDrainResult(
   drainedAtomic: bigint,
   meta: ChainMeta,
@@ -41,7 +43,7 @@ export function buildDrainResult(
   toAddress: string,
   remainingAtomic: bigint,
   walletId: string,
-  tx?: { type: "svm"; signature: string } | { type: "evm"; hash: string },
+  tx?: DrainTx,
 ) {
   return {
     drained_amount: formatAmount(drainedAtomic, meta.decimals),
@@ -61,6 +63,35 @@ export type DrainResult = ReturnType<typeof buildDrainResult>;
 // Minimum rent-exempt balance for a basic account (0 data bytes)
 // This is approximately 890,880 lamports (~0.00089 SOL)
 const RENT_EXEMPT_MINIMUM = 890_880n;
+
+type DrainChain = "evm" | "svm";
+
+/** Build a minimal viem {@link Chain} descriptor for a one-off native-token drain transfer. */
+function buildDrainChain(chainId: number, meta: ChainMeta, rpc: string): Chain {
+  return {
+    id: chainId,
+    name: meta.name,
+    nativeCurrency: { name: meta.name, symbol: meta.symbol, decimals: meta.decimals },
+    rpcUrls: { default: { http: [rpc] } },
+  };
+}
+
+/**
+ * Clear tracked active-wallet state after a successful drain — but only when the
+ * drained wallet is still the tracked active one for its chain type.
+ */
+function clearActiveWalletStateAfterDrain(chain: DrainChain, drainedAddress: string): void {
+  if (activeWallets.get(chain)?.address !== drainedAddress) {
+    return;
+  }
+  activeWallets.delete(chain);
+  clearActiveWalletId(chain).mapErr((e) =>
+    logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
+  );
+  clearLastDeploymentWalletId().mapErr((e) =>
+    logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
+  );
+}
 
 export function drainSvm(
   wallet: ResolvedWallet,
@@ -113,16 +144,7 @@ export function drainSvm(
       ]);
       const finalBalance = await connection.getBalance(deploymentKeypair.publicKey);
 
-      // Clear state after successful drain — only if this wallet is the tracked active one
-      if (activeWallets.get("svm")?.address === wallet.address) {
-        activeWallets.delete("svm");
-        clearActiveWalletId("svm").mapErr((e) =>
-          logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
-        );
-        clearLastDeploymentWalletId().mapErr((e) =>
-          logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
-        );
-      }
+      clearActiveWalletStateAfterDrain("svm", wallet.address);
 
       return buildDrainResult(
         drainAmount,
@@ -180,12 +202,7 @@ export function drainEvm(
       walletClient.sendTransaction({
         to: treasuryAccount.address,
         value: drainAmount,
-        chain: {
-          id: chainId,
-          name: meta.name,
-          nativeCurrency: { name: meta.name, symbol: meta.symbol, decimals: meta.decimals },
-          rpcUrls: { default: { http: [rpc] } },
-        },
+        chain: buildDrainChain(chainId, meta, rpc),
       }),
       toErr,
     ).andThen((hash) =>
@@ -193,16 +210,7 @@ export function drainEvm(
         publicClient.getBalance({ address: deploymentAccount.address }),
         toErr,
       ).map((finalBalance) => {
-        // Clear state after successful drain — only if this wallet is the tracked active one
-        if (activeWallets.get("evm")?.address === wallet.address) {
-          activeWallets.delete("evm");
-          clearActiveWalletId("evm").mapErr((e) =>
-            logger.warn({ error: e.message }, "Failed to clear active wallet ID"),
-          );
-          clearLastDeploymentWalletId().mapErr((e) =>
-            logger.warn({ error: e.message }, "Failed to clear deployment wallet ID"),
-          );
-        }
+        clearActiveWalletStateAfterDrain("evm", wallet.address);
         return buildDrainResult(
           drainAmount,
           meta,

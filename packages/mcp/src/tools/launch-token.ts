@@ -200,11 +200,13 @@ function signWithKey(
     }));
 }
 
+type TokenParams = { name: string; symbol: string; description: string };
+
 function openWebSigner(
   token_id: string,
   payload: unknown,
   quote: unknown,
-  tokenParams: { name: string; symbol: string; description: string },
+  tokenParams: TokenParams,
 ) {
   const chain_type = isEvmPayload(payload) ? ("evm" as const) : ("svm" as const);
   const image_url = `${env.PRINTR_CDN_URL}/t/${token_id}/media/image`;
@@ -342,7 +344,7 @@ export type OpenWebSignerFn = (
   token_id: string,
   payload: unknown,
   quote: unknown,
-  tokenParams: { name: string; symbol: string; description: string },
+  tokenParams: TokenParams,
 ) => ReturnType<typeof openWebSigner>;
 
 export type AutoDrainFn = (

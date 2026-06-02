@@ -112,7 +112,7 @@ export function getTreasuryContext(
   return ok({ treasuryKey, treasuryAddress });
 }
 
-// Looks up a deployment wallet key in the keystore for the given creator address.
+/** Looks up a deployment wallet key in the keystore for the given creator address. */
 function findDeploymentKey(
   chain: string,
   creatorAddress: string,
@@ -152,8 +152,10 @@ function fetchChainFees(
   });
 }
 
-// If the creator address differs from treasury, fees belong to a deployment
-// wallet — re-fetch with that wallet as payer to get the correct payload.
+/**
+ * If the creator address differs from treasury, fees belong to a deployment
+ * wallet — re-fetch with that wallet as payer to get the correct payload.
+ */
 export function resolveClaimContext(
   tokenId: string,
   chain: string,
@@ -197,10 +199,12 @@ export function resolveClaimContext(
   });
 }
 
-// Drains a deployment wallet back to treasury after a claim. Awaited so the
-// drain attempt completes (and any failure is logged) before the handler
-// resolves — earlier versions returned a floating ResultAsync whose
-// completion the runtime could drop.
+/**
+ * Drains a deployment wallet back to treasury after a claim. Awaited so the
+ * drain attempt completes (and any failure is logged) before the handler
+ * resolves — earlier versions returned a floating ResultAsync whose
+ * completion the runtime could drop.
+ */
 async function runPostClaimDrain(
   deploymentWallet: DeploymentWallet,
   treasuryKey: string,
@@ -216,8 +220,10 @@ async function runPostClaimDrain(
   );
 }
 
-// If the signer is a drained deployment wallet, pre-fund it from treasury,
-// claim with the deployment key, then drain it back.
+/**
+ * If the signer is a drained deployment wallet, pre-fund it from treasury,
+ * claim with the deployment key, then drain it back.
+ */
 function claimSvm(
   svmPayload: SvmPayload,
   ctx: ClaimContext,

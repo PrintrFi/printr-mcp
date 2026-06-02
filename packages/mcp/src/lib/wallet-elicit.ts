@@ -99,9 +99,9 @@ async function resolveAgentMode(
     : { kind: "insufficient_funds", address, chain: chainName, ...bal };
 }
 
-export function insufficientFundsMessage(
-  r: Extract<WalletResolution, { kind: "insufficient_funds" }>,
-): string {
+type InsufficientFundsResolution = Extract<WalletResolution, { kind: "insufficient_funds" }>;
+
+export function insufficientFundsMessage(r: InsufficientFundsResolution): string {
   return (
     `Wallet ${r.address} on ${r.chain} has insufficient ${r.symbol}.\n` +
     `Balance:  ${r.balance} ${r.symbol}\n` +

@@ -1,1 +1,1 @@
-bun test
+bun run lint && bun run typecheck && PRINTR_API_KEY="" bun test

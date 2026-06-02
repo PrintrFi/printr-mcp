@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -29,6 +29,14 @@
       "recommended": true,
       "complexity": {
         "noExcessiveCognitiveComplexity": "warn",
+        "noExcessiveLinesPerFunction": {
+          "level": "warn",
+          "options": {
+            "maxLines": 50,
+            "skipBlankLines": true,
+            "skipIifes": true
+          }
+        },
         "noBannedTypes": "error",
         "noForEach": "off",
         "noUselessLoneBlockStatements": "error",
@@ -81,14 +89,33 @@
   },
   "overrides": [
     {
+      "includes": ["**", "!**/proto/**", "!biome/plugins/**"],
+      "plugins": [
+        "./biome/plugins/no-inline-struct-type.grit",
+        "./biome/plugins/no-promise-result.grit",
+        "./biome/plugins/no-unsafe-json-parse-cast.grit"
+      ]
+    },
+    {
       "includes": ["**/*.spec.ts", "**/*.test.ts"],
       "linter": {
         "rules": {
           "suspicious": {
-            "noExplicitAny": "off"
+            "noExplicitAny": "off",
+            "noEmptyBlockStatements": "off"
           },
           "style": {
             "noNonNullAssertion": "off"
+          },
+          "complexity": {
+            "noExcessiveLinesPerFunction": {
+              "level": "warn",
+              "options": {
+                "maxLines": 200,
+                "skipBlankLines": true,
+                "skipIifes": true
+              }
+            }
           }
         }
       }
@@ -99,6 +126,9 @@
         "rules": {
           "suspicious": {
             "noShadowRestrictedNames": "off"
+          },
+          "complexity": {
+            "noExcessiveLinesPerFunction": "off"
           }
         }
       }

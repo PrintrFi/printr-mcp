@@ -2,15 +2,13 @@ import { Box, Text, useInput } from "ink";
 import { useState } from "react";
 import type { ClientDef } from "../types.js";
 
-export function SelectionScreen({
-  clients,
-  detectedIds,
-  onConfirm,
-}: {
+type SelectionScreenProps = {
   clients: ClientDef[];
   detectedIds: Set<string>;
   onConfirm: (ids: string[]) => void;
-}) {
+};
+
+export function SelectionScreen({ clients, detectedIds, onConfirm }: SelectionScreenProps) {
   const [cursor, setCursor] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set(detectedIds));
 
