@@ -17,15 +17,16 @@ type Finding = {
 };
 
 /**
- * Lines that begin a named function-shaped declaration: `function` declarations
- * and arrow functions bound to a `const`. Class methods are intentionally out of
- * scope — their bodies are hard to tell apart from control flow by line shape.
+ * Lines that begin a module-level named function-shaped declaration: `function`
+ * declarations and arrow functions bound to a `const`. Anchored at column 0, so
+ * indented inner helpers and class methods are intentionally out of scope —
+ * their preceding comments are usually implementation notes, not API docs.
  */
 const FUNCTION_RES = [
   // `function f`, `export default async function f`
-  /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\b/,
+  /^(?:export\s+)?(?:default\s+)?(?:async\s+)?function\b/,
   // `const f = () =>`, `export const f = async (x) =>`, `const f: T = x =>`
-  /^\s*(?:export\s+)?const\s+[\w$]+\s*(?::.+)?=\s*(?:async\s+)?(?:\([^)]*\)|[\w$]+)\s*(?::[^=]+?)?=>/,
+  /^(?:export\s+)?const\s+[\w$]+\s*(?::.+)?=\s*(?:async\s+)?(?:\([^)]*\)|[\w$]+)\s*(?::[^=]+?)?=>/,
 ];
 
 /** Matches a `//` line comment, but not a `///` triple-slash directive. */
