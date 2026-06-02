@@ -16,8 +16,17 @@ type Finding = {
   fn: string;
 };
 
-/** Matches a top-level/nested function declaration, optionally exported/async. */
-const FUNCTION_RE = /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\b/;
+/**
+ * Lines that begin a named function-shaped declaration: `function` declarations
+ * and arrow functions bound to a `const`. Class methods are intentionally out of
+ * scope — their bodies are hard to tell apart from control flow by line shape.
+ */
+const FUNCTION_RES = [
+  // `function f`, `export default async function f`
+  /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\b/,
+  // `const f = () =>`, `export const f = async (x) =>`, `const f: T = x =>`
+  /^\s*(?:export\s+)?const\s+[\w$]+\s*(?::.+)?=\s*(?:async\s+)?(?:\([^)]*\)|[\w$]+)\s*(?::[^=]+?)?=>/,
+];
 
 /** Matches a `//` line comment, but not a `///` triple-slash directive. */
 const LINE_COMMENT_RE = /^\s*\/\/(?!\/)/;
@@ -31,7 +40,7 @@ async function findInFile(path: string): Promise<Finding[]> {
   const findings: Finding[] = [];
   for (let i = 0; i < lines.length; i++) {
     const current = lines[i] ?? "";
-    if (!FUNCTION_RE.test(current)) {
+    if (!FUNCTION_RES.some((re) => re.test(current))) {
       continue;
     }
     const prev = lines[i - 1];
