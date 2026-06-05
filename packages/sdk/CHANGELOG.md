@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.7.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.6.1...sdk-v0.7.0) (2026-06-02)
+
+
+### Features
+
+* **sdk:** add fetch-only balance-lite variant ([813adbf](https://github.com/PrintrFi/printr-mcp/commit/813adbf83c579f6301b5b7572b65f95b3df39f36))
+* **sdk:** add Result-returning tryParse variants for throwing parsers ([50095e0](https://github.com/PrintrFi/printr-mcp/commit/50095e08d70f020624acdf0f3aaf3be0fce5a360))
+* **sdk:** add types-only @printr/sdk/openapi entry ([e31405a](https://github.com/PrintrFi/printr-mcp/commit/e31405ac9facae9981525010d47cbbce535f2bf3))
+* **sdk:** createStateRepo factory + cover state with specs ([6077ea3](https://github.com/PrintrFi/printr-mcp/commit/6077ea34811e3b7f166d2a8910c0526ac4bdbeb3))
+* **sdk:** epic A — make SDK Workers-ready ([1cde7cc](https://github.com/PrintrFi/printr-mcp/commit/1cde7cc1a92cf9294f8537c237a8e5c8270f9203))
+* **sdk:** generic PublicContractClient&lt;TAbi&gt; wrapper ([0fd5cf0](https://github.com/PrintrFi/printr-mcp/commit/0fd5cf0136a0224923d11f2de28c485c9cf5c742))
+* **sdk:** namespaced tx and balance facade ([075fb35](https://github.com/PrintrFi/printr-mcp/commit/075fb35c1599aba86cc36f9fb411ae86b96e89aa))
+* **sdk:** namespaced tx and balance facade ([cadeb90](https://github.com/PrintrFi/printr-mcp/commit/cadeb90d3ff03558f7c8a192e251b51d1fa118ac)), closes [#81](https://github.com/PrintrFi/printr-mcp/issues/81)
+* **sdk:** rpc fallback across multiple endpoints in signers ([674a921](https://github.com/PrintrFi/printr-mcp/commit/674a921fad901335d3f009e4ab1302423fb6f714))
+* **sdk:** rpc fallback across multiple endpoints in signers ([6b579da](https://github.com/PrintrFi/printr-mcp/commit/6b579dae08f22272200568da2820bd0ff9ed78a9)), closes [#79](https://github.com/PrintrFi/printr-mcp/issues/79)
+* **signing:** pluggable signer adapters + enforced lint gates ([87fbd07](https://github.com/PrintrFi/printr-mcp/commit/87fbd0709a5712226b1c9741a791aba55a04e45f))
+
+
+### Bug Fixes
+
+* **sdk:** balance-lite dispatcher + symbol() fallback ([6295954](https://github.com/PrintrFi/printr-mcp/commit/6295954b02cae39ac96a0f3450f701f4d040850c))
+* **sdk:** broadcast at most once when rpc fallback retries ([2b31f0d](https://github.com/PrintrFi/printr-mcp/commit/2b31f0d54eb2a7564b6caff03f031611421def3e))
+* **sdk:** catch sync throws in signers + type tx_hash as Hex ([b8a8f63](https://github.com/PrintrFi/printr-mcp/commit/b8a8f63d9cfa2d44417eb8bf16b0de8932844fc1))
+* **sdk:** drop createRequire shim from dist bundle ([16fb08a](https://github.com/PrintrFi/printr-mcp/commit/16fb08ada6b9d5a25a602ee4561255b50a3a72cc))
+* **sdk:** include api.gen.d.ts in dist ([7a227de](https://github.com/PrintrFi/printr-mcp/commit/7a227de5027da4f3cdd6c64bff5e5c486c6cff17))
+* **sdk:** lazy-load sharp + node:fs in image.ts ([09e8f4d](https://github.com/PrintrFi/printr-mcp/commit/09e8f4db705770768984e397577ba5de92aa1b24))
+* **sdk:** never overwrite an unreadable keystore with an empty one ([97d8a12](https://github.com/PrintrFi/printr-mcp/commit/97d8a12629c036617b07db65bc67e737bce02371))
+* **sdk:** read PRINTR_WALLET_STORE live so keystore tests stay isolated ([5671e85](https://github.com/PrintrFi/printr-mcp/commit/5671e85ff3840c36d79e0bc22b589712f1422b12))
+* **sdk:** validate token chain in balance.token.get + clarify test comment ([393b1dc](https://github.com/PrintrFi/printr-mcp/commit/393b1dc5a485e47884cd51d03a47f16abdf39ab7))
+
 ## [0.6.1](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.6.0...sdk-v0.6.1) (2026-05-18)
 
 

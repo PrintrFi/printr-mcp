@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.17.0](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.16.1...mcp-v0.17.0) (2026-06-02)
+
+
+### Features
+
+* **sdk:** epic A — make SDK Workers-ready ([1cde7cc](https://github.com/PrintrFi/printr-mcp/commit/1cde7cc1a92cf9294f8537c237a8e5c8270f9203))
+* **signing:** add pluggable signer port and adapters ([611d8a9](https://github.com/PrintrFi/printr-mcp/commit/611d8a99414c9e971194a457c2b4f355c237173e))
+* **signing:** pluggable signer adapters + enforced lint gates ([87fbd07](https://github.com/PrintrFi/printr-mcp/commit/87fbd0709a5712226b1c9741a791aba55a04e45f))
+
 ## [0.16.1](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.16.0...mcp-v0.16.1) (2026-05-18)
 
 

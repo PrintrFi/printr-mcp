@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.0](https://github.com/PrintrFi/printr-mcp/compare/cli-v0.3.2...cli-v0.4.0) (2026-06-02)
+
+
+### Features
+
+* **cli:** add quickstart command ([5ce339e](https://github.com/PrintrFi/printr-mcp/commit/5ce339e409a5011bf1565eb344117fd1013a2d7c))
+* **cli:** add quickstart command + tighten flag validation ([7f60fe8](https://github.com/PrintrFi/printr-mcp/commit/7f60fe82220242294b538b3cd639a45601e8e86b))
+* **signing:** pluggable signer adapters + enforced lint gates ([87fbd07](https://github.com/PrintrFi/printr-mcp/commit/87fbd0709a5712226b1c9741a791aba55a04e45f))
+
 ## [0.3.2](https://github.com/PrintrFi/printr-mcp/compare/cli-v0.3.1...cli-v0.3.2) (2026-05-18)
 
 
