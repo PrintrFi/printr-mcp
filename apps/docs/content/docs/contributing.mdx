@@ -1,0 +1,23 @@
+---
+title: Contributing
+description: Local setup, conventions, and the PR flow.
+---
+
+The canonical contributor guide lives in the repo at
+[`CONTRIBUTING.md`](https://github.com/PrintrFi/printr-mcp/blob/main/CONTRIBUTING.md). Highlights:
+
+## Setup
+
+```bash
+bun install
+bun run check   # typecheck + lint + test (the CI gate)
+```
+
+## Conventions
+
+- **Errors:** `neverthrow` `Result`/`ResultAsync` for failable business logic.
+- **Validation:** Zod for all I/O; shared schemas in `@printr/sdk`.
+- **TSDoc:** required on public SDK exports and `register*Tool` functions.
+- **Commits:** Conventional Commits; no `Co-Authored-By` trailers.
+
+_TODO: keep in sync with `CONTRIBUTING.md`, or generate from it._
