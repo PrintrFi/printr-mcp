@@ -1,7 +1,11 @@
 import { source } from '@/lib/source';
 import { createFromSource } from 'fumadocs-core/search/server';
 
-export const { GET } = createFromSource(source, {
+// Static export: emit a prebuilt search index at build time instead of a
+// server route. The client uses the `static` search preset (see app/layout.tsx).
+export const revalidate = false;
+
+export const { staticGET: GET } = createFromSource(source, {
   // https://docs.orama.com/docs/orama-js/supported-languages
   language: 'english',
 });
