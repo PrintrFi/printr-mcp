@@ -18,9 +18,7 @@ files. Add a page by dropping an `.mdx` file in and listing its slug in the near
 
 ## Notes
 
-- **`zod` is pinned to `^4.4.3` here on purpose.** `fumadocs-mdx` depends on `zod@^4.4.3`,
-  while the SDK packages pin `~4.3.6`. Without this pin, Bun installs two `fumadocs-core`
-  copies (one per `zod` version) and the mismatched module identity widens
-  `source.getPage().data` to the base `PageData`, dropping `body`/`toc`/`full` at type level.
 - `lib/source.ts` imports `.source/server` by relative path rather than the `collections/*`
   alias, because the monorepo-root `tsconfig.json` owns path resolution for this workspace.
+- Keep `zod` on one version across the monorepo. A split version installs two `fumadocs-core`
+  copies, widening `source.getPage().data` to base `PageData` (build passes, typecheck fails).
