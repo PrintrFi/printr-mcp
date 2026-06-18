@@ -86,15 +86,22 @@ async function main() {
     console.log();
 
     // 5. Call printr_get_token
-    const tokenId = "29CWsqH84TykHDDwA6DtETUtXQPuKbVgKCmxtkBsbrrr";
-    console.log(`5. Calling printr_get_token (${tokenId.slice(0, 10)}...):`);
+    // Example telecoin ID in the documented hex format. It may not exist in
+    // every environment; the call reports a missing token gracefully rather
+    // than failing the example.
+    const tokenId =
+      "0x10f55a83f704819160fd589ddb6ea581b43dc513bd287a85c0e586c7e40ced1f";
+    console.log(`5. Calling printr_get_token (${tokenId.slice(0, 12)}...):`);
     const tokenResult = await client.callTool({
       name: "printr_get_token",
       arguments: { id: tokenId },
     });
     const tokenContent = tokenResult.content as Array<{ type: string; text: string }>;
-    if (tokenContent[0]?.type === "text") {
-      const token = JSON.parse(tokenContent[0].text);
+    const tokenText = tokenContent[0]?.text ?? "";
+    if (tokenResult.isError) {
+      console.log(`   Token unavailable: ${tokenText.trim()}`);
+    } else {
+      const token = JSON.parse(tokenText);
       console.log(`   Name: ${token.name}`);
       console.log(`   Symbol: ${token.symbol}`);
       console.log(`   Chains: ${token.chains.join(", ")}`);

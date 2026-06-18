@@ -18,7 +18,10 @@ import {
   env,
 } from "@printr/sdk";
 
-const KNOWN_TOKEN_ID = "29CWsqH84TykHDDwA6DtETUtXQPuKbVgKCmxtkBsbrrr";
+// Example telecoin ID in the documented hex format. It may not exist in every
+// environment; the calls below report a missing token gracefully.
+const KNOWN_TOKEN_ID =
+  "0x10f55a83f704819160fd589ddb6ea581b43dc513bd287a85c0e586c7e40ced1f";
 
 async function main() {
   console.log("=== @printr/sdk Basic Example ===\n");
