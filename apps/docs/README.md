@@ -12,15 +12,8 @@ bun run --cwd apps/docs typecheck  # fumadocs-mdx + next typegen + tsc
 
 ## Deploy
 
-The site is a static export (`output: 'export'`) published to GitHub Pages by
-`.github/workflows/docs.yml` on every push to `main` that touches `apps/docs/**`.
-
-One-time setup: in the repo, **Settings → Pages → Source = "GitHub Actions"**.
-
-The project site is served from a subpath (`https://<owner>.github.io/printr-mcp/`),
-so the workflow builds with `NEXT_PUBLIC_BASE_PATH=/printr-mcp`. For a custom domain or
-user/org root page, drop that env var (empty base path). Search uses the build-time static
-index (`/api/search`) rather than a server route, so it works on static hosting.
+Static export published to GitHub Pages by `.github/workflows/docs.yml` on pushes to `main`.
+One-time setup: **Settings → Pages → Source = "GitHub Actions"**.
 
 ## Content
 
