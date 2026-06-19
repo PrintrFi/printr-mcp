@@ -1,6 +1,6 @@
 # Printr Monorepo
 
-Monorepo containing the Printr SDK and MCP server for AI agents to launch tokens across EVM chains and Solana.
+Monorepo containing the Printr SDK, CLI, and MCP server for AI agents to launch tokens across EVM chains and Solana.
 
 ## Packages
 
@@ -8,6 +8,7 @@ Monorepo containing the Printr SDK and MCP server for AI agents to launch tokens
 |---------|-------------|
 | `@printr/sdk` | Core TypeScript SDK with pure blockchain/API functionality |
 | `@printr/mcp` | MCP server that wraps the SDK for AI agent integration |
+| `@printr/cli` | CLI to configure MCP servers and install agent skills |
 
 ## Commands
 
