@@ -28,7 +28,7 @@ bunx @printr/cli setup
 `buildToken` calls the API and returns an **unsigned** transaction payload. You then sign and
 submit it (see [Wallets & signing](/docs/guides/wallets-signing)).
 
-```ts
+```ts twoslash
 import { buildToken, createPrintrClient, env } from "@printr/sdk";
 
 // Defaults target the public preview API; no key needed.
@@ -53,7 +53,14 @@ const result = await buildToken(
 
 `buildToken` returns a `neverthrow` `ResultAsync` — match on it instead of `try`/`catch`:
 
-```ts
+```ts twoslash
+import { buildToken, createPrintrClient, env } from "@printr/sdk";
+const client = createPrintrClient({ apiKey: env.PRINTR_API_KEY, baseUrl: env.PRINTR_API_BASE_URL });
+const result = await buildToken(
+  { creator_accounts: ["eip155:8453:0x"], name: "x", symbol: "X", description: "", chains: ["eip155:8453"], initial_buy: { spend_usd: 10 } },
+  client,
+);
+// ---cut---
 result.match(
   (payload) => console.log("Unsigned payload ready", payload),
   (error) => console.error("Build failed", error),

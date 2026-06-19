@@ -37,7 +37,7 @@ A token may target multiple chains in one launch — pass several CAIP-2 ids in 
 
 ### Estimate the cost (optional)
 
-```ts
+```ts twoslash
 import { createPrintrClient, env } from "@printr/sdk";
 
 const client = createPrintrClient({
@@ -64,7 +64,10 @@ Use the `printr_quote` MCP tool (or the API) to itemize per-chain cost before co
 
 ### Build the unsigned payload
 
-```ts
+```ts twoslash
+import { createPrintrClient, env } from "@printr/sdk";
+const client = createPrintrClient({ apiKey: env.PRINTR_API_KEY, baseUrl: env.PRINTR_API_BASE_URL });
+// ---cut---
 import { buildToken } from "@printr/sdk";
 
 const result = await buildToken(

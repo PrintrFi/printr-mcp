@@ -1,5 +1,8 @@
-import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
+import { rehypeCodeDefaultOptions } from 'fumadocs-core/mdx-plugins';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
+import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
+import { transformerTwoslash } from 'fumadocs-twoslash';
+import { twoslashCompilerOptions } from './lib/twoslash';
 
 export const docs = defineDocs({
   dir: 'content/docs',
@@ -15,5 +18,18 @@ export const docs = defineDocs({
 });
 
 export default defineConfig({
-  mdxOptions: {},
+  mdxOptions: {
+    // `transformerTwoslash` compiles every ```ts twoslash fence against the real
+    // @printr/* source (lib/twoslash.ts paths), so a doc snippet that no longer
+    // type-checks fails the build instead of going stale.
+    rehypeCodeOptions: {
+      ...rehypeCodeDefaultOptions,
+      transformers: [
+        ...(rehypeCodeDefaultOptions.transformers ?? []),
+        transformerTwoslash({
+          twoslashOptions: { compilerOptions: twoslashCompilerOptions },
+        }),
+      ],
+    },
+  },
 });
