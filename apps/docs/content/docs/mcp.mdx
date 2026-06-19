@@ -1,0 +1,25 @@
+---
+title: MCP server
+description: "@printr/mcp — expose the SDK to AI agents."
+---
+
+`@printr/mcp` wraps the SDK as a [Model Context Protocol](https://modelcontextprotocol.io)
+server, so AI agents can launch tokens, check balances, and manage wallets through typed tools.
+
+## Run it
+
+```bash
+bunx @printr/mcp
+```
+
+## Tools
+
+Each tool ships Zod-validated input and output schemas; `structuredContent` mirrors the JSON in
+the text response.
+
+_TODO: list each tool (create token, balances, transfer, wallet management, …) with its inputs
+and outputs._
+
+## Connecting a client
+
+_TODO: configuration snippets for Claude Code, Cursor, and other MCP clients._

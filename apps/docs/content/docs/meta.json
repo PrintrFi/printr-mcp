@@ -1,0 +1,16 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "getting-started",
+    "---Guides---",
+    "guides",
+    "---Packages---",
+    "sdk",
+    "mcp",
+    "cli",
+    "---Reference---",
+    "architecture",
+    "contributing"
+  ]
+}
