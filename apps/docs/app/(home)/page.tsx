@@ -1,5 +1,6 @@
 import { ArrowRight, Coins, Layers, ShieldCheck, Terminal } from "lucide-react";
 import Link from "next/link";
+import { TwoslashSnippet } from "@/components/twoslash-snippet";
 import { gitConfig } from "@/lib/shared";
 
 const features = [
@@ -25,19 +26,28 @@ const features = [
   },
 ];
 
-const SNIPPET = `import { createClient, createToken } from "@printr/sdk";
+const SNIPPET = `import { buildToken, createPrintrClient, env } from "@printr/sdk";
 
-const client = createClient({ apiKey: process.env.PRINTR_API_KEY });
-
-const result = await createToken(client, {
-  chain: "base",
-  name: "My Token",
-  symbol: "MINE",
-  image: "./logo.jpg",
+const client = createPrintrClient({
+  apiKey: env.PRINTR_API_KEY,
+  baseUrl: env.PRINTR_API_BASE_URL,
 });
 
+const result = await buildToken(
+  {
+    creator_accounts: ["eip155:8453:0xYourAddress"],
+    name: "My Token",
+    symbol: "MINE",
+    description: "A cross-chain token.",
+    chains: ["eip155:8453"],
+    initial_buy: { spend_usd: 10 },
+    image_path: "./logo.jpg",
+  },
+  client,
+);
+
 result.match(
-  (token) => console.log("launched", token.address),
+  (payload) => console.log("unsigned payload ready", payload),
   (error) => console.error(error),
 );`;
 
@@ -87,9 +97,7 @@ export default function HomePage() {
             <span className="size-3 rounded-full bg-green-400/70" />
             <span className="ml-2 text-xs text-fd-muted-foreground">launch.ts</span>
           </div>
-          <pre className="overflow-x-auto p-4 text-sm leading-relaxed">
-            <code className="font-mono text-fd-foreground">{SNIPPET}</code>
-          </pre>
+          <TwoslashSnippet code={SNIPPET} />
         </div>
       </section>
 
