@@ -14,6 +14,16 @@ describe("createPrintrClient", () => {
     expect(typeof client.GET).toBe("function");
     expect(typeof client.POST).toBe("function");
   });
+
+  it("creates a client without an apiKey (keyless preview API)", () => {
+    const client = createPrintrClient({
+      baseUrl: "https://api-preview.printr.money",
+    });
+
+    expect(client).toBeDefined();
+    expect(typeof client.GET).toBe("function");
+    expect(typeof client.POST).toBe("function");
+  });
 });
 
 describe("unwrapResult", () => {
