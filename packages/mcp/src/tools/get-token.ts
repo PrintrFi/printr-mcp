@@ -36,6 +36,14 @@ const outputSchema = z.object({
   curveProperties,
 });
 
+/**
+ * Registers the `printr_get_token` MCP tool, which returns details about a Printr token by its
+ * telecoin ID or CAIP-10 contract address, including name, symbol, creator addresses, deployed
+ * chains, bonding curve properties, and external links.
+ *
+ * @param server - MCP server instance to register the tool against
+ * @param client - Printr API client
+ */
 export function registerGetTokenTool(server: McpServer, client: PrintrClient) {
   server.registerTool(
     "printr_get_token",

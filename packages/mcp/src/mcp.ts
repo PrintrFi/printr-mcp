@@ -27,6 +27,11 @@ import { registerTransferTokenTool } from "~/tools/transfer-token.js";
 import { registerWalletTools } from "~/tools/wallet.js";
 import { version } from "../package.json";
 
+/**
+ * Bootstraps the Printr MCP server: creates the Printr API client, constructs the
+ * `McpServer` instance, registers every Printr tool (and the image-generation tool when
+ * `OPENROUTER_API_KEY` is set), and connects over stdio.
+ */
 export async function startMcpServer() {
   const client = createPrintrClient({
     apiKey: env.PRINTR_API_KEY,

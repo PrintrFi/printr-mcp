@@ -274,6 +274,12 @@ export function fundDeploymentWalletHandler({
     );
 }
 
+/**
+ * Registers the `printr_fund_deployment_wallet` MCP tool, which creates a fresh deployment
+ * wallet, funds it from the treasury wallet, and sets it as the active signing wallet.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerFundDeploymentWalletTool(server: McpServer): void {
   server.registerTool(
     "printr_fund_deployment_wallet",

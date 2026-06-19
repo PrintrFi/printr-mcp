@@ -52,6 +52,12 @@ const buildOutput = (
   ...result,
 });
 
+/**
+ * Registers the `printr_get_token_balance` MCP tool, which returns the balance of an ERC-20 or
+ * SPL token for a given wallet address.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerGetTokenBalanceTool(server: McpServer): void {
   server.registerTool(
     "printr_get_token_balance",

@@ -43,6 +43,12 @@ function feesMessage(totalFeesUsd: number, claimableCount: number): string {
   return `$${totalFeesUsd.toFixed(2)} in creator fees available across ${claimableCount} chain(s).`;
 }
 
+/**
+ * Registers the `printr_get_creator_fees` MCP tool, which reports accumulated creator fees for
+ * a token across all deployed chains and whether they can be claimed.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerGetCreatorFeesTool(server: McpServer): void {
   server.registerTool(
     "printr_get_creator_fees",

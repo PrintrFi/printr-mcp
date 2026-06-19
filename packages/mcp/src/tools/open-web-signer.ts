@@ -33,6 +33,13 @@ const outputSchema = z.object({
   expires_at: z.number().describe("Session expiry timestamp (epoch ms)"),
 });
 
+/**
+ * Registers the `printr_open_web_signer` MCP tool, which starts an ephemeral local signing
+ * session and returns a deep link to the Printr web app where the user can sign the transaction
+ * with their browser wallet (MetaMask / Phantom).
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerOpenWebSignerTool(server: McpServer): void {
   server.registerTool(
     "printr_open_web_signer",

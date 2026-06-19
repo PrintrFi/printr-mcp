@@ -15,6 +15,13 @@ const outputSchema = z.object({
   ),
 });
 
+/**
+ * Registers the `printr_supported_chains` MCP tool, which lists all blockchain networks
+ * supported by Printr MCP along with their chain IDs, names, native token info, and RPC
+ * availability.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerSupportedChainsTool(server: McpServer): void {
   server.registerTool(
     "printr_supported_chains",

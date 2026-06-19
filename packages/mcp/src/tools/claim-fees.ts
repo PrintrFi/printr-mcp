@@ -337,6 +337,12 @@ export function claimFeesHandler({
     );
 }
 
+/**
+ * Registers the `printr_claim_fees` MCP tool, which claims accumulated creator fees for a
+ * token on a specific chain using the treasury wallet to sign and submit the transaction.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerClaimFeesTool(server: McpServer): void {
   server.registerTool(
     "printr_claim_fees",

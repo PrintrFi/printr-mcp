@@ -48,6 +48,13 @@ const outputSchema = z.object({
     .describe("Confirmation level"),
 });
 
+/**
+ * Registers the `printr_sign_and_submit_svm` MCP tool, which signs and submits a Solana
+ * transaction payload returned by `printr_create_token` and returns the transaction signature
+ * once confirmed.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerSignAndSubmitSvmTool(server: McpServer): void {
   server.registerTool(
     "printr_sign_and_submit_svm",

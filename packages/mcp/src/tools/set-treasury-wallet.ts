@@ -33,6 +33,12 @@ const outputSchema = z.object({
   chain_type: z.enum(["evm", "svm"]).describe("Chain type (evm or svm)"),
 });
 
+/**
+ * Registers the `printr_set_treasury_wallet` MCP tool, which sets a keystore wallet as the
+ * treasury wallet (for the session) used to fund and drain deployment wallets.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerSetTreasuryWalletTool(server: McpServer): void {
   server.registerTool(
     "printr_set_treasury_wallet",

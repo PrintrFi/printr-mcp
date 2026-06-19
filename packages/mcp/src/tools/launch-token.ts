@@ -411,6 +411,14 @@ export async function launchTokenHandler(
   return mergeResponse(response, drainOutcome);
 }
 
+/**
+ * Registers the `printr_launch_token` MCP tool, which creates and signs a token in one call —
+ * submitting on-chain immediately when a `private_key` is supplied, or returning a browser
+ * signing URL otherwise.
+ *
+ * @param server - MCP server instance to register the tool against
+ * @param client - Printr API client
+ */
 export function registerLaunchTokenTool(server: McpServer, client: PrintrClient): void {
   const deps = createLaunchTokenDeps(client);
   server.registerTool(

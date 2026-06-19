@@ -40,6 +40,13 @@ const outputSchema = z.object({
   status: z.enum(["success", "reverted"]).describe("Transaction status"),
 });
 
+/**
+ * Registers the `printr_sign_and_submit_evm` MCP tool, which signs and submits an EVM
+ * transaction payload returned by `printr_create_token` and returns the transaction hash and
+ * receipt once confirmed.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerSignAndSubmitEvmTool(server: McpServer): void {
   server.registerTool(
     "printr_sign_and_submit_evm",

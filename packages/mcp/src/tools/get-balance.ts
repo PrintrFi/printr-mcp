@@ -47,6 +47,12 @@ const buildOutput = (
   ...result,
 });
 
+/**
+ * Registers the `printr_get_balance` MCP tool, which returns the native token balance of a
+ * wallet address on EVM chains or Solana.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerGetBalanceTool(server: McpServer): void {
   server.registerTool(
     "printr_get_balance",
