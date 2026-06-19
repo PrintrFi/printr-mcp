@@ -11,6 +11,8 @@ MCP server for [Printr](https://printr.money) — the cross-chain token launchpa
 
 No API key required. Works out of the box.
 
+📖 **[Documentation](https://printrfi.github.io/printr-mcp/)**
+
 ## Setup
 
 Add to your MCP client config (Claude Desktop, Cursor, etc.):
