@@ -7,7 +7,11 @@ export type { paths };
 export type PrintrClient = ReturnType<typeof createPrintrClient>;
 
 export interface ClientConfig {
-  apiKey: string;
+  /**
+   * Bearer token for authenticated endpoints. Optional — the public preview API
+   * (`https://api-preview.printr.money`, the default base URL) requires no key.
+   */
+  apiKey?: string;
   baseUrl: string;
 }
 
@@ -26,22 +30,28 @@ export class PrintrApiError extends Error {
 }
 
 /**
- * Creates a typed HTTP client for the Printr API with authentication.
+ * Creates a typed HTTP client for the Printr API.
+ *
+ * `apiKey` is optional: the public preview API requires no credentials, so the
+ * `Authorization` header is only sent when a key is provided.
  *
  * @example
  * ```ts
+ * // Keyless against the public preview API:
  * const client = createPrintrClient({
- *   apiKey: process.env.PRINTR_API_KEY,
- *   baseUrl: "https://api-preview.printr.money"
+ *   baseUrl: "https://api-preview.printr.money",
  * });
  * ```
  */
 export function createPrintrClient(config: ClientConfig) {
+  const headers: Record<string, string> = {};
+  if (config.apiKey) {
+    headers["Authorization"] = `Bearer ${config.apiKey}`;
+  }
+
   return createClient<paths>({
     baseUrl: `${config.baseUrl}/v0`,
-    headers: {
-      Authorization: `Bearer ${config.apiKey}`,
-    },
+    headers,
   });
 }
 
