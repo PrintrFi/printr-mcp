@@ -105,6 +105,12 @@ const outputSchema = z.object({
   signature: z.string().optional().describe("Solana transaction signature"),
 });
 
+/**
+ * Registers the `printr_transfer` MCP tool, which transfers native tokens (ETH, SOL, BNB, etc.)
+ * to another address, falling back to the unlocked active wallet when `private_key` is omitted.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerTransferTool(server: McpServer): void {
   server.registerTool(
     "printr_transfer",

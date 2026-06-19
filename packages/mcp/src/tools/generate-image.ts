@@ -36,6 +36,14 @@ const outputSchema = z.object({
   size_bytes: z.number().describe("Compressed file size in bytes"),
 });
 
+/**
+ * Registers the `printr_generate_image` MCP tool, which generates a token avatar image via
+ * OpenRouter AI and returns the path to a compressed JPEG ready to pass as `image_path` to
+ * `printr_create_token`.
+ *
+ * @param server - MCP server instance to register the tool against
+ * @param openrouterApiKey - OpenRouter API key for image generation
+ */
 export function registerGenerateImageTool(server: McpServer, openrouterApiKey: string): void {
   server.registerTool(
     "printr_generate_image",

@@ -199,6 +199,13 @@ async function fetchPositions(
   };
 }
 
+/**
+ * Registers the `printr_get_staking_positions` MCP tool, which returns staking positions (for
+ * the treasury wallet by default, or a specific owner) along with their claimable and
+ * historically claimed quote/telecoin rewards.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerGetStakingPositionsTool(server: McpServer): void {
   server.registerTool(
     "printr_get_staking_positions",

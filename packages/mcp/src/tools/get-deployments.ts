@@ -30,6 +30,14 @@ const outputSchema = z.object({
   deployments: z.array(deployment).describe("Per-chain deployment statuses"),
 });
 
+/**
+ * Registers the `printr_get_deployments` MCP tool, which reports the deployment status of a
+ * Printr token across all its target chains, including contract addresses, transaction hashes,
+ * graduation progress, and cross-chain message details.
+ *
+ * @param server - MCP server instance to register the tool against
+ * @param client - Printr API client
+ */
 export function registerGetDeploymentsTool(server: McpServer, client: PrintrClient) {
   server.registerTool(
     "printr_get_deployments",

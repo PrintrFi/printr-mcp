@@ -261,6 +261,13 @@ function buildSvmSigningContext(
   }
 }
 
+/**
+ * Sign a Solana transaction payload with `privateKey` and submit it, returning
+ * the confirmed signature.
+ *
+ * Resolves RPC endpoints from `rpcUrlOverride` (falling back to the configured
+ * Solana RPCs) and retries submission across them via the RPC fallback list.
+ */
 export function signAndSubmitSvm(
   payload: SvmPayload,
   privateKey: string,

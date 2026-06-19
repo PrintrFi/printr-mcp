@@ -22,6 +22,14 @@ const inputSchema = z.object({
 
 const outputSchema = quoteOutput;
 
+/**
+ * Registers the `printr_quote` MCP tool, which returns a cost estimate for creating a token on
+ * Printr, with itemized per-chain costs, total cost in USD and native tokens, and the number of
+ * tokens from the initial buy.
+ *
+ * @param server - MCP server instance to register the tool against
+ * @param client - Printr API client
+ */
 export function registerQuoteTool(server: McpServer, client: PrintrClient) {
   server.registerTool(
     "printr_quote",

@@ -175,6 +175,13 @@ function submitClaim(
   return errAsync(claimErr(`Unknown payload type: ${String(exhaustive)}`));
 }
 
+/**
+ * Registers the `printr_claim_staking_rewards` MCP tool, which claims staking rewards from a
+ * stake position (also withdrawing the principal if the position is unlocked) using the
+ * treasury wallet to sign and submit the transaction.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerClaimStakingRewardsTool(server: McpServer): void {
   server.registerTool(
     "printr_claim_staking_rewards",

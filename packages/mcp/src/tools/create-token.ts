@@ -77,6 +77,14 @@ const outputSchema = z.object({
   quote: quoteOutput.describe("Full cost breakdown"),
 });
 
+/**
+ * Registers the `printr_create_token` MCP tool, which creates a new token on Printr and
+ * returns an unsigned transaction payload (EVM calldata or Solana instructions) to be signed
+ * and submitted on-chain by the creator's wallet.
+ *
+ * @param server - MCP server instance to register the tool against
+ * @param client - Printr API client
+ */
 export function registerCreateTokenTool(server: McpServer, client: PrintrClient) {
   server.registerTool(
     "printr_create_token",

@@ -217,6 +217,13 @@ export function drainDeploymentWalletHandler({
   });
 }
 
+/**
+ * Registers the `printr_drain_deployment_wallet` MCP tool, which drains remaining funds from a
+ * deployment wallet back to the treasury, automatically calculating gas fees and recovering
+ * wallets from persisted state when needed.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerDrainDeploymentWalletTool(server: McpServer): void {
   server.registerTool(
     "printr_drain_deployment_wallet",

@@ -209,6 +209,13 @@ function submitCreate(
   return errAsync(createErr(`Unknown payload type: ${String(exhaustive)}`));
 }
 
+/**
+ * Registers the `printr_create_stake_position` MCP tool, which creates a new stake position
+ * for a telecoin using the treasury wallet as payer and owner, then signs and submits the
+ * returned transaction on-chain.
+ *
+ * @param server - MCP server instance to register the tool against
+ */
 export function registerCreateStakePositionTool(server: McpServer): void {
   server.registerTool(
     "printr_create_stake_position",
