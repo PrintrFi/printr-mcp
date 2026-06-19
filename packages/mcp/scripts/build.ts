@@ -8,7 +8,10 @@ console.log("Building MCP server...");
 const args = [
   "bun",
   "build",
+  // CLI / stdio entry (node).
   "./src/index.ts",
+  // Workers-safe subpath: read + build-unsigned tool registration only.
+  "./src/tools/remote-safe.ts",
   "--outdir",
   "./dist",
   "--target",

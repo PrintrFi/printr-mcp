@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "printr-mcp-remote",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-26",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  // McpAgent persists per-session MCP state in a SQLite-backed Durable Object.
+  "durable_objects": {
+    "bindings": [{ "name": "MCP_OBJECT", "class_name": "PrintrMCP" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PrintrMCP"] }],
+  // Public preview API needs no key; set PRINTR_API_KEY via `wrangler secret put`
+  // only if pointing at an authenticated environment.
+  "vars": {
+    "PRINTR_API_BASE_URL": "https://api-preview.printr.money"
+  }
+}
