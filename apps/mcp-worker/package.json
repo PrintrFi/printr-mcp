@@ -7,7 +7,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "dry-run": "wrangler deploy --dry-run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "wrangler types && tsc --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
@@ -16,7 +16,7 @@
     "agents": "^0.16.2"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250109.0",
+    "@types/node": "^25.9.3",
     "typescript": "^6.0.3",
     "wrangler": "^4.94.0"
   }
