@@ -1,8 +1,8 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "printr-mcp-remote",
   "main": "src/index.ts",
-  "compatibility_date": "2026-06-20",
+  "compatibility_date": "2026-06-19",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true, "head_sampling_rate": 1 },
   // McpAgent persists per-session MCP state in a SQLite-backed Durable Object.
