@@ -5,8 +5,9 @@ description: Install Printr and run your first token launch.
 
 ## Prerequisites
 
-- [Bun](https://bun.sh)
-- An API key for the Printr API (a public default ships with the SDK)
+- [Bun](https://bun.sh) (Node.js also works as a fallback runtime)
+- No API key required — the SDK targets the public preview API
+  (`https://api-preview.printr.money`) by default, which needs no credentials.
 
 ## Install
 
@@ -17,24 +18,59 @@ bunx @printr/cli setup
 ```
 
 <Callout type="info">
-  Full installation and MCP-client configuration details live in
-  [`INSTALL.md`](https://github.com/PrintrFi/printr-mcp/blob/main/INSTALL.md) until this page is
-  expanded.
+  Full MCP-client configuration details live in
+  [`INSTALL.md`](https://github.com/PrintrFi/printr-mcp/blob/main/INSTALL.md) and on the
+  [MCP server](/docs/mcp) page.
 </Callout>
 
 ## Your first launch
 
-```ts
-import { createClient, createToken } from "@printr/sdk";
+`buildToken` calls the API and returns an **unsigned** transaction payload. You then sign and
+submit it (see [Wallets & signing](/docs/guides/wallets-signing)).
 
-const client = createClient({ apiKey: process.env.PRINTR_API_KEY });
+```ts twoslash
+import { buildToken, createPrintrClient, env } from "@printr/sdk";
 
-const result = await createToken(client, {
-  chain: "base",
-  name: "My Token",
-  symbol: "MINE",
-  image: "./logo.jpg",
+// Defaults target the public preview API; no key needed.
+const client = createPrintrClient({
+  apiKey: env.PRINTR_API_KEY,
+  baseUrl: env.PRINTR_API_BASE_URL,
 });
+
+const result = await buildToken(
+  {
+    creator_accounts: ["eip155:8453:0xYourAddress"],
+    name: "My Token",
+    symbol: "MINE",
+    description: "A cross-chain token.",
+    chains: ["eip155:8453"], // Base
+    initial_buy: { spend_usd: 10 },
+    image_path: "./logo.jpg",
+  },
+  client,
+);
 ```
 
-_TODO: expand with end-to-end output and next steps._
+`buildToken` returns a `neverthrow` `ResultAsync` — match on it instead of `try`/`catch`:
+
+```ts twoslash
+import { buildToken, createPrintrClient, env } from "@printr/sdk";
+const client = createPrintrClient({ apiKey: env.PRINTR_API_KEY, baseUrl: env.PRINTR_API_BASE_URL });
+const result = await buildToken(
+  { creator_accounts: ["eip155:8453:0x"], name: "x", symbol: "X", description: "", chains: ["eip155:8453"], initial_buy: { spend_usd: 10 } },
+  client,
+);
+// ---cut---
+result.match(
+  (payload) => console.log("Unsigned payload ready", payload),
+  (error) => console.error("Build failed", error),
+);
+```
+
+## Next steps
+
+<Cards>
+  <Card title="Creating tokens" href="/docs/guides/creating-tokens" description="Chains, images, and the full launch flow." />
+  <Card title="Wallets & signing" href="/docs/guides/wallets-signing" description="Sign and submit the payload." />
+  <Card title="Agent mode" href="/docs/guides/agent-mode" description="Drive Printr from an AI agent." />
+</Cards>

@@ -3,17 +3,103 @@ title: Creating tokens
 description: Launch a token on an EVM chain or Solana.
 ---
 
-_TODO._ Walk through launching a token end to end: choosing a chain, preparing an image,
-setting metadata, and submitting the transaction.
+A launch has two halves: **build** an unsigned payload from your metadata, then **sign and
+submit** it. This guide covers the build; see [Wallets & signing](/docs/wallets-signing) for the
+second half.
 
 ## Supported chains
 
-Printr supports token launches across EVM chains and Solana. _TODO: list the exact supported
-chains from `@printr/sdk` chain metadata._
+Chains are identified by [CAIP-2](https://chainagnostic.org/CAIPs/caip-2). Pass these ids in the
+`chains` array.
 
-## Image requirements
+| Chain | CAIP-2 | Native |
+|-------|--------|--------|
+| Ethereum | `eip155:1` | ETH |
+| BNB Chain | `eip155:56` | BNB |
+| Unichain | `eip155:130` | ETH |
+| Monad | `eip155:143` | MON |
+| HyperEVM | `eip155:999` | HYPE |
+| Mantle | `eip155:5000` | MNT |
+| MegaETH | `eip155:4326` | ETH |
+| Base | `eip155:8453` | ETH |
+| Plasma | `eip155:9745` | XPL |
+| Arbitrum | `eip155:42161` | ETH |
+| Avalanche | `eip155:43114` | AVAX |
+| Solana | `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` | SOL |
 
-- Max image size: 500KB (base64).
-- JPEG recommended; PNGs are usually too large — convert first.
+A token may target multiple chains in one launch — pass several CAIP-2 ids in `chains`.
 
-_TODO: expand._
+## Walkthrough
+
+<Steps>
+
+<Step>
+
+### Estimate the cost (optional)
+
+```ts twoslash
+import { createPrintrClient, env } from "@printr/sdk";
+
+const client = createPrintrClient({
+  apiKey: env.PRINTR_API_KEY,
+  baseUrl: env.PRINTR_API_BASE_URL,
+});
+```
+
+Use the `printr_quote` MCP tool (or the API) to itemize per-chain cost before committing.
+
+</Step>
+
+<Step>
+
+### Prepare the image
+
+- Max size **500KB** (base64).
+- **JPEG recommended** — PNGs are usually too large; convert first.
+- Pass either `image` (base64/URL) or `image_path` (local file, resolved and compressed for you).
+
+</Step>
+
+<Step>
+
+### Build the unsigned payload
+
+```ts twoslash
+import { createPrintrClient, env } from "@printr/sdk";
+const client = createPrintrClient({ apiKey: env.PRINTR_API_KEY, baseUrl: env.PRINTR_API_BASE_URL });
+// ---cut---
+import { buildToken } from "@printr/sdk";
+
+const result = await buildToken(
+  {
+    creator_accounts: ["eip155:8453:0xYourAddress"],
+    name: "My Token",
+    symbol: "MINE",
+    description: "A cross-chain token.",
+    chains: ["eip155:8453"],
+    initial_buy: { spend_usd: 10 },
+    image_path: "./logo.jpg",
+  },
+  client,
+);
+```
+
+`buildToken` returns a `ResultAsync` with the unsigned transaction payload.
+
+</Step>
+
+<Step>
+
+### Sign and submit
+
+Hand the payload to a signer — browser or keystore. See
+[Wallets & signing](/docs/wallets-signing).
+
+</Step>
+
+</Steps>
+
+<Callout type="info">
+  Where creator fees go is controlled by `fee_sink`
+  (`dev` | `stake_pool` | `buyback` | `liquidity_pool`), defaulting to `dev` (the creator wallet).
+</Callout>

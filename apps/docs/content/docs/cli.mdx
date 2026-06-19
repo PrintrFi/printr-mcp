@@ -6,10 +6,40 @@ description: "@printr/cli — configure MCP servers and install agent skills."
 `@printr/cli` wires Printr into your environment: it configures MCP servers and installs agent
 skills.
 
-## Run it
+## `setup`
+
+Detects installed MCP clients and adds the Printr server entry (auto-selecting `bunx` or `npx`
+as the runner). Run with no flags for interactive client selection.
 
 ```bash
 bunx @printr/cli setup
 ```
 
-_TODO: document the `setup` and `skill` sub-commands and their options._
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--client <id>` | `-c <id>` | Configure a specific client. Repeatable; skips the interactive picker. |
+| `--openrouter-api-key <key>` | | Pre-fill the OpenRouter key (enables image generation). Also read from `OPENROUTER_API_KEY`. |
+
+Valid `--client` ids: `claude-desktop`, `cursor`, `windsurf`, `gemini`, `claude-code`.
+
+```bash
+# configure two clients at once
+bunx @printr/cli setup --client cursor --client claude-code
+```
+
+An unknown `--client` value is reported to stderr and skipped, so a typo fails loudly without
+aborting an otherwise valid run.
+
+## `skill`
+
+Installs the Printr agent skill into a supported agent's skill directory.
+
+```bash
+bunx @printr/cli skill
+```
+
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--agent <id>` | `-a <id>` | Install for a specific agent. Repeatable; skips the interactive picker. |
+
+Valid `--agent` ids: `claude-code`, `cursor`, `gemini`, `local`.

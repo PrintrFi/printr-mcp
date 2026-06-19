@@ -12,14 +12,122 @@ server, so AI agents can launch tokens, check balances, and manage wallets throu
 bunx @printr/mcp
 ```
 
+The server speaks MCP over stdio. Use the CLI to wire it into a client automatically:
+
+```bash
+bunx @printr/cli setup
+```
+
 ## Tools
 
 Each tool ships Zod-validated input and output schemas; `structuredContent` mirrors the JSON in
-the text response.
+the text response. Chains and accounts are identified with
+[CAIP-2](https://chainagnostic.org/CAIPs/caip-2) (chain) and
+[CAIP-10](https://chainagnostic.org/CAIPs/caip-10) (account) identifiers.
 
-_TODO: list each tool (create token, balances, transfer, wallet management, …) with its inputs
-and outputs._
+### Token creation & lifecycle
+
+| Tool | Purpose |
+|------|---------|
+| `printr_quote` | Cost estimate for a launch — itemized per chain, total USD, initial-buy tokens. |
+| `printr_create_token` | Build an **unsigned** token-deployment payload. |
+| `printr_launch_token` | Create, sign, and submit a token in one call. |
+| `printr_get_token` | Look up a token by telecoin ID or CAIP-10 address. |
+| `printr_get_deployments` | Check per-chain deployment status for a token. |
+| `printr_generate_image` | Generate a token image (requires `OPENROUTER_API_KEY`). |
+| `printr_supported_chains` | List supported networks. |
+
+### Signing & submission
+
+| Tool | Purpose |
+|------|---------|
+| `printr_sign_and_submit_evm` | Sign + submit an EVM payload. |
+| `printr_sign_and_submit_svm` | Sign + submit a Solana payload. |
+| `printr_open_web_signer` | Start an ephemeral browser signing session (human-gated). |
+
+### Wallet management (keystore)
+
+| Tool | Purpose |
+|------|---------|
+| `printr_wallet_new` | Generate, encrypt, and store a new keypair. |
+| `printr_wallet_import` | Import an existing private key. |
+| `printr_wallet_list` | List stored wallets (optionally filtered by chain). |
+| `printr_wallet_unlock` | Decrypt a wallet and make it active. |
+| `printr_wallet_remove` | Delete one wallet. |
+| `printr_wallet_bulk_remove` | Delete multiple wallets. |
+
+### Treasury & deployment wallets
+
+| Tool | Purpose |
+|------|---------|
+| `printr_set_treasury_wallet` | Mark a keystore wallet as the funding treasury. |
+| `printr_fund_deployment_wallet` | Create a fresh deployment wallet, fund it from treasury. |
+| `printr_drain_deployment_wallet` | Return deployment-wallet funds to treasury. |
+
+### Balances & transfers
+
+| Tool | Purpose |
+|------|---------|
+| `printr_get_balance` | Native balance for an account. |
+| `printr_get_token_balance` | ERC-20 / SPL token balance. |
+| `printr_transfer` | Transfer native tokens. |
+| `printr_transfer_token` | Transfer ERC-20 / SPL tokens. |
+
+### Creator fees & staking
+
+| Tool | Purpose |
+|------|---------|
+| `printr_get_creator_fees` | Accumulated creator fees across chains. |
+| `printr_claim_fees` | Claim creator fees on a chain. |
+| `printr_get_staking_positions` | Staking positions with claimable rewards. |
+| `printr_create_stake_position` | Open a stake position for a telecoin. |
+| `printr_claim_staking_rewards` | Claim rewards (or withdraw unlocked principal). |
 
 ## Connecting a client
 
-_TODO: configuration snippets for Claude Code, Cursor, and other MCP clients._
+Easiest path — let the CLI detect and configure your client:
+
+```bash
+bunx @printr/cli setup
+# or target one explicitly
+bunx @printr/cli setup --client cursor
+```
+
+Or configure manually:
+
+<Tabs items={["Claude Code", "Cursor"]}>
+
+<Tab value="Claude Code">
+
+```bash
+claude mcp add --scope user printr -- bunx @printr/mcp@latest
+# Node.js fallback
+claude mcp add --scope user printr -- npx -y @printr/mcp@latest
+```
+
+</Tab>
+
+<Tab value="Cursor">
+
+Add to `~/.cursor/mcp.json` (merge into `mcpServers`, don't overwrite):
+
+```json
+{
+  "mcpServers": {
+    "printr": {
+      "command": "bunx",
+      "args": ["@printr/mcp@latest"]
+    }
+  }
+}
+```
+
+</Tab>
+
+</Tabs>
+
+<Callout type="info">
+  No API key is required for the default public preview API. See
+  [`INSTALL.md`](https://github.com/PrintrFi/printr-mcp/blob/main/INSTALL.md) for Claude Desktop,
+  Windsurf, Gemini, and VS Code config.
+</Callout>
