@@ -1,0 +1,40 @@
+---
+title: Getting started
+description: Install Printr and run your first token launch.
+---
+
+## Prerequisites
+
+- [Bun](https://bun.sh)
+- An API key for the Printr API (a public default ships with the SDK)
+
+## Install
+
+```bash
+bun add @printr/sdk
+# or run the MCP server / CLI
+bunx @printr/cli setup
+```
+
+<Callout type="info">
+  Full installation and MCP-client configuration details live in
+  [`INSTALL.md`](https://github.com/PrintrFi/printr-mcp/blob/main/INSTALL.md) until this page is
+  expanded.
+</Callout>
+
+## Your first launch
+
+```ts
+import { createClient, createToken } from "@printr/sdk";
+
+const client = createClient({ apiKey: process.env.PRINTR_API_KEY });
+
+const result = await createToken(client, {
+  chain: "base",
+  name: "My Token",
+  symbol: "MINE",
+  image: "./logo.jpg",
+});
+```
+
+_TODO: expand with end-to-end output and next steps._

@@ -1,0 +1,28 @@
+---
+title: SDK
+description: "@printr/sdk — the core TypeScript library."
+---
+
+`@printr/sdk` is the pure core: blockchain and API functionality with no agent or transport
+concerns. Everything else in the monorepo builds on it.
+
+## Install
+
+```bash
+bun add @printr/sdk
+```
+
+## Surface
+
+The SDK exposes (among others):
+
+- **Client** — `createClient` API client factory.
+- **Chains** — chain metadata, RPC, and CAIP-2/10 utilities.
+- **Tokens** — token creation.
+- **Balances & transfers** — balance queries and native transfers.
+- **Keystore** — wallet encryption for self-custody signing.
+
+All functions return `neverthrow` `Result`/`ResultAsync` for failable operations, and all I/O is
+validated with Zod.
+
+_TODO: per-function reference (hand-written)._

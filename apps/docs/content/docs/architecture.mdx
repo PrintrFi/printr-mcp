@@ -1,0 +1,28 @@
+---
+title: Architecture
+description: How the SDK, signing, and MCP server fit together.
+---
+
+## Monorepo
+
+| Package | Role |
+|---------|------|
+| `@printr/sdk` | Pure core — blockchain/API functionality, no transport. |
+| `@printr/mcp` | MCP server wrapping the SDK for AI agents. |
+| `@printr/cli` | Configures MCP servers and installs agent skills. |
+
+The SDK is the single source of truth; the MCP server and CLI consume it.
+
+## Signing as ports & adapters
+
+Signing is modeled as a functional **port** — a `Signer` interface returning `neverthrow`
+`ResultAsync` — with swappable **adapters**:
+
+- **Browser** — per-transaction approval in a browser wallet.
+- **Keystore** — an encrypted local key unlocked for the session.
+- **Fake** — a deterministic adapter for tests.
+
+The adapter is selected from the resolved wallet, keeping the core deterministic and testable
+with no vendor lock-in.
+
+_TODO: link the relevant ADRs once published to the site._

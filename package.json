@@ -7,7 +7,7 @@
     "url": "https://github.com/PrintrFi/printr-mcp"
   },
   "license": "Apache-2.0",
-  "workspaces": ["packages/*", "examples/*"],
+  "workspaces": ["packages/*", "examples/*", "apps/*"],
   "scripts": {
     "build": "bun run build:sdk && bun run build:packages",
     "build:sdk": "bun run --cwd packages/sdk build",
