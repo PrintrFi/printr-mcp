@@ -12,17 +12,62 @@ concerns. Everything else in the monorepo builds on it.
 bun add @printr/sdk
 ```
 
+All failable functions return `neverthrow` `Result`/`ResultAsync`, and all I/O is validated with
+Zod. Match on results rather than using `try`/`catch`.
+
 ## Surface
 
-The SDK exposes (among others):
+### Client
 
-- **Client** — `createClient` API client factory.
-- **Chains** — chain metadata, RPC, and CAIP-2/10 utilities.
-- **Tokens** — token creation.
-- **Balances & transfers** — balance queries and native transfers.
-- **Keystore** — wallet encryption for self-custody signing.
+- `createPrintrClient(config)` — build the API client. Defaults target the keyless public preview
+  API.
+- `env` — parsed, validated environment (base URLs, optional keys).
+- `PrintrApiError` — typed API error.
+- Tool-response helpers: `toToolResponse`, `toToolResponseAsync`, `toolOk`, `toolError`,
+  `unwrapResult`, `unwrapResultAsync`.
 
-All functions return `neverthrow` `Result`/`ResultAsync` for failable operations, and all I/O is
-validated with Zod.
+### Chains
 
-_TODO: per-function reference (hand-written)._
+- `CHAIN_META`, `getChainMeta(caip2)` — chain metadata lookup.
+- `isSupportedCaip2`, `getRpcUrl`, `getRpcUrls`, `getEvmConfig`, `createViemChain`.
+- CAIP utilities: `parseCaip2`, `parseCaip10`, `chainTypeFromCaip2`, `caip10ToChainId`,
+  `toCaip2FromParts`.
+
+### Tokens
+
+- `buildToken(input, client)` — resolve the image and build an **unsigned** deployment payload.
+- `FeeSink` — where creator fees go (`dev` | `stake_pool` | `buyback` | `liquidity_pool`).
+
+### Signing
+
+- `signAndSubmitEvm(payload, …)` — sign and broadcast an EVM payload.
+- `signAndSubmitSvm(payload, …)` / `sendAndConfirmSvmTransaction(…)` — Solana equivalents.
+
+### Balances & transfers
+
+- `fetchNativeBalance`, `fetchTokenBalance` — balance queries.
+- `executeTransfer`, `executeTokenTransfer` — generic transfers, with chain-specific helpers
+  (`transferEvm`, `transferErc20`, `transferSvm`, `transferSplToken`).
+- Namespaced facade: `balance.checkNativeBalance`, `balance.checkTokenBalance`, `tx.sendNative`,
+  `tx.sendToken`.
+
+### Keystore
+
+- `addWallet`, `getWallet`, `listWallets`, `removeWallet`, `removeWallets` — encrypted wallet
+  storage for self-custody signing.
+- `encryptKey`, `decryptKey`, `keystorePath`.
+
+### Staking & fees
+
+- `createStakePosition`, `claimStakingRewards`, `listStakePositionsWithRewards`,
+  `parseLockPeriod`.
+- `getProtocolFees` — protocol fee structure.
+
+### Image processing
+
+- `generateTokenImage`, `generateImageFromPrompt`, `processImagePath`, `compressImageBuffer`.
+
+<Callout type="info">
+  This is the high-level map. Public exports carry TSDoc — your editor's hover and
+  autocomplete are the authoritative per-function reference.
+</Callout>

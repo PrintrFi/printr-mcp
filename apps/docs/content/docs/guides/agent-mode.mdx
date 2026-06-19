@@ -3,7 +3,49 @@ title: Agent mode
 description: Drive Printr from an AI agent via the MCP server.
 ---
 
-_TODO._ How to run `@printr/mcp` and connect it to an MCP client (Claude, Cursor, and others),
-and how the available tools map to SDK functionality.
+Agent mode runs `@printr/mcp` and connects it to an MCP client (Claude Code, Cursor, and
+others). The agent then calls Printr's typed tools — the same SDK functionality, exposed over
+[MCP](https://modelcontextprotocol.io).
 
-See [MCP server](/docs/mcp) for the tool surface.
+<Steps>
+
+<Step>
+
+### Configure a client
+
+```bash
+bunx @printr/cli setup
+```
+
+The CLI detects installed clients and adds the server entry. Target one explicitly with
+`--client cursor` (see the [CLI reference](/docs/cli)), or configure it by hand from the
+[MCP server](/docs/mcp) page.
+
+</Step>
+
+<Step>
+
+### Start a conversation
+
+Once configured, the agent can call tools directly — for example, ask it to quote a launch
+(`printr_quote`), create a token (`printr_create_token`), or check a balance
+(`printr_get_balance`). No keys needed for the public preview API.
+
+</Step>
+
+<Step>
+
+### Keep signing human-gated
+
+Token creation builds an **unsigned** payload. The agent then routes to a human-gated signer —
+a browser wallet (`printr_open_web_signer`) or an unlocked keystore wallet. See
+[Wallets & signing](/docs/wallets-signing).
+
+</Step>
+
+</Steps>
+
+<Callout type="info">
+  The full tool list lives on the [MCP server](/docs/mcp) page — 28 tools spanning token
+  lifecycle, signing, wallets, balances, transfers, fees, and staking.
+</Callout>

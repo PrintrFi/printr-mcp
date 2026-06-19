@@ -4,16 +4,85 @@ description: How transactions built by Printr get signed.
 ---
 
 Printr builds transactions; you choose how they get signed. Both supported paths are
-human-gated — you stay in control of every signature.
+**human-gated** — you stay in control of every signature.
 
-## Browser signer
+<Tabs items={["Browser signer", "Self-custody keystore"]}>
 
-You approve each transaction in a browser wallet, one transaction at a time. Printr runs a
-local signing server and opens the wallet for confirmation.
+<Tab value="Browser signer">
 
-## Self-custody keystore
+You approve each transaction in a browser wallet, one at a time. Printr runs a local signing
+server and opens the wallet for confirmation.
 
-An encrypted key you provision and unlock locally. Once unlocked, signing tools use it for the
-session.
+<Steps>
 
-_TODO: step-by-step for each path, plus how the active wallet is selected._
+<Step>
+
+### Open a signing session
+
+Call the `printr_open_web_signer` tool with the chain type and the unsigned payload. It returns
+a local URL and starts an ephemeral session.
+
+</Step>
+
+<Step>
+
+### Approve in your wallet
+
+Open the URL; your browser wallet prompts for confirmation. Approve to sign and submit.
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+<Tab value="Self-custody keystore">
+
+An encrypted key you provision and unlock locally. Once unlocked it becomes the **active
+wallet** and signing tools use it for the session.
+
+<Steps>
+
+<Step>
+
+### Create or import a wallet
+
+```text
+printr_wallet_new      → generate, encrypt, store (password ≥ 12 chars)
+printr_wallet_import   → import an existing private key
+```
+
+</Step>
+
+<Step>
+
+### Unlock to make it active
+
+```text
+printr_wallet_unlock   → decrypt and set as the active wallet
+```
+
+The active wallet is what `printr_sign_and_submit_evm` / `printr_sign_and_submit_svm` use when
+no explicit `private_key` is passed.
+
+</Step>
+
+<Step>
+
+### Sign and submit
+
+Pass the unsigned payload to `printr_sign_and_submit_evm` (EVM) or
+`printr_sign_and_submit_svm` (Solana). The active keystore wallet signs and broadcasts it.
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+<Callout type="warn">
+  Keystore signing trades per-transaction approval for session convenience — only unlock on a
+  machine you trust. The browser path keeps a human in the loop on every signature.
+</Callout>
