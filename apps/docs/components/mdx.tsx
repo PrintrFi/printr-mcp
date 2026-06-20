@@ -3,6 +3,7 @@ import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { MDXComponents } from 'mdx/types';
+import { SupportedChains } from '@/components/supported-chains';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -15,6 +16,8 @@ export function getMDXComponents(components?: MDXComponents) {
     Popup,
     PopupContent,
     PopupTrigger,
+    // supported-chains table generated from @printr/sdk CHAIN_META
+    SupportedChains,
     ...components,
   } satisfies MDXComponents;
 }

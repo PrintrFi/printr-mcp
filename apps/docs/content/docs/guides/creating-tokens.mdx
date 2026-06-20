@@ -10,22 +10,10 @@ second half.
 ## Supported chains
 
 Chains are identified by [CAIP-2](https://chainagnostic.org/CAIPs/caip-2). Pass these ids in the
-`chains` array.
+`chains` array. This table is generated from the SDK's chain metadata, so it always matches what
+`@printr/sdk` actually supports.
 
-| Chain | CAIP-2 | Native |
-|-------|--------|--------|
-| Ethereum | `eip155:1` | ETH |
-| BNB Chain | `eip155:56` | BNB |
-| Unichain | `eip155:130` | ETH |
-| Monad | `eip155:143` | MON |
-| HyperEVM | `eip155:999` | HYPE |
-| Mantle | `eip155:5000` | MNT |
-| MegaETH | `eip155:4326` | ETH |
-| Base | `eip155:8453` | ETH |
-| Plasma | `eip155:9745` | XPL |
-| Arbitrum | `eip155:42161` | ETH |
-| Avalanche | `eip155:43114` | AVAX |
-| Solana | `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` | SOL |
+<SupportedChains />
 
 A token may target multiple chains in one launch — pass several CAIP-2 ids in `chains`.
 
