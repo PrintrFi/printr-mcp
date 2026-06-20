@@ -1,16 +1,16 @@
 ---
 title: Introduction
-description: Launch cross-chain tokens from TypeScript or from an AI agent.
+description: Print tokens across chains — from TypeScript or from an AI agent.
 ---
 
-Printr is a monorepo for launching tokens across EVM chains and Solana. It ships three
+Printr prints tokens across EVM chains and Solana. These are the developer docs — three
 surfaces over one core:
 
-- **`@printr/sdk`** — a pure TypeScript SDK for blockchain and API functionality.
-- **`@printr/mcp`** — an MCP server that exposes the SDK to AI agents.
-- **`@printr/cli`** — a CLI to configure MCP servers and install agent skills.
+- **`@printr/sdk`** — the TypeScript SDK. Pure blockchain + API functionality; runs on Node, Bun, and the browser.
+- **`@printr/mcp`** — an MCP server exposing the SDK's tools to Claude, Cursor, or any MCP-compatible agent.
+- **`@printr/cli`** — wires the MCP server into AI clients and installs agent skills.
 
-The SDK is the single source of truth; the MCP server and CLI both build on it.
+The SDK is the single source of truth; the MCP server and CLI build on it.
 
 ## Where to go next
 
@@ -20,3 +20,6 @@ The SDK is the single source of truth; the MCP server and CLI both build on it.
   <Card title="SDK" href="/docs/sdk" description="The core TypeScript library." />
   <Card title="MCP server" href="/docs/mcp" description="Use Printr from an AI agent." />
 </Cards>
+
+For how Printr works as a product — bonding curve, fees, staking, supported chains —
+see the [Printr docs](https://printr.gitbook.io/printr-docs/).
