@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "next build",
-    "dev": "next dev",
+    "gen:chains": "bun scripts/gen-chains.ts",
+    "build": "bun run gen:chains && next build",
+    "dev": "bun run gen:chains && next dev",
     "start": "next start",
-    "typecheck": "fumadocs-mdx && next typegen && tsc --noEmit"
+    "typecheck": "bun run gen:chains && fumadocs-mdx && next typegen && tsc --noEmit",
+    "test": "bun test"
   },
   "dependencies": {
     "fumadocs-core": "^16.10.4",
