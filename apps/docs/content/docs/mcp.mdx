@@ -3,8 +3,17 @@ title: MCP server
 description: "@printr/mcp — expose the SDK to AI agents."
 ---
 
-`@printr/mcp` wraps the SDK as a [Model Context Protocol](https://modelcontextprotocol.io)
-server, so AI agents can launch tokens, check balances, and manage wallets through typed tools.
+`@printr/mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server that
+exposes the SDK's tools to Claude, Cursor, or any MCP-compatible agent: create tokens, check
+balances, and manage wallets, all typed.
+
+- **No API key** — the public preview API is keyless.
+- **Multi-chain** — EVM chains and Solana from one server.
+- **Keys stay local** — private keys never reach the agent.
+- **Browser signing** — approve in MetaMask or Phantom.
+- **Encrypted keystore** — self-custody wallet storage on your machine.
+
+For the product overview, see [Printr MCP](https://printr.gitbook.io/printr-docs/for-agents/printr-mcp) in the Printr docs.
 
 ## Run it
 
