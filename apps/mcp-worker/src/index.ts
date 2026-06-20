@@ -3,7 +3,12 @@ import { registerRemoteSafeTools } from "@printr/mcp/remote-safe";
 import { createPrintrClient } from "@printr/sdk";
 import { McpAgent } from "agents/mcp";
 
-import { authorizeMcp, enforceRateLimit } from "./middleware.js";
+import {
+  authorizeMcp,
+  enforceOrigin,
+  enforceRateLimit,
+  withSecurityHeaders,
+} from "./middleware.js";
 import { sessionRoutes } from "./session-routes.js";
 import { registerRemoteWebSignerTool } from "./web-signer-tool.js";
 
@@ -35,41 +40,47 @@ export class PrintrMCP extends McpAgent<Env> {
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const url = new URL(request.url);
-
-    // Health is unauthenticated and unmetered (monitoring probes).
-    if (url.pathname === "/health") {
-      return sessionRoutes().fetch(request, env, ctx);
-    }
-
-    const limited = await enforceRateLimit(request, env);
-    if (limited) {
-      return limited;
-    }
-
-    // Web-signer session API (talks to the Printr web app's /sign page). The
-    // unguessable session token in the URL is the capability — no bearer here,
-    // or the cross-origin web app couldn't reach it.
-    if (url.pathname.startsWith("/sessions")) {
-      return sessionRoutes().fetch(request, env, ctx);
-    }
-
-    // MCP transports are bearer-gated when MCP_AUTH_TOKEN is set.
-    const denied = authorizeMcp(request, env);
-    if (denied) {
-      return denied;
-    }
-
-    // Streamable HTTP transport (current MCP spec).
-    if (url.pathname === "/mcp") {
-      return PrintrMCP.serve("/mcp").fetch(request, env, ctx);
-    }
-
-    // SSE transport (legacy clients).
-    if (url.pathname === "/sse" || url.pathname === "/sse/message") {
-      return PrintrMCP.serveSSE("/sse").fetch(request, env, ctx);
-    }
-
-    return new Response("Not found", { status: 404 });
+    return withSecurityHeaders(await route(request, env, ctx));
   },
 } satisfies ExportedHandler<Env>;
+
+/** Route a request to the session API, MCP transports, or a 404. */
+async function route(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const url = new URL(request.url);
+
+  // Health is unauthenticated and unmetered (monitoring probes).
+  if (url.pathname === "/health") {
+    return sessionRoutes().fetch(request, env, ctx);
+  }
+
+  const limited = await enforceRateLimit(request, env);
+  if (limited) {
+    return limited;
+  }
+
+  // Web-signer session API (talks to the Printr web app's /sign page). Browser
+  // access is restricted by the route's own CORS allowlist; the unguessable
+  // session token in the URL is the capability, so no bearer here.
+  if (url.pathname.startsWith("/sessions")) {
+    return sessionRoutes().fetch(request, env, ctx);
+  }
+
+  // MCP transports: block disallowed browser origins (DNS-rebinding / CSRF),
+  // then apply the optional bearer gate (when MCP_AUTH_TOKEN is set).
+  const blocked = enforceOrigin(request, env) ?? authorizeMcp(request, env);
+  if (blocked) {
+    return blocked;
+  }
+
+  // Streamable HTTP transport (current MCP spec).
+  if (url.pathname === "/mcp") {
+    return PrintrMCP.serve("/mcp").fetch(request, env, ctx);
+  }
+
+  // SSE transport (legacy clients).
+  if (url.pathname === "/sse" || url.pathname === "/sse/message") {
+    return PrintrMCP.serveSSE("/sse").fetch(request, env, ctx);
+  }
+
+  return new Response("Not found", { status: 404 });
+}

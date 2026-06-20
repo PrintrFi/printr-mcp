@@ -15,6 +15,40 @@ function bearer(request: Request): string {
   return header.startsWith("Bearer ") ? header.slice("Bearer ".length) : "";
 }
 
+/** Parse the comma-separated ALLOWED_ORIGINS var into a trimmed list. */
+function allowedOrigins(env: Env): string[] {
+  return (env.ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Reject browser cross-origin requests to the MCP transports — the DNS-rebinding
+ * / CSRF defense the MCP spec calls for. Native MCP clients (Claude, Cursor,
+ * curl) send no `Origin`, so they pass; a browser request only passes when its
+ * `Origin` is in the `ALLOWED_ORIGINS` allowlist (empty by default → all
+ * browser origins blocked). Returns a 403 `Response` to short-circuit, or `null`.
+ */
+export function enforceOrigin(request: Request, env: Env): Response | null {
+  const origin = request.headers.get("Origin");
+  if (!origin) {
+    return null;
+  }
+  if (!allowedOrigins(env).includes(origin)) {
+    return Response.json({ error: "Origin not allowed" }, { status: 403 });
+  }
+  return null;
+}
+
+/** Add baseline hardening headers to any response (clones so SSE streams pass through). */
+export function withSecurityHeaders(response: Response): Response {
+  const wrapped = new Response(response.body, response);
+  wrapped.headers.set("X-Content-Type-Options", "nosniff");
+  wrapped.headers.set("Referrer-Policy", "no-referrer");
+  return wrapped;
+}
+
 /**
  * Bearer-token gate for the MCP transport endpoints. A no-op when
  * `MCP_AUTH_TOKEN` is unset — the public preview deployment stays open — so auth

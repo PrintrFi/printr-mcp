@@ -2,13 +2,15 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 
-import type { CreateSessionInput, TxResult } from "./session-types.js";
+import type { TxResult } from "./session-types.js";
 
 /**
- * HTTP routes the Printr web signer talks to: create a session, poll it for the
- * payload, and report the signing result back. Ported from the local stdio
- * server (`packages/mcp/src/server/app.ts`), but backed by the
- * {@link SigningSessionDO} Durable Object instead of an in-memory map.
+ * HTTP routes the Printr web signer talks to: poll a session for the payload and
+ * report the signing result back. Sessions are *created* by the
+ * `printr_open_web_signer` tool (in-process, via the Durable Object) — there is
+ * deliberately no public create endpoint, so a session can only exist for a
+ * payload an MCP client actually built. Backed by the {@link SigningSessionDO}
+ * Durable Object.
  */
 export function sessionRoutes(): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
@@ -24,19 +26,6 @@ export function sessionRoutes(): Hono<{ Bindings: Env }> {
   app.use("*", bodyLimit({ maxSize: 1024 * 1024 }));
 
   app.get("/health", (c) => c.json({ ok: true }));
-
-  app.post("/sessions", async (c) => {
-    let input: CreateSessionInput;
-    try {
-      input = await c.req.json<CreateSessionInput>();
-    } catch {
-      return c.json({ error: "Invalid request body" }, 400);
-    }
-    const token = crypto.randomUUID();
-    const stub = c.env.SIGNING_SESSION.get(c.env.SIGNING_SESSION.idFromName(token));
-    const { expires_at } = await stub.create(input, token);
-    return c.json({ token, expires_at }, 201);
-  });
 
   app.get("/sessions/:token", async (c) => {
     const token = c.req.param("token");
