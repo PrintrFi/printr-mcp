@@ -3,6 +3,7 @@ import { registerRemoteSafeTools } from "@printr/mcp/remote-safe";
 import { createPrintrClient } from "@printr/sdk";
 import { McpAgent } from "agents/mcp";
 
+import { authorizeMcp, enforceRateLimit } from "./middleware.js";
 import { sessionRoutes } from "./session-routes.js";
 import { registerRemoteWebSignerTool } from "./web-signer-tool.js";
 
@@ -33,12 +34,30 @@ export class PrintrMCP extends McpAgent<Env> {
 }
 
 export default {
-  fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> | Response {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
-    // Web-signer session API (talks to the Printr web app's /sign page).
-    if (url.pathname === "/health" || url.pathname.startsWith("/sessions")) {
+    // Health is unauthenticated and unmetered (monitoring probes).
+    if (url.pathname === "/health") {
       return sessionRoutes().fetch(request, env, ctx);
+    }
+
+    const limited = await enforceRateLimit(request, env);
+    if (limited) {
+      return limited;
+    }
+
+    // Web-signer session API (talks to the Printr web app's /sign page). The
+    // unguessable session token in the URL is the capability — no bearer here,
+    // or the cross-origin web app couldn't reach it.
+    if (url.pathname.startsWith("/sessions")) {
+      return sessionRoutes().fetch(request, env, ctx);
+    }
+
+    // MCP transports are bearer-gated when MCP_AUTH_TOKEN is set.
+    const denied = authorizeMcp(request, env);
+    if (denied) {
+      return denied;
     }
 
     // Streamable HTTP transport (current MCP spec).
