@@ -28,7 +28,6 @@
     "PRINTR_API_BASE_URL": "https://api-preview.printr.money",
     "PRINTR_APP_URL": "https://app.printr.money",
     // This Worker's own public origin, handed to the web app as the session API.
-    // Set per-deploy (e.g. https://printr-mcp-remote.<subdomain>.workers.dev).
-    "PUBLIC_ORIGIN": "http://localhost:8787"
+    "PUBLIC_ORIGIN": "https://printr-mcp-remote.printr.workers.dev"
   }
 }
