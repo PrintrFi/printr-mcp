@@ -1,0 +1,59 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Top-level config IS production (the default `wrangler deploy` target).
+  // `wrangler deploy --env staging` targets the staging worker below. Bindings
+  // and vars are not inherited by named environments, so staging redeclares them.
+  "name": "printr-mcp-remote",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-19",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  // McpAgent persists per-session MCP state in a SQLite-backed Durable Object;
+  // SigningSessionDO holds one web-signing session per token. DO instances are
+  // scoped per worker name, so staging and prod are isolated automatically.
+  "durable_objects": {
+    "bindings": [
+      { "name": "MCP_OBJECT", "class_name": "PrintrMCP" },
+      { "name": "SIGNING_SESSION", "class_name": "SigningSessionDO" }
+    ]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PrintrMCP", "SigningSessionDO"] }],
+  // Per-client rate limit on /mcp, /sse, and /sessions (keyed by bearer token or
+  // client IP). period must be 10 or 60.
+  "ratelimits": [
+    { "name": "MCP_RATE_LIMIT", "namespace_id": "1001", "simple": { "limit": 120, "period": 60 } }
+  ],
+  // Optional bearer auth on the MCP transports: `wrangler secret put MCP_AUTH_TOKEN`
+  // (set it per environment). When unset, the transports are open.
+  // ALLOWED_ORIGINS: comma-separated browser origins permitted to call /mcp + /sse
+  // (DNS-rebinding / CSRF guard). Empty = block all browser origins; native MCP
+  // clients send no Origin and are unaffected.
+  "vars": {
+    "PRINTR_API_BASE_URL": "https://api-preview.printr.money",
+    "PRINTR_APP_URL": "https://app.printr.money",
+    "PUBLIC_ORIGIN": "https://printr-mcp-remote.printr.workers.dev",
+    "ALLOWED_ORIGINS": ""
+  },
+  "env": {
+    "staging": {
+      "name": "printr-mcp-remote-staging",
+      "observability": { "enabled": true, "head_sampling_rate": 1 },
+      "durable_objects": {
+        "bindings": [
+          { "name": "MCP_OBJECT", "class_name": "PrintrMCP" },
+          { "name": "SIGNING_SESSION", "class_name": "SigningSessionDO" }
+        ]
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PrintrMCP", "SigningSessionDO"] }],
+      "ratelimits": [
+        { "name": "MCP_RATE_LIMIT", "namespace_id": "1002", "simple": { "limit": 120, "period": 60 } }
+      ],
+      "vars": {
+        "PRINTR_API_BASE_URL": "https://api-preview.printr.money",
+        "PRINTR_APP_URL": "https://app.printr.money",
+        "PUBLIC_ORIGIN": "https://printr-mcp-remote-staging.printr.workers.dev",
+        "ALLOWED_ORIGINS": ""
+      }
+    }
+  }
+}

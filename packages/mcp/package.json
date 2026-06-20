@@ -6,6 +6,16 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./remote-safe": {
+      "types": "./dist/tools/remote-safe.d.ts",
+      "import": "./dist/tools/remote-safe.js"
+    }
+  },
   "bin": {
     "printr-mcp": "./dist/index.js"
   },

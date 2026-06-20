@@ -1,0 +1,25 @@
+{
+  "name": "@printr/mcp-worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "dry-run": "wrangler deploy --dry-run",
+    "typecheck": "wrangler types && tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@printr/mcp": "workspace:*",
+    "@printr/sdk": "workspace:*",
+    "agents": "^0.16.2",
+    "hono": "^4.12.23",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.94.0"
+  }
+}
