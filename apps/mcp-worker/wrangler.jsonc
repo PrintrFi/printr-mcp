@@ -5,15 +5,23 @@
   "compatibility_date": "2026-06-19",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true, "head_sampling_rate": 1 },
-  // McpAgent persists per-session MCP state in a SQLite-backed Durable Object.
+  // McpAgent persists per-session MCP state in a SQLite-backed Durable Object;
+  // SigningSessionDO holds one web-signing session per token.
   "durable_objects": {
-    "bindings": [{ "name": "MCP_OBJECT", "class_name": "PrintrMCP" }]
+    "bindings": [
+      { "name": "MCP_OBJECT", "class_name": "PrintrMCP" },
+      { "name": "SIGNING_SESSION", "class_name": "SigningSessionDO" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PrintrMCP"] }],
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PrintrMCP", "SigningSessionDO"] }],
   // Public preview API is keyless. To target an authenticated environment, add a
   // PRINTR_API_KEY secret (`wrangler secret put`), wire it into createPrintrClient,
   // and rerun `wrangler types`.
   "vars": {
-    "PRINTR_API_BASE_URL": "https://api-preview.printr.money"
+    "PRINTR_API_BASE_URL": "https://api-preview.printr.money",
+    "PRINTR_APP_URL": "https://app.printr.money",
+    // This Worker's own public origin, handed to the web app as the session API.
+    // Set per-deploy (e.g. https://printr-mcp-remote.<subdomain>.workers.dev).
+    "PUBLIC_ORIGIN": "http://localhost:8787"
   }
 }
