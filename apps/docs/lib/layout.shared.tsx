@@ -11,7 +11,7 @@ export function baseOptions(): BaseLayoutProps {
         <>
           {/* biome-ignore lint/performance/noImgElement: static export, next/image disabled */}
           <img
-            src={`${basePath}/logo-printr.jpg`}
+            src={`${basePath}/icon.png`}
             alt=""
             width={24}
             height={24}
