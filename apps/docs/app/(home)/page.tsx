@@ -60,7 +60,7 @@ export default function HomePage() {
           SDK · MCP server · CLI
         </span>
         <h1 className="bg-gradient-to-b from-fd-foreground to-fd-foreground/60 bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-7xl">
-          Printr
+          Build with Printr
         </h1>
         <p className="mt-5 max-w-2xl text-balance text-lg text-fd-muted-foreground sm:text-xl">
           Launch cross-chain tokens from TypeScript or from an AI agent. One
