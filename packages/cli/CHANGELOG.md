@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/PrintrFi/printr-mcp/compare/cli-v0.4.0...cli-v0.5.0) (2026-06-20)
+
+
+### Features
+
+* **docs:** scaffold Fumadocs documentation site ([02c96c7](https://github.com/PrintrFi/printr-mcp/commit/02c96c73f775254cbf457240a769fce4e04fd469))
+
 ## [0.4.0](https://github.com/PrintrFi/printr-mcp/compare/cli-v0.3.2...cli-v0.4.0) (2026-06-02)
 
 

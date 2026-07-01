@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.18.0](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.17.0...mcp-v0.18.0) (2026-06-20)
+
+
+### Features
+
+* **docs:** scaffold Fumadocs documentation site ([02c96c7](https://github.com/PrintrFi/printr-mcp/commit/02c96c73f775254cbf457240a769fce4e04fd469))
+* **mcp-worker:** scaffold remote MCP server on Cloudflare Workers ([7c30c79](https://github.com/PrintrFi/printr-mcp/commit/7c30c79725b5179d1ecef8db62249201e50f7b67))
+* **mcp:** remote MCP server on Cloudflare Workers ([7cca95f](https://github.com/PrintrFi/printr-mcp/commit/7cca95f6170b565cce0641d10ce9ee7bb29cc1e8))
+
+
+### Bug Fixes
+
+* handle MCP metadata flags before startup ([ebc5179](https://github.com/PrintrFi/printr-mcp/commit/ebc51795c06b2fdd825d0ad3a02dcd6f8ed6b6ca))
+* **mcp:** build Workers-safe ESM; deploy remote worker ([d49cfc3](https://github.com/PrintrFi/printr-mcp/commit/d49cfc398cb63e3bb3f26ddb1d328f6223aa773f))
+* **mcp:** handle metadata flags before server startup ([aea7e0f](https://github.com/PrintrFi/printr-mcp/commit/aea7e0f361583fca8b15c02573500388798b0921))
+
 ## [0.17.0](https://github.com/PrintrFi/printr-mcp/compare/mcp-v0.16.1...mcp-v0.17.0) (2026-06-02)
 
 
