@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.8.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.7.0...sdk-v0.8.0) (2026-06-20)
+
+
+### Features
+
+* **docs:** scaffold Fumadocs documentation site ([02c96c7](https://github.com/PrintrFi/printr-mcp/commit/02c96c73f775254cbf457240a769fce4e04fd469))
+* **sdk:** make client apiKey optional ([c1073d1](https://github.com/PrintrFi/printr-mcp/commit/c1073d159f7f1854cfa1c575f1f332f8b689ffeb))
+* **sdk:** make client apiKey optional ([f378371](https://github.com/PrintrFi/printr-mcp/commit/f3783716a64cd1a0a95523664c862d7add0b8e7b))
+
 ## [0.7.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.6.1...sdk-v0.7.0) (2026-06-02)
 
 
