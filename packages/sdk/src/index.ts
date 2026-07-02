@@ -46,13 +46,19 @@ export {
 export {
   type ChainType,
   chainTypeFromCaip2,
+  EVM_CAIP10,
   isSupportedNamespace,
   namespaceToChainType,
+  normalizeTokenId,
   type ParsedCaip2,
   type ParsedCaip10,
   parseCaip2,
   parseCaip10,
+  SOLANA_ADDRESS,
+  SOLANA_CAIP10,
+  SOLANA_MAINNET,
   type SupportedNamespace,
+  TELECOIN_ID,
   toCaip2,
 } from "./caip.js";
 // Chains
