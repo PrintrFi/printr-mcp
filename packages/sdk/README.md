@@ -216,6 +216,7 @@ console.log(wallets.map((w) => `${w.label}: ${w.address}`));
 - Monad: `eip155:143`
 - HyperEVM: `eip155:999`
 - MegaETH: `eip155:4326`
+- Robinhood: `eip155:4663`
 - Mantle: `eip155:5000`
 - Base: `eip155:8453`
 - Plasma: `eip155:9745`

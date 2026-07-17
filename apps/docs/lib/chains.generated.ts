@@ -45,6 +45,12 @@ export const SUPPORTED_CHAINS: readonly SupportedChain[] = [
     "decimals": 18
   },
   {
+    "caip2": "eip155:4663",
+    "name": "Robinhood",
+    "symbol": "ETH",
+    "decimals": 18
+  },
+  {
     "caip2": "eip155:8453",
     "name": "Base",
     "symbol": "ETH",

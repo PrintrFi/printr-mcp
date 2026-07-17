@@ -290,7 +290,7 @@ Set `ALCHEMY_API_KEY` to automatically use Alchemy RPCs for supported chains:
 }
 ```
 
-Alchemy-supported chains: Ethereum, BNB, Unichain, HyperEVM, Mantle, Base, Arbitrum, Avalanche, Solana. Other chains (Monad, MegaETH, Plasma) fall back to public RPCs.
+Alchemy-supported chains: Ethereum, BNB, Unichain, HyperEVM, Mantle, Robinhood, Base, Arbitrum, Avalanche, Solana. Other chains (Monad, MegaETH, Plasma) fall back to public RPCs.
 
 **Option 2: Custom RPC URLs**
 
@@ -311,7 +311,7 @@ Use `RPC_URLS` for other providers (Helius, QuickNode, etc.) or to override Alch
 3. Alchemy (if `ALCHEMY_API_KEY` is set)
 4. Default public RPC
 
-**Supported chain names for `RPC_URLS`:** `ethereum`, `eth`, `base`, `arbitrum`, `arb`, `avalanche`, `avax`, `bnb`, `bsc`, `solana`, `sol`, `mantle`, `monad`, `unichain`, `hyperevm`, `megaeth`, `plasma`
+**Supported chain names for `RPC_URLS`:** `ethereum`, `eth`, `base`, `arbitrum`, `arb`, `avalanche`, `avax`, `bnb`, `bsc`, `solana`, `sol`, `mantle`, `monad`, `unichain`, `hyperevm`, `megaeth`, `plasma`, `robinhood`
 
 ---
 
