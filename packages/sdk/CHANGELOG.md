@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.9.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.8.0...sdk-v0.9.0) (2026-07-17)
+
+
+### Features
+
+* **sdk:** add normalizeTokenId + CAIP token-id regex exports ([1488567](https://github.com/PrintrFi/printr-mcp/commit/148856766f5e6ac3c2d13387bfe4579100562268))
+* **sdk:** add Robinhood chain support (eip155:4663) ([14874ad](https://github.com/PrintrFi/printr-mcp/commit/14874ad52ab39a7663d3a91354ac9ece90c380af))
+* **sdk:** add Robinhood chain support (eip155:4663) ([807273c](https://github.com/PrintrFi/printr-mcp/commit/807273ca015658a34aff4a97bf9c1de18671198e))
+* **sdk:** normalizeTokenId + CAIP token-id regex exports ([01165b8](https://github.com/PrintrFi/printr-mcp/commit/01165b8af2524a220b36da77451079eb2f0a0a4a))
+
+
+### Bug Fixes
+
+* **sdk:** align chain registry with printr web ([2c4df28](https://github.com/PrintrFi/printr-mcp/commit/2c4df2814cfdc22d24a83c6dcdbfdfb335519ad9))
+
 ## [0.8.0](https://github.com/PrintrFi/printr-mcp/compare/sdk-v0.7.0...sdk-v0.8.0) (2026-06-20)
 
 
