@@ -214,9 +214,11 @@ console.log(wallets.map((w) => `${w.label}: ${w.address}`));
 - BNB Smart Chain: `eip155:56`
 - Unichain: `eip155:130`
 - Monad: `eip155:143`
+- X Layer: `eip155:196`
 - HyperEVM: `eip155:999`
-- MegaETH: `eip155:4326`
+- Robinhood: `eip155:4663`
 - Mantle: `eip155:5000`
+- MegaETH: `eip155:6342`
 - Base: `eip155:8453`
 - Plasma: `eip155:9745`
 - Arbitrum: `eip155:42161`

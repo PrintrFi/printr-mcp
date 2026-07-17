@@ -51,11 +51,22 @@ export const CHAIN_META = {
     decimals: 18,
     defaultRpc: "https://rpc.mantle.xyz",
   },
-  "eip155:4326": {
+  "eip155:196": {
+    name: "X Layer",
+    symbol: "OKB",
+    decimals: 18,
+    defaultRpc: "https://xlayerrpc.okx.com",
+  },
+  "eip155:6342": {
     name: "MegaETH",
     symbol: "ETH",
     decimals: 18,
-    defaultRpc: "https://mainnet.megaeth.com/rpc",
+  },
+  "eip155:4663": {
+    name: "Robinhood",
+    symbol: "ETH",
+    decimals: 18,
+    defaultRpc: "https://rpc.mainnet.chain.robinhood.com",
   },
   "eip155:8453": {
     name: "Base",
@@ -99,6 +110,7 @@ export function isSupportedCaip2(caip2: string): caip2 is SupportedCaip2 {
 /** Additional aliases for chain names (lowercase) */
 const CHAIN_ALIASES: Record<string, string> = {
   eth: "eip155:1",
+  xlayer: "eip155:196",
   bsc: "eip155:56",
   arb: "eip155:42161",
   avax: "eip155:43114",
