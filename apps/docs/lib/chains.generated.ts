@@ -39,7 +39,13 @@ export const SUPPORTED_CHAINS: readonly SupportedChain[] = [
     "decimals": 18
   },
   {
-    "caip2": "eip155:4326",
+    "caip2": "eip155:196",
+    "name": "X Layer",
+    "symbol": "OKB",
+    "decimals": 18
+  },
+  {
+    "caip2": "eip155:6342",
     "name": "MegaETH",
     "symbol": "ETH",
     "decimals": 18
