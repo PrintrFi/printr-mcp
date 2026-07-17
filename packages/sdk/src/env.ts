@@ -29,6 +29,7 @@ export const ALCHEMY_RPC_TEMPLATES: Record<string, string> = {
   ethereum: "https://eth-mainnet.g.alchemy.com/v2/{key}",
   bnb: "https://bnb-mainnet.g.alchemy.com/v2/{key}",
   unichain: "https://unichain-mainnet.g.alchemy.com/v2/{key}",
+  "x layer": "https://xlayer-mainnet.g.alchemy.com/v2/{key}",
   hyperevm: "https://hyperliquid-mainnet.g.alchemy.com/v2/{key}",
   mantle: "https://mantle-mainnet.g.alchemy.com/v2/{key}",
   robinhood: "https://robinhood-mainnet.g.alchemy.com/v2/{key}",
