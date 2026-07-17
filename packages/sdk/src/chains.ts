@@ -57,6 +57,12 @@ export const CHAIN_META = {
     decimals: 18,
     defaultRpc: "https://mainnet.megaeth.com/rpc",
   },
+  "eip155:4663": {
+    name: "Robinhood",
+    symbol: "ETH",
+    decimals: 18,
+    defaultRpc: "https://rpc.mainnet.chain.robinhood.com",
+  },
   "eip155:8453": {
     name: "Base",
     symbol: "ETH",

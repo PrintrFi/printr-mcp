@@ -12,6 +12,15 @@ describe("getChainMeta", () => {
     });
   });
 
+  test("returns metadata for Robinhood", () => {
+    expect(getChainMeta("eip155:4663")).toEqual({
+      name: "Robinhood",
+      symbol: "ETH",
+      decimals: 18,
+      defaultRpc: "https://rpc.mainnet.chain.robinhood.com",
+    });
+  });
+
   test("returns undefined for unknown chains", () => {
     expect(getChainMeta("eip155:99999")).toBeUndefined();
   });
@@ -113,6 +122,9 @@ describe("getRpcUrl", () => {
       );
       expect(getRpcUrl("eip155:5000")).toBe(
         "https://mantle-mainnet.g.alchemy.com/v2/test-alchemy-key",
+      );
+      expect(getRpcUrl("eip155:4663")).toBe(
+        "https://robinhood-mainnet.g.alchemy.com/v2/test-alchemy-key",
       );
       expect(getRpcUrl("eip155:8453")).toBe(
         "https://base-mainnet.g.alchemy.com/v2/test-alchemy-key",

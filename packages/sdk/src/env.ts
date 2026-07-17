@@ -31,6 +31,7 @@ export const ALCHEMY_RPC_TEMPLATES: Record<string, string> = {
   unichain: "https://unichain-mainnet.g.alchemy.com/v2/{key}",
   hyperevm: "https://hyperliquid-mainnet.g.alchemy.com/v2/{key}",
   mantle: "https://mantle-mainnet.g.alchemy.com/v2/{key}",
+  robinhood: "https://robinhood-mainnet.g.alchemy.com/v2/{key}",
   base: "https://base-mainnet.g.alchemy.com/v2/{key}",
   arbitrum: "https://arb-mainnet.g.alchemy.com/v2/{key}",
   avalanche: "https://avax-mainnet.g.alchemy.com/v2/{key}",
