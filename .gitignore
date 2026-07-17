@@ -41,6 +41,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .DS_Store
 
 .gemini/
+.serena/
 
 # Claude Code local settings (secrets, personal config)
 .claude/settings.local.json

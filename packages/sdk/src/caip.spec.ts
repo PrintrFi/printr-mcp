@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { parseCaip2, parseCaip10 } from "./caip.js";
+import { normalizeTokenId, parseCaip2, parseCaip10, SOLANA_MAINNET } from "./caip.js";
 
 describe("parseCaip2", () => {
   it("parses a valid CAIP-2 string", () => {
@@ -54,5 +54,69 @@ describe("parseCaip10", () => {
 
   it("returns null for empty string", () => {
     expect(parseCaip10("")).toBeNull();
+  });
+});
+
+describe("normalizeTokenId", () => {
+  it("passes through a Telecoin hex ID with 0x prefix", () => {
+    const id = "0xda97f29a4c137298ed138194b39b8b81eb7889018cd9ae4ab4a053fe0bfb7ed5";
+    const result = normalizeTokenId(id);
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value).toBe(id);
+    }
+  });
+
+  it("passes through a Telecoin hex ID without 0x prefix", () => {
+    const id = "da97f29a4c137298ed138194b39b8b81eb7889018cd9ae4ab4a053fe0bfb7ed5";
+    const result = normalizeTokenId(id);
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value).toBe(id);
+    }
+  });
+
+  it("passes through an EVM CAIP-10 address", () => {
+    const id = "eip155:8453:0x4200000000000000000000000000000000000006";
+    const result = normalizeTokenId(id);
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value).toBe(id);
+    }
+  });
+
+  it("passes through a Solana CAIP-10 address", () => {
+    const id = `${SOLANA_MAINNET}:G6mNZN8o16QBcTqfuEx6FzjiWa94B1XWhfyDxjDibrrr`;
+    const result = normalizeTokenId(id);
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value).toBe(id);
+    }
+  });
+
+  it("prefixes a bare Solana mint with the mainnet CAIP-2 chain id", () => {
+    const mint = "G6mNZN8o16QBcTqfuEx6FzjiWa94B1XWhfyDxjDibrrr";
+    const result = normalizeTokenId(mint);
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value).toBe(`${SOLANA_MAINNET}:${mint}`);
+    }
+  });
+
+  it("keeps an ambiguous all-hex string as Telecoin rather than misreading it as Solana", () => {
+    const id = "abcdef1234567890";
+    const result = normalizeTokenId(id);
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value).toBe(id);
+    }
+  });
+
+  it("returns an error for garbage input", () => {
+    const result = normalizeTokenId("not a token id at all!!");
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error).toBe("not a Telecoin ID, CAIP-10 address, or Solana mint");
+    }
   });
 });
