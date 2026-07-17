@@ -12,6 +12,15 @@ describe("getChainMeta", () => {
     });
   });
 
+  test("returns metadata for Robinhood", () => {
+    expect(getChainMeta("eip155:4663")).toEqual({
+      name: "Robinhood",
+      symbol: "ETH",
+      decimals: 18,
+      defaultRpc: "https://rpc.mainnet.chain.robinhood.com",
+    });
+  });
+
   test("returns undefined for unknown chains", () => {
     expect(getChainMeta("eip155:99999")).toBeUndefined();
   });
@@ -114,6 +123,12 @@ describe("getRpcUrl", () => {
       expect(getRpcUrl("eip155:5000")).toBe(
         "https://mantle-mainnet.g.alchemy.com/v2/test-alchemy-key",
       );
+      expect(getRpcUrl("eip155:4663")).toBe(
+        "https://robinhood-mainnet.g.alchemy.com/v2/test-alchemy-key",
+      );
+      expect(getRpcUrl("eip155:196")).toBe(
+        "https://xlayer-mainnet.g.alchemy.com/v2/test-alchemy-key",
+      );
       expect(getRpcUrl("eip155:8453")).toBe(
         "https://base-mainnet.g.alchemy.com/v2/test-alchemy-key",
       );
@@ -147,8 +162,8 @@ describe("getRpcUrl", () => {
     const originalKey = env.ALCHEMY_API_KEY;
     env.ALCHEMY_API_KEY = "test-alchemy-key";
     try {
-      // MegaETH is not in ALCHEMY_RPC_TEMPLATES
-      expect(getRpcUrl("eip155:4326")).toBe("https://mainnet.megaeth.com/rpc");
+      // Monad is not in ALCHEMY_RPC_TEMPLATES
+      expect(getRpcUrl("eip155:143")).toBe("https://monad-mainnet.drpc.org");
     } finally {
       env.ALCHEMY_API_KEY = originalKey;
     }
@@ -231,5 +246,8 @@ describe("getRpcUrls", () => {
     // Plasma (eip155:9745) has no defaultRpc and no Alchemy template
     expect(CHAIN_META["eip155:9745"]?.defaultRpc).toBeUndefined();
     expect(getRpcUrls("eip155:9745")).toEqual([]);
+    // MegaETH testnet (eip155:6342, deprecated upstream) likewise ships no defaultRpc
+    expect(CHAIN_META["eip155:6342"]?.defaultRpc).toBeUndefined();
+    expect(getRpcUrls("eip155:6342")).toEqual([]);
   });
 });
